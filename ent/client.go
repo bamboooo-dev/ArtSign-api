@@ -22,6 +22,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Work is the client for interacting with the Work builders.
 	Work *WorkClient
+	// additional fields for node api
+	tables tables
 }
 
 // NewClient creates a new client configured with the given options.
