@@ -249,6 +249,19 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Text string `json:"text,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Work.Query().
+//		GroupBy(work.FieldText).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (wq *WorkQuery) GroupBy(field string, fields ...string) *WorkGroupBy {
 	group := &WorkGroupBy{config: wq.config}
 	group.fields = append([]string{field}, fields...)
@@ -263,6 +276,17 @@ func (wq *WorkQuery) GroupBy(field string, fields ...string) *WorkGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Text string `json:"text,omitempty"`
+//	}
+//
+//	client.Work.Query().
+//		Select(work.FieldText).
+//		Scan(ctx, &v)
+//
 func (wq *WorkQuery) Select(fields ...string) *WorkSelect {
 	wq.fields = append(wq.fields, fields...)
 	return &WorkSelect{WorkQuery: wq}

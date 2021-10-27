@@ -5,7 +5,9 @@ package ent
 import (
 	"artsign/ent/work"
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -16,6 +18,54 @@ type WorkCreate struct {
 	config
 	mutation *WorkMutation
 	hooks    []Hook
+}
+
+// SetText sets the "text" field.
+func (wc *WorkCreate) SetText(s string) *WorkCreate {
+	wc.mutation.SetText(s)
+	return wc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (wc *WorkCreate) SetCreatedAt(t time.Time) *WorkCreate {
+	wc.mutation.SetCreatedAt(t)
+	return wc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (wc *WorkCreate) SetNillableCreatedAt(t *time.Time) *WorkCreate {
+	if t != nil {
+		wc.SetCreatedAt(*t)
+	}
+	return wc
+}
+
+// SetStatus sets the "status" field.
+func (wc *WorkCreate) SetStatus(w work.Status) *WorkCreate {
+	wc.mutation.SetStatus(w)
+	return wc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (wc *WorkCreate) SetNillableStatus(w *work.Status) *WorkCreate {
+	if w != nil {
+		wc.SetStatus(*w)
+	}
+	return wc
+}
+
+// SetPriority sets the "priority" field.
+func (wc *WorkCreate) SetPriority(i int) *WorkCreate {
+	wc.mutation.SetPriority(i)
+	return wc
+}
+
+// SetNillablePriority sets the "priority" field if the given value is not nil.
+func (wc *WorkCreate) SetNillablePriority(i *int) *WorkCreate {
+	if i != nil {
+		wc.SetPriority(*i)
+	}
+	return wc
 }
 
 // Mutation returns the WorkMutation object of the builder.
@@ -29,6 +79,7 @@ func (wc *WorkCreate) Save(ctx context.Context) (*Work, error) {
 		err  error
 		node *Work
 	)
+	wc.defaults()
 	if len(wc.hooks) == 0 {
 		if err = wc.check(); err != nil {
 			return nil, err
@@ -86,8 +137,46 @@ func (wc *WorkCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (wc *WorkCreate) defaults() {
+	if _, ok := wc.mutation.CreatedAt(); !ok {
+		v := work.DefaultCreatedAt()
+		wc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := wc.mutation.Status(); !ok {
+		v := work.DefaultStatus
+		wc.mutation.SetStatus(v)
+	}
+	if _, ok := wc.mutation.Priority(); !ok {
+		v := work.DefaultPriority
+		wc.mutation.SetPriority(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (wc *WorkCreate) check() error {
+	if _, ok := wc.mutation.Text(); !ok {
+		return &ValidationError{Name: "text", err: errors.New(`ent: missing required field "text"`)}
+	}
+	if v, ok := wc.mutation.Text(); ok {
+		if err := work.TextValidator(v); err != nil {
+			return &ValidationError{Name: "text", err: fmt.Errorf(`ent: validator failed for field "text": %w`, err)}
+		}
+	}
+	if _, ok := wc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+	}
+	if _, ok := wc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
+	}
+	if v, ok := wc.mutation.Status(); ok {
+		if err := work.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "status": %w`, err)}
+		}
+	}
+	if _, ok := wc.mutation.Priority(); !ok {
+		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "priority"`)}
+	}
 	return nil
 }
 
@@ -115,6 +204,38 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := wc.mutation.Text(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldText,
+		})
+		_node.Text = value
+	}
+	if value, ok := wc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: work.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := wc.mutation.Status(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: work.FieldStatus,
+		})
+		_node.Status = value
+	}
+	if value, ok := wc.mutation.Priority(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldPriority,
+		})
+		_node.Priority = value
+	}
 	return _node, _spec
 }
 
@@ -132,6 +253,7 @@ func (wcb *WorkCreateBulk) Save(ctx context.Context) ([]*Work, error) {
 	for i := range wcb.builders {
 		func(i int, root context.Context) {
 			builder := wcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*WorkMutation)
 				if !ok {

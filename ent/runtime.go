@@ -2,8 +2,28 @@
 
 package ent
 
+import (
+	"artsign/ent/schema"
+	"artsign/ent/work"
+	"time"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	workFields := schema.Work{}.Fields()
+	_ = workFields
+	// workDescText is the schema descriptor for text field.
+	workDescText := workFields[0].Descriptor()
+	// work.TextValidator is a validator for the "text" field. It is called by the builders before save.
+	work.TextValidator = workDescText.Validators[0].(func(string) error)
+	// workDescCreatedAt is the schema descriptor for created_at field.
+	workDescCreatedAt := workFields[1].Descriptor()
+	// work.DefaultCreatedAt holds the default value on creation for the created_at field.
+	work.DefaultCreatedAt = workDescCreatedAt.Default.(func() time.Time)
+	// workDescPriority is the schema descriptor for priority field.
+	workDescPriority := workFields[3].Descriptor()
+	// work.DefaultPriority holds the default value on creation for the priority field.
+	work.DefaultPriority = workDescPriority.Default.(int)
 }

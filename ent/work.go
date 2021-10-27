@@ -6,15 +6,24 @@ import (
 	"artsign/ent/work"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 )
 
 // Work is the model entity for the Work schema.
 type Work struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// Text holds the value of the "text" field.
+	Text string `json:"text,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// Status holds the value of the "status" field.
+	Status work.Status `json:"status,omitempty"`
+	// Priority holds the value of the "priority" field.
+	Priority int `json:"priority,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -22,8 +31,12 @@ func (*Work) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case work.FieldID:
+		case work.FieldID, work.FieldPriority:
 			values[i] = new(sql.NullInt64)
+		case work.FieldText, work.FieldStatus:
+			values[i] = new(sql.NullString)
+		case work.FieldCreatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Work", columns[i])
 		}
@@ -45,6 +58,30 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			w.ID = int(value.Int64)
+		case work.FieldText:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field text", values[i])
+			} else if value.Valid {
+				w.Text = value.String
+			}
+		case work.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				w.CreatedAt = value.Time
+			}
+		case work.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				w.Status = work.Status(value.String)
+			}
+		case work.FieldPriority:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field priority", values[i])
+			} else if value.Valid {
+				w.Priority = int(value.Int64)
+			}
 		}
 	}
 	return nil
@@ -73,6 +110,14 @@ func (w *Work) String() string {
 	var builder strings.Builder
 	builder.WriteString("Work(")
 	builder.WriteString(fmt.Sprintf("id=%v", w.ID))
+	builder.WriteString(", text=")
+	builder.WriteString(w.Text)
+	builder.WriteString(", created_at=")
+	builder.WriteString(w.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", status=")
+	builder.WriteString(fmt.Sprintf("%v", w.Status))
+	builder.WriteString(", priority=")
+	builder.WriteString(fmt.Sprintf("%v", w.Priority))
 	builder.WriteByte(')')
 	return builder.String()
 }

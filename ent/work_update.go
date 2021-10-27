@@ -26,6 +26,47 @@ func (wu *WorkUpdate) Where(ps ...predicate.Work) *WorkUpdate {
 	return wu
 }
 
+// SetText sets the "text" field.
+func (wu *WorkUpdate) SetText(s string) *WorkUpdate {
+	wu.mutation.SetText(s)
+	return wu
+}
+
+// SetStatus sets the "status" field.
+func (wu *WorkUpdate) SetStatus(w work.Status) *WorkUpdate {
+	wu.mutation.SetStatus(w)
+	return wu
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (wu *WorkUpdate) SetNillableStatus(w *work.Status) *WorkUpdate {
+	if w != nil {
+		wu.SetStatus(*w)
+	}
+	return wu
+}
+
+// SetPriority sets the "priority" field.
+func (wu *WorkUpdate) SetPriority(i int) *WorkUpdate {
+	wu.mutation.ResetPriority()
+	wu.mutation.SetPriority(i)
+	return wu
+}
+
+// SetNillablePriority sets the "priority" field if the given value is not nil.
+func (wu *WorkUpdate) SetNillablePriority(i *int) *WorkUpdate {
+	if i != nil {
+		wu.SetPriority(*i)
+	}
+	return wu
+}
+
+// AddPriority adds i to the "priority" field.
+func (wu *WorkUpdate) AddPriority(i int) *WorkUpdate {
+	wu.mutation.AddPriority(i)
+	return wu
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wu *WorkUpdate) Mutation() *WorkMutation {
 	return wu.mutation
@@ -38,12 +79,18 @@ func (wu *WorkUpdate) Save(ctx context.Context) (int, error) {
 		affected int
 	)
 	if len(wu.hooks) == 0 {
+		if err = wu.check(); err != nil {
+			return 0, err
+		}
 		affected, err = wu.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*WorkMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = wu.check(); err != nil {
+				return 0, err
 			}
 			wu.mutation = mutation
 			affected, err = wu.sqlSave(ctx)
@@ -85,6 +132,21 @@ func (wu *WorkUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (wu *WorkUpdate) check() error {
+	if v, ok := wu.mutation.Text(); ok {
+		if err := work.TextValidator(v); err != nil {
+			return &ValidationError{Name: "text", err: fmt.Errorf("ent: validator failed for field \"text\": %w", err)}
+		}
+	}
+	if v, ok := wu.mutation.Status(); ok {
+		if err := work.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf("ent: validator failed for field \"status\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -103,6 +165,34 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := wu.mutation.Text(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldText,
+		})
+	}
+	if value, ok := wu.mutation.Status(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: work.FieldStatus,
+		})
+	}
+	if value, ok := wu.mutation.Priority(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldPriority,
+		})
+	}
+	if value, ok := wu.mutation.AddedPriority(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldPriority,
+		})
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, wu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{work.Label}
@@ -120,6 +210,47 @@ type WorkUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *WorkMutation
+}
+
+// SetText sets the "text" field.
+func (wuo *WorkUpdateOne) SetText(s string) *WorkUpdateOne {
+	wuo.mutation.SetText(s)
+	return wuo
+}
+
+// SetStatus sets the "status" field.
+func (wuo *WorkUpdateOne) SetStatus(w work.Status) *WorkUpdateOne {
+	wuo.mutation.SetStatus(w)
+	return wuo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (wuo *WorkUpdateOne) SetNillableStatus(w *work.Status) *WorkUpdateOne {
+	if w != nil {
+		wuo.SetStatus(*w)
+	}
+	return wuo
+}
+
+// SetPriority sets the "priority" field.
+func (wuo *WorkUpdateOne) SetPriority(i int) *WorkUpdateOne {
+	wuo.mutation.ResetPriority()
+	wuo.mutation.SetPriority(i)
+	return wuo
+}
+
+// SetNillablePriority sets the "priority" field if the given value is not nil.
+func (wuo *WorkUpdateOne) SetNillablePriority(i *int) *WorkUpdateOne {
+	if i != nil {
+		wuo.SetPriority(*i)
+	}
+	return wuo
+}
+
+// AddPriority adds i to the "priority" field.
+func (wuo *WorkUpdateOne) AddPriority(i int) *WorkUpdateOne {
+	wuo.mutation.AddPriority(i)
+	return wuo
 }
 
 // Mutation returns the WorkMutation object of the builder.
@@ -141,12 +272,18 @@ func (wuo *WorkUpdateOne) Save(ctx context.Context) (*Work, error) {
 		node *Work
 	)
 	if len(wuo.hooks) == 0 {
+		if err = wuo.check(); err != nil {
+			return nil, err
+		}
 		node, err = wuo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*WorkMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = wuo.check(); err != nil {
+				return nil, err
 			}
 			wuo.mutation = mutation
 			node, err = wuo.sqlSave(ctx)
@@ -188,6 +325,21 @@ func (wuo *WorkUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (wuo *WorkUpdateOne) check() error {
+	if v, ok := wuo.mutation.Text(); ok {
+		if err := work.TextValidator(v); err != nil {
+			return &ValidationError{Name: "text", err: fmt.Errorf("ent: validator failed for field \"text\": %w", err)}
+		}
+	}
+	if v, ok := wuo.mutation.Status(); ok {
+		if err := work.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf("ent: validator failed for field \"status\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -222,6 +374,34 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := wuo.mutation.Text(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldText,
+		})
+	}
+	if value, ok := wuo.mutation.Status(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: work.FieldStatus,
+		})
+	}
+	if value, ok := wuo.mutation.Priority(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldPriority,
+		})
+	}
+	if value, ok := wuo.mutation.AddedPriority(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldPriority,
+		})
 	}
 	_node = &Work{config: wuo.config}
 	_spec.Assign = _node.assignValues
