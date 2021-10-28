@@ -67,9 +67,70 @@ func (wu *WorkUpdate) AddPriority(i int) *WorkUpdate {
 	return wu
 }
 
+// AddChildIDs adds the "children" edge to the Work entity by IDs.
+func (wu *WorkUpdate) AddChildIDs(ids ...int) *WorkUpdate {
+	wu.mutation.AddChildIDs(ids...)
+	return wu
+}
+
+// AddChildren adds the "children" edges to the Work entity.
+func (wu *WorkUpdate) AddChildren(w ...*Work) *WorkUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wu.AddChildIDs(ids...)
+}
+
+// SetParentID sets the "parent" edge to the Work entity by ID.
+func (wu *WorkUpdate) SetParentID(id int) *WorkUpdate {
+	wu.mutation.SetParentID(id)
+	return wu
+}
+
+// SetNillableParentID sets the "parent" edge to the Work entity by ID if the given value is not nil.
+func (wu *WorkUpdate) SetNillableParentID(id *int) *WorkUpdate {
+	if id != nil {
+		wu = wu.SetParentID(*id)
+	}
+	return wu
+}
+
+// SetParent sets the "parent" edge to the Work entity.
+func (wu *WorkUpdate) SetParent(w *Work) *WorkUpdate {
+	return wu.SetParentID(w.ID)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wu *WorkUpdate) Mutation() *WorkMutation {
 	return wu.mutation
+}
+
+// ClearChildren clears all "children" edges to the Work entity.
+func (wu *WorkUpdate) ClearChildren() *WorkUpdate {
+	wu.mutation.ClearChildren()
+	return wu
+}
+
+// RemoveChildIDs removes the "children" edge to Work entities by IDs.
+func (wu *WorkUpdate) RemoveChildIDs(ids ...int) *WorkUpdate {
+	wu.mutation.RemoveChildIDs(ids...)
+	return wu
+}
+
+// RemoveChildren removes "children" edges to Work entities.
+func (wu *WorkUpdate) RemoveChildren(w ...*Work) *WorkUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wu.RemoveChildIDs(ids...)
+}
+
+// ClearParent clears the "parent" edge to the Work entity.
+func (wu *WorkUpdate) ClearParent() *WorkUpdate {
+	wu.mutation.ClearParent()
+	return wu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -193,6 +254,95 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: work.FieldPriority,
 		})
 	}
+	if wu.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   work.ChildrenTable,
+			Columns: []string{work.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !wu.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   work.ChildrenTable,
+			Columns: []string{work.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   work.ChildrenTable,
+			Columns: []string{work.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wu.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   work.ParentTable,
+			Columns: []string{work.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   work.ParentTable,
+			Columns: []string{work.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, wu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{work.Label}
@@ -253,9 +403,70 @@ func (wuo *WorkUpdateOne) AddPriority(i int) *WorkUpdateOne {
 	return wuo
 }
 
+// AddChildIDs adds the "children" edge to the Work entity by IDs.
+func (wuo *WorkUpdateOne) AddChildIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.AddChildIDs(ids...)
+	return wuo
+}
+
+// AddChildren adds the "children" edges to the Work entity.
+func (wuo *WorkUpdateOne) AddChildren(w ...*Work) *WorkUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wuo.AddChildIDs(ids...)
+}
+
+// SetParentID sets the "parent" edge to the Work entity by ID.
+func (wuo *WorkUpdateOne) SetParentID(id int) *WorkUpdateOne {
+	wuo.mutation.SetParentID(id)
+	return wuo
+}
+
+// SetNillableParentID sets the "parent" edge to the Work entity by ID if the given value is not nil.
+func (wuo *WorkUpdateOne) SetNillableParentID(id *int) *WorkUpdateOne {
+	if id != nil {
+		wuo = wuo.SetParentID(*id)
+	}
+	return wuo
+}
+
+// SetParent sets the "parent" edge to the Work entity.
+func (wuo *WorkUpdateOne) SetParent(w *Work) *WorkUpdateOne {
+	return wuo.SetParentID(w.ID)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 	return wuo.mutation
+}
+
+// ClearChildren clears all "children" edges to the Work entity.
+func (wuo *WorkUpdateOne) ClearChildren() *WorkUpdateOne {
+	wuo.mutation.ClearChildren()
+	return wuo
+}
+
+// RemoveChildIDs removes the "children" edge to Work entities by IDs.
+func (wuo *WorkUpdateOne) RemoveChildIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.RemoveChildIDs(ids...)
+	return wuo
+}
+
+// RemoveChildren removes "children" edges to Work entities.
+func (wuo *WorkUpdateOne) RemoveChildren(w ...*Work) *WorkUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wuo.RemoveChildIDs(ids...)
+}
+
+// ClearParent clears the "parent" edge to the Work entity.
+func (wuo *WorkUpdateOne) ClearParent() *WorkUpdateOne {
+	wuo.mutation.ClearParent()
+	return wuo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -402,6 +613,95 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 			Value:  value,
 			Column: work.FieldPriority,
 		})
+	}
+	if wuo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   work.ChildrenTable,
+			Columns: []string{work.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !wuo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   work.ChildrenTable,
+			Columns: []string{work.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   work.ChildrenTable,
+			Columns: []string{work.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   work.ParentTable,
+			Columns: []string{work.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   work.ParentTable,
+			Columns: []string{work.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Work{config: wuo.config}
 	_spec.Assign = _node.assignValues

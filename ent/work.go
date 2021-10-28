@@ -24,6 +24,44 @@ type Work struct {
 	Status work.Status `json:"status,omitempty"`
 	// Priority holds the value of the "priority" field.
 	Priority int `json:"priority,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the WorkQuery when eager-loading is set.
+	Edges       WorkEdges `json:"edges"`
+	work_parent *int
+}
+
+// WorkEdges holds the relations/edges for other nodes in the graph.
+type WorkEdges struct {
+	// Children holds the value of the children edge.
+	Children []*Work `json:"children,omitempty"`
+	// Parent holds the value of the parent edge.
+	Parent *Work `json:"parent,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// ChildrenOrErr returns the Children value or an error if the edge
+// was not loaded in eager-loading.
+func (e WorkEdges) ChildrenOrErr() ([]*Work, error) {
+	if e.loadedTypes[0] {
+		return e.Children, nil
+	}
+	return nil, &NotLoadedError{edge: "children"}
+}
+
+// ParentOrErr returns the Parent value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e WorkEdges) ParentOrErr() (*Work, error) {
+	if e.loadedTypes[1] {
+		if e.Parent == nil {
+			// The edge parent was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: work.Label}
+		}
+		return e.Parent, nil
+	}
+	return nil, &NotLoadedError{edge: "parent"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -37,6 +75,8 @@ func (*Work) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case work.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
+		case work.ForeignKeys[0]: // work_parent
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Work", columns[i])
 		}
@@ -82,9 +122,26 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				w.Priority = int(value.Int64)
 			}
+		case work.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field work_parent", value)
+			} else if value.Valid {
+				w.work_parent = new(int)
+				*w.work_parent = int(value.Int64)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryChildren queries the "children" edge of the Work entity.
+func (w *Work) QueryChildren() *WorkQuery {
+	return (&WorkClient{config: w.config}).QueryChildren(w)
+}
+
+// QueryParent queries the "parent" edge of the Work entity.
+func (w *Work) QueryParent() *WorkQuery {
+	return (&WorkClient{config: w.config}).QueryParent(w)
 }
 
 // Update returns a builder for updating this Work.

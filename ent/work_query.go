@@ -6,6 +6,7 @@ import (
 	"artsign/ent/predicate"
 	"artsign/ent/work"
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -24,6 +25,10 @@ type WorkQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Work
+	// eager-loading edges.
+	withChildren *WorkQuery
+	withParent   *WorkQuery
+	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,6 +63,50 @@ func (wq *WorkQuery) Unique(unique bool) *WorkQuery {
 func (wq *WorkQuery) Order(o ...OrderFunc) *WorkQuery {
 	wq.order = append(wq.order, o...)
 	return wq
+}
+
+// QueryChildren chains the current query on the "children" edge.
+func (wq *WorkQuery) QueryChildren() *WorkQuery {
+	query := &WorkQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(work.Table, work.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, work.ChildrenTable, work.ChildrenColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryParent chains the current query on the "parent" edge.
+func (wq *WorkQuery) QueryParent() *WorkQuery {
+	query := &WorkQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(work.Table, work.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, work.ParentTable, work.ParentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Work entity from the query.
@@ -236,15 +285,39 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 		return nil
 	}
 	return &WorkQuery{
-		config:     wq.config,
-		limit:      wq.limit,
-		offset:     wq.offset,
-		order:      append([]OrderFunc{}, wq.order...),
-		predicates: append([]predicate.Work{}, wq.predicates...),
+		config:       wq.config,
+		limit:        wq.limit,
+		offset:       wq.offset,
+		order:        append([]OrderFunc{}, wq.order...),
+		predicates:   append([]predicate.Work{}, wq.predicates...),
+		withChildren: wq.withChildren.Clone(),
+		withParent:   wq.withParent.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
 		path: wq.path,
 	}
+}
+
+// WithChildren tells the query-builder to eager-load the nodes that are connected to
+// the "children" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithChildren(opts ...func(*WorkQuery)) *WorkQuery {
+	query := &WorkQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withChildren = query
+	return wq
+}
+
+// WithParent tells the query-builder to eager-load the nodes that are connected to
+// the "parent" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithParent(opts ...func(*WorkQuery)) *WorkQuery {
+	query := &WorkQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withParent = query
+	return wq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -310,9 +383,20 @@ func (wq *WorkQuery) prepareQuery(ctx context.Context) error {
 
 func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 	var (
-		nodes = []*Work{}
-		_spec = wq.querySpec()
+		nodes       = []*Work{}
+		withFKs     = wq.withFKs
+		_spec       = wq.querySpec()
+		loadedTypes = [2]bool{
+			wq.withChildren != nil,
+			wq.withParent != nil,
+		}
 	)
+	if wq.withParent != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, work.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Work{config: wq.config}
 		nodes = append(nodes, node)
@@ -323,6 +407,7 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, wq.driver, _spec); err != nil {
@@ -331,6 +416,65 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := wq.withChildren; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Work)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Children = []*Work{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Work(func(s *sql.Selector) {
+			s.Where(sql.InValues(work.ChildrenColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.work_parent
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "work_parent" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "work_parent" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Children = append(node.Edges.Children, n)
+		}
+	}
+
+	if query := wq.withParent; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Work)
+		for i := range nodes {
+			if nodes[i].work_parent == nil {
+				continue
+			}
+			fk := *nodes[i].work_parent
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(work.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "work_parent" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Parent = n
+			}
+		}
+	}
+
 	return nodes, nil
 }
 

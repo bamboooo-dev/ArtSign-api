@@ -425,6 +425,91 @@ func (w *WorkQuery) Paginate(
 	return conn, nil
 }
 
+var (
+	// WorkOrderFieldText orders Work by text.
+	WorkOrderFieldText = &WorkOrderField{
+		field: work.FieldText,
+		toCursor: func(w *Work) Cursor {
+			return Cursor{
+				ID:    w.ID,
+				Value: w.Text,
+			}
+		},
+	}
+	// WorkOrderFieldCreatedAt orders Work by created_at.
+	WorkOrderFieldCreatedAt = &WorkOrderField{
+		field: work.FieldCreatedAt,
+		toCursor: func(w *Work) Cursor {
+			return Cursor{
+				ID:    w.ID,
+				Value: w.CreatedAt,
+			}
+		},
+	}
+	// WorkOrderFieldStatus orders Work by status.
+	WorkOrderFieldStatus = &WorkOrderField{
+		field: work.FieldStatus,
+		toCursor: func(w *Work) Cursor {
+			return Cursor{
+				ID:    w.ID,
+				Value: w.Status,
+			}
+		},
+	}
+	// WorkOrderFieldPriority orders Work by priority.
+	WorkOrderFieldPriority = &WorkOrderField{
+		field: work.FieldPriority,
+		toCursor: func(w *Work) Cursor {
+			return Cursor{
+				ID:    w.ID,
+				Value: w.Priority,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f WorkOrderField) String() string {
+	var str string
+	switch f.field {
+	case work.FieldText:
+		str = "TEXT"
+	case work.FieldCreatedAt:
+		str = "CREATED_AT"
+	case work.FieldStatus:
+		str = "STATUS"
+	case work.FieldPriority:
+		str = "PRIORITY"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f WorkOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *WorkOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("WorkOrderField %T must be a string", v)
+	}
+	switch str {
+	case "TEXT":
+		*f = *WorkOrderFieldText
+	case "CREATED_AT":
+		*f = *WorkOrderFieldCreatedAt
+	case "STATUS":
+		*f = *WorkOrderFieldStatus
+	case "PRIORITY":
+		*f = *WorkOrderFieldPriority
+	default:
+		return fmt.Errorf("%s is not a valid WorkOrderField", str)
+	}
+	return nil
+}
+
 // WorkOrderField defines the ordering field of Work.
 type WorkOrderField struct {
 	field    string

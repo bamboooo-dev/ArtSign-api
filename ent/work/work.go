@@ -22,8 +22,20 @@ const (
 	FieldStatus = "status"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
+	// EdgeChildren holds the string denoting the children edge name in mutations.
+	EdgeChildren = "children"
+	// EdgeParent holds the string denoting the parent edge name in mutations.
+	EdgeParent = "parent"
 	// Table holds the table name of the work in the database.
 	Table = "works"
+	// ChildrenTable is the table that holds the children relation/edge.
+	ChildrenTable = "works"
+	// ChildrenColumn is the table column denoting the children relation/edge.
+	ChildrenColumn = "work_parent"
+	// ParentTable is the table that holds the parent relation/edge.
+	ParentTable = "works"
+	// ParentColumn is the table column denoting the parent relation/edge.
+	ParentColumn = "work_parent"
 )
 
 // Columns holds all SQL columns for work fields.
@@ -35,10 +47,21 @@ var Columns = []string{
 	FieldPriority,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "works"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"work_parent",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -62,8 +85,8 @@ const DefaultStatus = StatusInProgress
 
 // Status values.
 const (
-	StatusInProgress Status = "in_progress"
-	StatusCompleted  Status = "completed"
+	StatusInProgress Status = "IN_PROGRESS"
+	StatusCompleted  Status = "COMPLETED"
 )
 
 func (s Status) String() string {

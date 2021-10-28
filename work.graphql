@@ -1,6 +1,10 @@
 # Maps a Time GraphQL scalar to a Go time.Time struct.
 scalar Time
 
+interface Node {
+  id: ID!
+}
+
 # Define an enumeration type and map it later to Ent enum (Go type).
 # https://graphql.org/learn/schema/#enumeration-types
 enum Status {
@@ -10,7 +14,7 @@ enum Status {
 
 # Define an object type and map it later to the generated Ent model.
 # https://graphql.org/learn/schema/#object-types-and-fields
-type Work {
+type Work implements Node {
   id: ID!
   createdAt: Time
   status: Status!
@@ -37,5 +41,51 @@ type Mutation {
 
 # Define a query for getting all works.
 type Query {
-  works: [Work!]
+  works(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+  ): WorkConnection
+  node(id: ID!): Node
+  nodes(ids: [ID!]!): [Node]!
+}
+
+scalar Cursor
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: Cursor
+  endCursor: Cursor
+}
+
+type WorkConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [WorkEdge]
+}
+
+type WorkEdge {
+  node: Work
+  cursor: Cursor!
+}
+
+# These enums are matched the entgql annotations in the ent/schema.
+enum WorkOrderField {
+  CREATED_AT
+  PRIORITY
+  STATUS
+  TEXT
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+input WorkOrder {
+  direction: OrderDirection!
+  field: WorkOrderField
 }

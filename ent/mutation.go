@@ -28,18 +28,23 @@ const (
 // WorkMutation represents an operation that mutates the Work nodes in the graph.
 type WorkMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	text          *string
-	created_at    *time.Time
-	status        *work.Status
-	priority      *int
-	addpriority   *int
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Work, error)
-	predicates    []predicate.Work
+	op              Op
+	typ             string
+	id              *int
+	text            *string
+	created_at      *time.Time
+	status          *work.Status
+	priority        *int
+	addpriority     *int
+	clearedFields   map[string]struct{}
+	children        map[int]struct{}
+	removedchildren map[int]struct{}
+	clearedchildren bool
+	parent          *int
+	clearedparent   bool
+	done            bool
+	oldValue        func(context.Context) (*Work, error)
+	predicates      []predicate.Work
 }
 
 var _ ent.Mutation = (*WorkMutation)(nil)
@@ -285,6 +290,99 @@ func (m *WorkMutation) ResetPriority() {
 	m.addpriority = nil
 }
 
+// AddChildIDs adds the "children" edge to the Work entity by ids.
+func (m *WorkMutation) AddChildIDs(ids ...int) {
+	if m.children == nil {
+		m.children = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.children[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChildren clears the "children" edge to the Work entity.
+func (m *WorkMutation) ClearChildren() {
+	m.clearedchildren = true
+}
+
+// ChildrenCleared reports if the "children" edge to the Work entity was cleared.
+func (m *WorkMutation) ChildrenCleared() bool {
+	return m.clearedchildren
+}
+
+// RemoveChildIDs removes the "children" edge to the Work entity by IDs.
+func (m *WorkMutation) RemoveChildIDs(ids ...int) {
+	if m.removedchildren == nil {
+		m.removedchildren = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.children, ids[i])
+		m.removedchildren[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChildren returns the removed IDs of the "children" edge to the Work entity.
+func (m *WorkMutation) RemovedChildrenIDs() (ids []int) {
+	for id := range m.removedchildren {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChildrenIDs returns the "children" edge IDs in the mutation.
+func (m *WorkMutation) ChildrenIDs() (ids []int) {
+	for id := range m.children {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChildren resets all changes to the "children" edge.
+func (m *WorkMutation) ResetChildren() {
+	m.children = nil
+	m.clearedchildren = false
+	m.removedchildren = nil
+}
+
+// SetParentID sets the "parent" edge to the Work entity by id.
+func (m *WorkMutation) SetParentID(id int) {
+	m.parent = &id
+}
+
+// ClearParent clears the "parent" edge to the Work entity.
+func (m *WorkMutation) ClearParent() {
+	m.clearedparent = true
+}
+
+// ParentCleared reports if the "parent" edge to the Work entity was cleared.
+func (m *WorkMutation) ParentCleared() bool {
+	return m.clearedparent
+}
+
+// ParentID returns the "parent" edge ID in the mutation.
+func (m *WorkMutation) ParentID() (id int, exists bool) {
+	if m.parent != nil {
+		return *m.parent, true
+	}
+	return
+}
+
+// ParentIDs returns the "parent" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParentID instead. It exists only for internal usage by the builders.
+func (m *WorkMutation) ParentIDs() (ids []int) {
+	if id := m.parent; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParent resets all changes to the "parent" edge.
+func (m *WorkMutation) ResetParent() {
+	m.parent = nil
+	m.clearedparent = false
+}
+
 // Where appends a list predicates to the WorkMutation builder.
 func (m *WorkMutation) Where(ps ...predicate.Work) {
 	m.predicates = append(m.predicates, ps...)
@@ -469,48 +567,102 @@ func (m *WorkMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.children != nil {
+		edges = append(edges, work.EdgeChildren)
+	}
+	if m.parent != nil {
+		edges = append(edges, work.EdgeParent)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *WorkMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case work.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.children))
+		for id := range m.children {
+			ids = append(ids, id)
+		}
+		return ids
+	case work.EdgeParent:
+		if id := m.parent; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.removedchildren != nil {
+		edges = append(edges, work.EdgeChildren)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case work.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.removedchildren))
+		for id := range m.removedchildren {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.clearedchildren {
+		edges = append(edges, work.EdgeChildren)
+	}
+	if m.clearedparent {
+		edges = append(edges, work.EdgeParent)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *WorkMutation) EdgeCleared(name string) bool {
+	switch name {
+	case work.EdgeChildren:
+		return m.clearedchildren
+	case work.EdgeParent:
+		return m.clearedparent
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *WorkMutation) ClearEdge(name string) error {
+	switch name {
+	case work.EdgeParent:
+		m.ClearParent()
+		return nil
+	}
 	return fmt.Errorf("unknown Work unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkMutation) ResetEdge(name string) error {
+	switch name {
+	case work.EdgeChildren:
+		m.ResetChildren()
+		return nil
+	case work.EdgeParent:
+		m.ResetParent()
+		return nil
+	}
 	return fmt.Errorf("unknown Work edge %s", name)
 }

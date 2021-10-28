@@ -51,7 +51,7 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		ID:     w.ID,
 		Type:   "Work",
 		Fields: make([]*Field, 4),
-		Edges:  make([]*Edge, 0),
+		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(w.Text); err != nil {
@@ -85,6 +85,26 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		Type:  "int",
 		Name:  "priority",
 		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Work",
+		Name: "children",
+	}
+	err = w.QueryChildren().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "Work",
+		Name: "parent",
+	}
+	err = w.QueryParent().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
 	}
 	return node, nil
 }
