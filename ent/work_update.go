@@ -7,6 +7,7 @@ import (
 	"artsign/ent/work"
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -23,6 +24,38 @@ type WorkUpdate struct {
 // Where appends a list predicates to the WorkUpdate builder.
 func (wu *WorkUpdate) Where(ps ...predicate.Work) *WorkUpdate {
 	wu.mutation.Where(ps...)
+	return wu
+}
+
+// SetTitle sets the "title" field.
+func (wu *WorkUpdate) SetTitle(s string) *WorkUpdate {
+	wu.mutation.SetTitle(s)
+	return wu
+}
+
+// SetDescription sets the "description" field.
+func (wu *WorkUpdate) SetDescription(s string) *WorkUpdate {
+	wu.mutation.SetDescription(s)
+	return wu
+}
+
+// SetImageURL sets the "image_url" field.
+func (wu *WorkUpdate) SetImageURL(s string) *WorkUpdate {
+	wu.mutation.SetImageURL(s)
+	return wu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (wu *WorkUpdate) SetUpdatedAt(t time.Time) *WorkUpdate {
+	wu.mutation.SetUpdatedAt(t)
+	return wu
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (wu *WorkUpdate) SetNillableUpdatedAt(t *time.Time) *WorkUpdate {
+	if t != nil {
+		wu.SetUpdatedAt(*t)
+	}
 	return wu
 }
 
@@ -195,6 +228,16 @@ func (wu *WorkUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (wu *WorkUpdate) check() error {
+	if v, ok := wu.mutation.Title(); ok {
+		if err := work.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf("ent: validator failed for field \"title\": %w", err)}
+		}
+	}
+	if v, ok := wu.mutation.Description(); ok {
+		if err := work.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf("ent: validator failed for field \"description\": %w", err)}
+		}
+	}
 	if v, ok := wu.mutation.Text(); ok {
 		if err := work.TextValidator(v); err != nil {
 			return &ValidationError{Name: "text", err: fmt.Errorf("ent: validator failed for field \"text\": %w", err)}
@@ -225,6 +268,34 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := wu.mutation.Title(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldTitle,
+		})
+	}
+	if value, ok := wu.mutation.Description(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldDescription,
+		})
+	}
+	if value, ok := wu.mutation.ImageURL(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldImageURL,
+		})
+	}
+	if value, ok := wu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: work.FieldUpdatedAt,
+		})
 	}
 	if value, ok := wu.mutation.Text(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -360,6 +431,38 @@ type WorkUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *WorkMutation
+}
+
+// SetTitle sets the "title" field.
+func (wuo *WorkUpdateOne) SetTitle(s string) *WorkUpdateOne {
+	wuo.mutation.SetTitle(s)
+	return wuo
+}
+
+// SetDescription sets the "description" field.
+func (wuo *WorkUpdateOne) SetDescription(s string) *WorkUpdateOne {
+	wuo.mutation.SetDescription(s)
+	return wuo
+}
+
+// SetImageURL sets the "image_url" field.
+func (wuo *WorkUpdateOne) SetImageURL(s string) *WorkUpdateOne {
+	wuo.mutation.SetImageURL(s)
+	return wuo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (wuo *WorkUpdateOne) SetUpdatedAt(t time.Time) *WorkUpdateOne {
+	wuo.mutation.SetUpdatedAt(t)
+	return wuo
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (wuo *WorkUpdateOne) SetNillableUpdatedAt(t *time.Time) *WorkUpdateOne {
+	if t != nil {
+		wuo.SetUpdatedAt(*t)
+	}
+	return wuo
 }
 
 // SetText sets the "text" field.
@@ -538,6 +641,16 @@ func (wuo *WorkUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (wuo *WorkUpdateOne) check() error {
+	if v, ok := wuo.mutation.Title(); ok {
+		if err := work.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf("ent: validator failed for field \"title\": %w", err)}
+		}
+	}
+	if v, ok := wuo.mutation.Description(); ok {
+		if err := work.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf("ent: validator failed for field \"description\": %w", err)}
+		}
+	}
 	if v, ok := wuo.mutation.Text(); ok {
 		if err := work.TextValidator(v); err != nil {
 			return &ValidationError{Name: "text", err: fmt.Errorf("ent: validator failed for field \"text\": %w", err)}
@@ -585,6 +698,34 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := wuo.mutation.Title(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldTitle,
+		})
+	}
+	if value, ok := wuo.mutation.Description(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldDescription,
+		})
+	}
+	if value, ok := wuo.mutation.ImageURL(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldImageURL,
+		})
+	}
+	if value, ok := wuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: work.FieldUpdatedAt,
+		})
 	}
 	if value, ok := wuo.mutation.Text(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

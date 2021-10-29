@@ -17,6 +17,19 @@ type Work struct {
 // Fields of the Work.
 func (Work) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("title").
+			NotEmpty().
+			Annotations(
+				entgql.OrderField("TITLE"),
+			),
+		field.Text("description").
+			NotEmpty(),
+		field.String("image_url"),
+		field.Time("updated_at").
+			Default(time.Now).
+			Annotations(
+				entgql.OrderField("UPDATED_AT"),
+			),
 		field.Text("text").
 			NotEmpty().
 			Annotations(

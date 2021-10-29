@@ -16,6 +16,14 @@ type Work struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// Title holds the value of the "title" field.
+	Title string `json:"title,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
+	// ImageURL holds the value of the "image_url" field.
+	ImageURL string `json:"image_url,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Text holds the value of the "text" field.
 	Text string `json:"text,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -71,9 +79,9 @@ func (*Work) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case work.FieldID, work.FieldPriority:
 			values[i] = new(sql.NullInt64)
-		case work.FieldText, work.FieldStatus:
+		case work.FieldTitle, work.FieldDescription, work.FieldImageURL, work.FieldText, work.FieldStatus:
 			values[i] = new(sql.NullString)
-		case work.FieldCreatedAt:
+		case work.FieldUpdatedAt, work.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case work.ForeignKeys[0]: // work_parent
 			values[i] = new(sql.NullInt64)
@@ -98,6 +106,30 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			w.ID = int(value.Int64)
+		case work.FieldTitle:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field title", values[i])
+			} else if value.Valid {
+				w.Title = value.String
+			}
+		case work.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				w.Description = value.String
+			}
+		case work.FieldImageURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field image_url", values[i])
+			} else if value.Valid {
+				w.ImageURL = value.String
+			}
+		case work.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				w.UpdatedAt = value.Time
+			}
 		case work.FieldText:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field text", values[i])
@@ -167,6 +199,14 @@ func (w *Work) String() string {
 	var builder strings.Builder
 	builder.WriteString("Work(")
 	builder.WriteString(fmt.Sprintf("id=%v", w.ID))
+	builder.WriteString(", title=")
+	builder.WriteString(w.Title)
+	builder.WriteString(", description=")
+	builder.WriteString(w.Description)
+	builder.WriteString(", image_url=")
+	builder.WriteString(w.ImageURL)
+	builder.WriteString(", updated_at=")
+	builder.WriteString(w.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", text=")
 	builder.WriteString(w.Text)
 	builder.WriteString(", created_at=")

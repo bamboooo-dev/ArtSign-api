@@ -31,6 +31,10 @@ type WorkMutation struct {
 	op              Op
 	typ             string
 	id              *int
+	title           *string
+	description     *string
+	image_url       *string
+	updated_at      *time.Time
 	text            *string
 	created_at      *time.Time
 	status          *work.Status
@@ -124,6 +128,150 @@ func (m *WorkMutation) ID() (id int, exists bool) {
 		return
 	}
 	return *m.id, true
+}
+
+// SetTitle sets the "title" field.
+func (m *WorkMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *WorkMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *WorkMutation) ResetTitle() {
+	m.title = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *WorkMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *WorkMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *WorkMutation) ResetDescription() {
+	m.description = nil
+}
+
+// SetImageURL sets the "image_url" field.
+func (m *WorkMutation) SetImageURL(s string) {
+	m.image_url = &s
+}
+
+// ImageURL returns the value of the "image_url" field in the mutation.
+func (m *WorkMutation) ImageURL() (r string, exists bool) {
+	v := m.image_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImageURL returns the old "image_url" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldImageURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldImageURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldImageURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImageURL: %w", err)
+	}
+	return oldValue.ImageURL, nil
+}
+
+// ResetImageURL resets all changes to the "image_url" field.
+func (m *WorkMutation) ResetImageURL() {
+	m.image_url = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *WorkMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *WorkMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *WorkMutation) ResetUpdatedAt() {
+	m.updated_at = nil
 }
 
 // SetText sets the "text" field.
@@ -402,7 +550,19 @@ func (m *WorkMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 8)
+	if m.title != nil {
+		fields = append(fields, work.FieldTitle)
+	}
+	if m.description != nil {
+		fields = append(fields, work.FieldDescription)
+	}
+	if m.image_url != nil {
+		fields = append(fields, work.FieldImageURL)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, work.FieldUpdatedAt)
+	}
 	if m.text != nil {
 		fields = append(fields, work.FieldText)
 	}
@@ -423,6 +583,14 @@ func (m *WorkMutation) Fields() []string {
 // schema.
 func (m *WorkMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case work.FieldTitle:
+		return m.Title()
+	case work.FieldDescription:
+		return m.Description()
+	case work.FieldImageURL:
+		return m.ImageURL()
+	case work.FieldUpdatedAt:
+		return m.UpdatedAt()
 	case work.FieldText:
 		return m.Text()
 	case work.FieldCreatedAt:
@@ -440,6 +608,14 @@ func (m *WorkMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *WorkMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case work.FieldTitle:
+		return m.OldTitle(ctx)
+	case work.FieldDescription:
+		return m.OldDescription(ctx)
+	case work.FieldImageURL:
+		return m.OldImageURL(ctx)
+	case work.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
 	case work.FieldText:
 		return m.OldText(ctx)
 	case work.FieldCreatedAt:
@@ -457,6 +633,34 @@ func (m *WorkMutation) OldField(ctx context.Context, name string) (ent.Value, er
 // type.
 func (m *WorkMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case work.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
+	case work.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case work.FieldImageURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImageURL(v)
+		return nil
+	case work.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
 	case work.FieldText:
 		v, ok := value.(string)
 		if !ok {
@@ -549,6 +753,18 @@ func (m *WorkMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *WorkMutation) ResetField(name string) error {
 	switch name {
+	case work.FieldTitle:
+		m.ResetTitle()
+		return nil
+	case work.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case work.FieldImageURL:
+		m.ResetImageURL()
+		return nil
+	case work.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
 	case work.FieldText:
 		m.ResetText()
 		return nil

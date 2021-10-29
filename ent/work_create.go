@@ -20,6 +20,38 @@ type WorkCreate struct {
 	hooks    []Hook
 }
 
+// SetTitle sets the "title" field.
+func (wc *WorkCreate) SetTitle(s string) *WorkCreate {
+	wc.mutation.SetTitle(s)
+	return wc
+}
+
+// SetDescription sets the "description" field.
+func (wc *WorkCreate) SetDescription(s string) *WorkCreate {
+	wc.mutation.SetDescription(s)
+	return wc
+}
+
+// SetImageURL sets the "image_url" field.
+func (wc *WorkCreate) SetImageURL(s string) *WorkCreate {
+	wc.mutation.SetImageURL(s)
+	return wc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (wc *WorkCreate) SetUpdatedAt(t time.Time) *WorkCreate {
+	wc.mutation.SetUpdatedAt(t)
+	return wc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (wc *WorkCreate) SetNillableUpdatedAt(t *time.Time) *WorkCreate {
+	if t != nil {
+		wc.SetUpdatedAt(*t)
+	}
+	return wc
+}
+
 // SetText sets the "text" field.
 func (wc *WorkCreate) SetText(s string) *WorkCreate {
 	wc.mutation.SetText(s)
@@ -173,6 +205,10 @@ func (wc *WorkCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (wc *WorkCreate) defaults() {
+	if _, ok := wc.mutation.UpdatedAt(); !ok {
+		v := work.DefaultUpdatedAt()
+		wc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := wc.mutation.CreatedAt(); !ok {
 		v := work.DefaultCreatedAt()
 		wc.mutation.SetCreatedAt(v)
@@ -189,6 +225,28 @@ func (wc *WorkCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (wc *WorkCreate) check() error {
+	if _, ok := wc.mutation.Title(); !ok {
+		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "title"`)}
+	}
+	if v, ok := wc.mutation.Title(); ok {
+		if err := work.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "title": %w`, err)}
+		}
+	}
+	if _, ok := wc.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "description"`)}
+	}
+	if v, ok := wc.mutation.Description(); ok {
+		if err := work.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "description": %w`, err)}
+		}
+	}
+	if _, ok := wc.mutation.ImageURL(); !ok {
+		return &ValidationError{Name: "image_url", err: errors.New(`ent: missing required field "image_url"`)}
+	}
+	if _, ok := wc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+	}
 	if _, ok := wc.mutation.Text(); !ok {
 		return &ValidationError{Name: "text", err: errors.New(`ent: missing required field "text"`)}
 	}
@@ -238,6 +296,38 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := wc.mutation.Title(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldTitle,
+		})
+		_node.Title = value
+	}
+	if value, ok := wc.mutation.Description(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldDescription,
+		})
+		_node.Description = value
+	}
+	if value, ok := wc.mutation.ImageURL(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldImageURL,
+		})
+		_node.ImageURL = value
+	}
+	if value, ok := wc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: work.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
+	}
 	if value, ok := wc.mutation.Text(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,

@@ -14,6 +14,14 @@ const (
 	Label = "work"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldTitle holds the string denoting the title field in the database.
+	FieldTitle = "title"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
+	// FieldImageURL holds the string denoting the image_url field in the database.
+	FieldImageURL = "image_url"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// FieldText holds the string denoting the text field in the database.
 	FieldText = "text"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -41,6 +49,10 @@ const (
 // Columns holds all SQL columns for work fields.
 var Columns = []string{
 	FieldID,
+	FieldTitle,
+	FieldDescription,
+	FieldImageURL,
+	FieldUpdatedAt,
 	FieldText,
 	FieldCreatedAt,
 	FieldStatus,
@@ -69,6 +81,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	TitleValidator func(string) error
+	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	DescriptionValidator func(string) error
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
 	// TextValidator is a validator for the "text" field. It is called by the builders before save.
 	TextValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.

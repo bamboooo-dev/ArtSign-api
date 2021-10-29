@@ -14,16 +14,28 @@ import (
 func init() {
 	workFields := schema.Work{}.Fields()
 	_ = workFields
+	// workDescTitle is the schema descriptor for title field.
+	workDescTitle := workFields[0].Descriptor()
+	// work.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	work.TitleValidator = workDescTitle.Validators[0].(func(string) error)
+	// workDescDescription is the schema descriptor for description field.
+	workDescDescription := workFields[1].Descriptor()
+	// work.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	work.DescriptionValidator = workDescDescription.Validators[0].(func(string) error)
+	// workDescUpdatedAt is the schema descriptor for updated_at field.
+	workDescUpdatedAt := workFields[3].Descriptor()
+	// work.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	work.DefaultUpdatedAt = workDescUpdatedAt.Default.(func() time.Time)
 	// workDescText is the schema descriptor for text field.
-	workDescText := workFields[0].Descriptor()
+	workDescText := workFields[4].Descriptor()
 	// work.TextValidator is a validator for the "text" field. It is called by the builders before save.
 	work.TextValidator = workDescText.Validators[0].(func(string) error)
 	// workDescCreatedAt is the schema descriptor for created_at field.
-	workDescCreatedAt := workFields[1].Descriptor()
+	workDescCreatedAt := workFields[5].Descriptor()
 	// work.DefaultCreatedAt holds the default value on creation for the created_at field.
 	work.DefaultCreatedAt = workDescCreatedAt.Default.(func() time.Time)
 	// workDescPriority is the schema descriptor for priority field.
-	workDescPriority := workFields[3].Descriptor()
+	workDescPriority := workFields[7].Descriptor()
 	// work.DefaultPriority holds the default value on creation for the priority field.
 	work.DefaultPriority = workDescPriority.Default.(int)
 }

@@ -17,9 +17,13 @@ enum Status {
 type Work implements Node {
   id: ID!
   createdAt: Time
+  updatedAt: Time
   status: Status!
   priority: Int!
   text: String!
+  title: String!
+  description: String!
+  image_url: String!
   parent: Work
   children: [Work!]
 }
@@ -68,6 +72,8 @@ type WorkEdge {
 # These enums are matched the entgql annotations in the ent/schema.
 enum WorkOrderField {
   CREATED_AT
+  UPDATED_AT
+  TITLE
   PRIORITY
   STATUS
   TEXT
@@ -87,6 +93,8 @@ input UpdateWorkInput {
   status: Status
   priority: Int
   text: String
+  title: String
+  description: String
   parentID: ID
   clearParent: Boolean
   addChildIDs: [ID!]
@@ -97,6 +105,8 @@ input CreateWorkInput {
   status: Status! = IN_PROGRESS
   priority: Int
   text: String!
+  title: String!
+  description: String!
   parentID: ID
   childIDs: [ID!]
 }

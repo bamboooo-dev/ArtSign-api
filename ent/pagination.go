@@ -426,6 +426,26 @@ func (w *WorkQuery) Paginate(
 }
 
 var (
+	// WorkOrderFieldTitle orders Work by title.
+	WorkOrderFieldTitle = &WorkOrderField{
+		field: work.FieldTitle,
+		toCursor: func(w *Work) Cursor {
+			return Cursor{
+				ID:    w.ID,
+				Value: w.Title,
+			}
+		},
+	}
+	// WorkOrderFieldUpdatedAt orders Work by updated_at.
+	WorkOrderFieldUpdatedAt = &WorkOrderField{
+		field: work.FieldUpdatedAt,
+		toCursor: func(w *Work) Cursor {
+			return Cursor{
+				ID:    w.ID,
+				Value: w.UpdatedAt,
+			}
+		},
+	}
 	// WorkOrderFieldText orders Work by text.
 	WorkOrderFieldText = &WorkOrderField{
 		field: work.FieldText,
@@ -472,6 +492,10 @@ var (
 func (f WorkOrderField) String() string {
 	var str string
 	switch f.field {
+	case work.FieldTitle:
+		str = "TITLE"
+	case work.FieldUpdatedAt:
+		str = "UPDATED_AT"
 	case work.FieldText:
 		str = "TEXT"
 	case work.FieldCreatedAt:
@@ -496,6 +520,10 @@ func (f *WorkOrderField) UnmarshalGQL(v interface{}) error {
 		return fmt.Errorf("WorkOrderField %T must be a string", v)
 	}
 	switch str {
+	case "TITLE":
+		*f = *WorkOrderFieldTitle
+	case "UPDATED_AT":
+		*f = *WorkOrderFieldUpdatedAt
 	case "TEXT":
 		*f = *WorkOrderFieldText
 	case "CREATED_AT":

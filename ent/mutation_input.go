@@ -9,16 +9,26 @@ import (
 
 // CreateWorkInput represents a mutation input for creating works.
 type CreateWorkInput struct {
-	Text      string
-	CreatedAt *time.Time
-	Status    *work.Status
-	Priority  *int
-	ChildIDs  []int
-	ParentID  *int
+	Title       string
+	Description string
+	ImageURL    string
+	UpdatedAt   *time.Time
+	Text        string
+	CreatedAt   *time.Time
+	Status      *work.Status
+	Priority    *int
+	ChildIDs    []int
+	ParentID    *int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
 func (i *CreateWorkInput) Mutate(m *WorkCreate) {
+	m.SetTitle(i.Title)
+	m.SetDescription(i.Description)
+	m.SetImageURL(i.ImageURL)
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
 	m.SetText(i.Text)
 	if v := i.CreatedAt; v != nil {
 		m.SetCreatedAt(*v)
@@ -45,6 +55,10 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 
 // UpdateWorkInput represents a mutation input for updating works.
 type UpdateWorkInput struct {
+	Title          *string
+	Description    *string
+	ImageURL       *string
+	UpdatedAt      *time.Time
 	Text           *string
 	Status         *work.Status
 	Priority       *int
@@ -56,6 +70,18 @@ type UpdateWorkInput struct {
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
 func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
+	if v := i.Title; v != nil {
+		m.SetTitle(*v)
+	}
+	if v := i.Description; v != nil {
+		m.SetDescription(*v)
+	}
+	if v := i.ImageURL; v != nil {
+		m.SetImageURL(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
 	if v := i.Text; v != nil {
 		m.SetText(*v)
 	}

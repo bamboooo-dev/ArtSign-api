@@ -326,12 +326,12 @@ func (wq *WorkQuery) WithParent(opts ...func(*WorkQuery)) *WorkQuery {
 // Example:
 //
 //	var v []struct {
-//		Text string `json:"text,omitempty"`
+//		Title string `json:"title,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Work.Query().
-//		GroupBy(work.FieldText).
+//		GroupBy(work.FieldTitle).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -353,11 +353,11 @@ func (wq *WorkQuery) GroupBy(field string, fields ...string) *WorkGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Text string `json:"text,omitempty"`
+//		Title string `json:"title,omitempty"`
 //	}
 //
 //	client.Work.Query().
-//		Select(work.FieldText).
+//		Select(work.FieldTitle).
 //		Scan(ctx, &v)
 //
 func (wq *WorkQuery) Select(fields ...string) *WorkSelect {
