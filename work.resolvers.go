@@ -9,7 +9,8 @@ import (
 )
 
 func (r *mutationResolver) CreateWork(ctx context.Context, work WorkInput) (*ent.Work, error) {
-	return r.client.Work.Create().
+	client := ent.FromContext(ctx)
+	return client.Work.Create().
 		SetText(work.Text).
 		SetStatus(work.Status).
 		SetNillablePriority(work.Priority). // Set the "priority" field if provided.
