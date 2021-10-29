@@ -24,19 +24,12 @@ type Work implements Node {
   children: [Work!]
 }
 
-# Define an input type for the mutation below.
-# https://graphql.org/learn/schema/#input-types
-input WorkInput {
-  status: Status! = IN_PROGRESS
-  priority: Int
-  text: String!
-  parent: ID
-}
-
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
-  createWork(work: WorkInput!): Work!
+  createWork(input: CreateWorkInput!): Work!
+  updateWork(id: ID!, input: UpdateWorkInput!): Work!
+  updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
 }
 
 # Define a query for getting all works.
@@ -88,4 +81,22 @@ enum OrderDirection {
 input WorkOrder {
   direction: OrderDirection!
   field: WorkOrderField
+}
+
+input UpdateWorkInput {
+  status: Status
+  priority: Int
+  text: String
+  parentID: ID
+  clearParent: Boolean
+  addChildIDs: [ID!]
+  removeChildIDs: [ID!]
+}
+
+input CreateWorkInput {
+  status: Status! = IN_PROGRESS
+  priority: Int
+  text: String!
+  parentID: ID
+  childIDs: [ID!]
 }

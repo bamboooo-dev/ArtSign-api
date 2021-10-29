@@ -5,17 +5,27 @@ package artsign
 
 import (
 	"artsign/ent"
+	"artsign/ent/work"
 	"context"
 )
 
-func (r *mutationResolver) CreateWork(ctx context.Context, work WorkInput) (*ent.Work, error) {
-	client := ent.FromContext(ctx)
-	return client.Work.Create().
-		SetText(work.Text).
-		SetStatus(work.Status).
-		SetNillablePriority(work.Priority). // Set the "priority" field if provided.
-		SetNillableParentID(work.Parent).   // Set the "parent_id" field if provided.
+func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkInput) (*ent.Work, error) {
+	return ent.FromContext(ctx).Work.
+		Create().
+		SetInput(input).
 		Save(ctx)
+}
+
+func (r *mutationResolver) UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error) {
+	return ent.FromContext(ctx).Work.UpdateOneID(id).SetInput(input).Save(ctx)
+}
+
+func (r *mutationResolver) UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error) {
+	client := ent.FromContext(ctx)
+	if err := client.Work.Update().Where(work.IDIn(ids...)).SetInput(input).Exec(ctx); err != nil {
+		return nil, err
+	}
+	return client.Work.Query().Where(work.IDIn(ids...)).All(ctx)
 }
 
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
