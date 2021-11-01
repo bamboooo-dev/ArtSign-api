@@ -3,9 +3,6 @@
 package work
 
 import (
-	"fmt"
-	"io"
-	"strconv"
 	"time"
 )
 
@@ -20,30 +17,21 @@ const (
 	FieldDescription = "description"
 	// FieldImageURL holds the string denoting the image_url field in the database.
 	FieldImageURL = "image_url"
-	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
-	FieldUpdatedAt = "updated_at"
-	// FieldText holds the string denoting the text field in the database.
-	FieldText = "text"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
-	// FieldPriority holds the string denoting the priority field in the database.
-	FieldPriority = "priority"
-	// EdgeChildren holds the string denoting the children edge name in mutations.
-	EdgeChildren = "children"
-	// EdgeParent holds the string denoting the parent edge name in mutations.
-	EdgeParent = "parent"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// EdgeCategory holds the string denoting the category edge name in mutations.
+	EdgeCategory = "category"
 	// Table holds the table name of the work in the database.
 	Table = "works"
-	// ChildrenTable is the table that holds the children relation/edge.
-	ChildrenTable = "works"
-	// ChildrenColumn is the table column denoting the children relation/edge.
-	ChildrenColumn = "work_parent"
-	// ParentTable is the table that holds the parent relation/edge.
-	ParentTable = "works"
-	// ParentColumn is the table column denoting the parent relation/edge.
-	ParentColumn = "work_parent"
+	// CategoryTable is the table that holds the category relation/edge.
+	CategoryTable = "works"
+	// CategoryInverseTable is the table name for the Category entity.
+	// It exists in this package in order to avoid circular dependency with the "category" package.
+	CategoryInverseTable = "categories"
+	// CategoryColumn is the table column denoting the category relation/edge.
+	CategoryColumn = "category_works"
 )
 
 // Columns holds all SQL columns for work fields.
@@ -52,17 +40,14 @@ var Columns = []string{
 	FieldTitle,
 	FieldDescription,
 	FieldImageURL,
-	FieldUpdatedAt,
-	FieldText,
 	FieldCreatedAt,
-	FieldStatus,
-	FieldPriority,
+	FieldUpdatedAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "works"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"work_parent",
+	"category_works",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -85,56 +70,8 @@ var (
 	TitleValidator func(string) error
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
-	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
-	DefaultUpdatedAt func() time.Time
-	// TextValidator is a validator for the "text" field. It is called by the builders before save.
-	TextValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// DefaultPriority holds the default value on creation for the "priority" field.
-	DefaultPriority int
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
 )
-
-// Status defines the type for the "status" enum field.
-type Status string
-
-// StatusInProgress is the default value of the Status enum.
-const DefaultStatus = StatusInProgress
-
-// Status values.
-const (
-	StatusInProgress Status = "IN_PROGRESS"
-	StatusCompleted  Status = "COMPLETED"
-)
-
-func (s Status) String() string {
-	return string(s)
-}
-
-// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s Status) error {
-	switch s {
-	case StatusInProgress, StatusCompleted:
-		return nil
-	default:
-		return fmt.Errorf("work: invalid enum value for status field: %q", s)
-	}
-}
-
-// MarshalGQL implements graphql.Marshaler interface.
-func (s Status) MarshalGQL(w io.Writer) {
-	io.WriteString(w, strconv.Quote(s.String()))
-}
-
-// UnmarshalGQL implements graphql.Unmarshaler interface.
-func (s *Status) UnmarshalGQL(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("enum %T must be a string", val)
-	}
-	*s = Status(str)
-	if err := StatusValidator(*s); err != nil {
-		return fmt.Errorf("%s is not a valid Status", str)
-	}
-	return nil
-}

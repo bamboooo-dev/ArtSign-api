@@ -8,18 +8,26 @@ import (
 )
 
 var (
+	// CategoriesColumns holds the columns for the "categories" table.
+	CategoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+	}
+	// CategoriesTable holds the schema information for the "categories" table.
+	CategoriesTable = &schema.Table{
+		Name:       "categories",
+		Columns:    CategoriesColumns,
+		PrimaryKey: []*schema.Column{CategoriesColumns[0]},
+	}
 	// WorksColumns holds the columns for the "works" table.
 	WorksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
 		{Name: "image_url", Type: field.TypeString},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "text", Type: field.TypeString, Size: 2147483647},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"IN_PROGRESS", "COMPLETED"}, Default: "IN_PROGRESS"},
-		{Name: "priority", Type: field.TypeInt, Default: 0},
-		{Name: "work_parent", Type: field.TypeInt, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "category_works", Type: field.TypeInt, Nullable: true},
 	}
 	// WorksTable holds the schema information for the "works" table.
 	WorksTable = &schema.Table{
@@ -28,19 +36,20 @@ var (
 		PrimaryKey: []*schema.Column{WorksColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "works_works_parent",
-				Columns:    []*schema.Column{WorksColumns[9]},
-				RefColumns: []*schema.Column{WorksColumns[0]},
+				Symbol:     "works_categories_works",
+				Columns:    []*schema.Column{WorksColumns[6]},
+				RefColumns: []*schema.Column{CategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CategoriesTable,
 		WorksTable,
 	}
 )
 
 func init() {
-	WorksTable.ForeignKeys[0].RefTable = WorksTable
+	WorksTable.ForeignKeys[0].RefTable = CategoriesTable
 }

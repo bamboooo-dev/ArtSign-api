@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"artsign/ent/category"
 	"artsign/ent/work"
 	"context"
 	"encoding/json"
@@ -46,12 +47,41 @@ type Edge struct {
 	IDs  []int  `json:"ids,omitempty"`  // node ids (where this edge point to).
 }
 
+func (c *Category) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     c.ID,
+		Type:   "Category",
+		Fields: make([]*Field, 1),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(c.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Work",
+		Name: "works",
+	}
+	err = c.QueryWorks().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
 func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     w.ID,
 		Type:   "Work",
-		Fields: make([]*Field, 8),
-		Edges:  make([]*Edge, 2),
+		Fields: make([]*Field, 5),
+		Edges:  make([]*Edge, 1),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(w.Title); err != nil {
@@ -78,63 +108,29 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "image_url",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(w.UpdatedAt); err != nil {
+	if buf, err = json.Marshal(w.CreatedAt); err != nil {
 		return nil, err
 	}
 	node.Fields[3] = &Field{
 		Type:  "time.Time",
-		Name:  "updated_at",
-		Value: string(buf),
-	}
-	if buf, err = json.Marshal(w.Text); err != nil {
-		return nil, err
-	}
-	node.Fields[4] = &Field{
-		Type:  "string",
-		Name:  "text",
-		Value: string(buf),
-	}
-	if buf, err = json.Marshal(w.CreatedAt); err != nil {
-		return nil, err
-	}
-	node.Fields[5] = &Field{
-		Type:  "time.Time",
 		Name:  "created_at",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(w.Status); err != nil {
+	if buf, err = json.Marshal(w.UpdatedAt); err != nil {
 		return nil, err
 	}
-	node.Fields[6] = &Field{
-		Type:  "work.Status",
-		Name:  "status",
-		Value: string(buf),
-	}
-	if buf, err = json.Marshal(w.Priority); err != nil {
-		return nil, err
-	}
-	node.Fields[7] = &Field{
-		Type:  "int",
-		Name:  "priority",
+	node.Fields[4] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{
-		Type: "Work",
-		Name: "children",
+		Type: "Category",
+		Name: "category",
 	}
-	err = w.QueryChildren().
-		Select(work.FieldID).
+	err = w.QueryCategory().
+		Select(category.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
-	if err != nil {
-		return nil, err
-	}
-	node.Edges[1] = &Edge{
-		Type: "Work",
-		Name: "parent",
-	}
-	err = w.QueryParent().
-		Select(work.FieldID).
-		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +204,15 @@ func (c *Client) Noder(ctx context.Context, id int, opts ...NodeOption) (_ Noder
 
 func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error) {
 	switch table {
+	case category.Table:
+		n, err := c.Category.Query().
+			Where(category.ID(id)).
+			CollectFields(ctx, "Category").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
 	case work.Table:
 		n, err := c.Work.Query().
 			Where(work.ID(id)).
@@ -290,6 +295,19 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		idmap[id] = append(idmap[id], &noders[i])
 	}
 	switch table {
+	case category.Table:
+		nodes, err := c.Category.Query().
+			Where(category.IDIn(ids...)).
+			CollectFields(ctx, "Category").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
 	case work.Table:
 		nodes, err := c.Work.Query().
 			Where(work.IDIn(ids...)).

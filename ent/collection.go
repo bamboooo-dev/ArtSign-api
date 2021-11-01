@@ -9,6 +9,18 @@ import (
 )
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (c *CategoryQuery) CollectFields(ctx context.Context, satisfies ...string) *CategoryQuery {
+	if fc := graphql.GetFieldContext(ctx); fc != nil {
+		c = c.collectField(graphql.GetOperationContext(ctx), fc.Field, satisfies...)
+	}
+	return c
+}
+
+func (c *CategoryQuery) collectField(ctx *graphql.OperationContext, field graphql.CollectedField, satisfies ...string) *CategoryQuery {
+	return c
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (w *WorkQuery) CollectFields(ctx context.Context, satisfies ...string) *WorkQuery {
 	if fc := graphql.GetFieldContext(ctx); fc != nil {
 		w = w.collectField(graphql.GetOperationContext(ctx), fc.Field, satisfies...)
@@ -17,17 +29,5 @@ func (w *WorkQuery) CollectFields(ctx context.Context, satisfies ...string) *Wor
 }
 
 func (w *WorkQuery) collectField(ctx *graphql.OperationContext, field graphql.CollectedField, satisfies ...string) *WorkQuery {
-	for _, field := range graphql.CollectFields(ctx, field.Selections, satisfies) {
-		switch field.Name {
-		case "children":
-			w = w.WithChildren(func(query *WorkQuery) {
-				query.collectField(ctx, field)
-			})
-		case "parent":
-			w = w.WithParent(func(query *WorkQuery) {
-				query.collectField(ctx, field)
-			})
-		}
-	}
 	return w
 }

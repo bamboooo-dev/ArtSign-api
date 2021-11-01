@@ -4,7 +4,6 @@ package artsign
 
 import (
 	"artsign/ent"
-	"artsign/ent/work"
 	"bytes"
 	"context"
 	"errors"
@@ -46,10 +45,15 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Category struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
+	}
+
 	Mutation struct {
-		CreateWork  func(childComplexity int, input ent.CreateWorkInput) int
-		UpdateWork  func(childComplexity int, id int, input ent.UpdateWorkInput) int
-		UpdateWorks func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
+		CreateWork  func(childComplexity int, input ent.CreateWorkInput, categoryID int) int
+		UpdateWork  func(childComplexity int, id int, input ent.UpdateWorkInput, categoryID *int) int
+		UpdateWorks func(childComplexity int, ids []int, input ent.UpdateWorkInput, categoryID *int) int
 	}
 
 	PageInfo struct {
@@ -66,15 +70,11 @@ type ComplexityRoot struct {
 	}
 
 	Work struct {
-		Children    func(childComplexity int) int
+		Category    func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		ImageURL    func(childComplexity int) int
-		Parent      func(childComplexity int) int
-		Priority    func(childComplexity int) int
-		Status      func(childComplexity int) int
-		Text        func(childComplexity int) int
 		Title       func(childComplexity int) int
 		UpdatedAt   func(childComplexity int) int
 	}
@@ -92,9 +92,9 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateWork(ctx context.Context, input ent.CreateWorkInput) (*ent.Work, error)
-	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error)
-	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error)
+	CreateWork(ctx context.Context, input ent.CreateWorkInput, categoryID int) (*ent.Work, error)
+	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput, categoryID *int) (*ent.Work, error)
+	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput, categoryID *int) ([]*ent.Work, error)
 }
 type QueryResolver interface {
 	Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
@@ -117,6 +117,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Category.id":
+		if e.complexity.Category.ID == nil {
+			break
+		}
+
+		return e.complexity.Category.ID(childComplexity), true
+
+	case "Category.name":
+		if e.complexity.Category.Name == nil {
+			break
+		}
+
+		return e.complexity.Category.Name(childComplexity), true
+
 	case "Mutation.createWork":
 		if e.complexity.Mutation.CreateWork == nil {
 			break
@@ -127,7 +141,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput)), true
+		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput), args["categoryID"].(int)), true
 
 	case "Mutation.updateWork":
 		if e.complexity.Mutation.UpdateWork == nil {
@@ -139,7 +153,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateWork(childComplexity, args["id"].(int), args["input"].(ent.UpdateWorkInput)), true
+		return e.complexity.Mutation.UpdateWork(childComplexity, args["id"].(int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int)), true
 
 	case "Mutation.updateWorks":
 		if e.complexity.Mutation.UpdateWorks == nil {
@@ -151,7 +165,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateWorks(childComplexity, args["ids"].([]int), args["input"].(ent.UpdateWorkInput)), true
+		return e.complexity.Mutation.UpdateWorks(childComplexity, args["ids"].([]int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -217,12 +231,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Works(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.WorkOrder)), true
 
-	case "Work.children":
-		if e.complexity.Work.Children == nil {
+	case "Work.category":
+		if e.complexity.Work.Category == nil {
 			break
 		}
 
-		return e.complexity.Work.Children(childComplexity), true
+		return e.complexity.Work.Category(childComplexity), true
 
 	case "Work.createdAt":
 		if e.complexity.Work.CreatedAt == nil {
@@ -251,34 +265,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Work.ImageURL(childComplexity), true
-
-	case "Work.parent":
-		if e.complexity.Work.Parent == nil {
-			break
-		}
-
-		return e.complexity.Work.Parent(childComplexity), true
-
-	case "Work.priority":
-		if e.complexity.Work.Priority == nil {
-			break
-		}
-
-		return e.complexity.Work.Priority(childComplexity), true
-
-	case "Work.status":
-		if e.complexity.Work.Status == nil {
-			break
-		}
-
-		return e.complexity.Work.Status(childComplexity), true
-
-	case "Work.text":
-		if e.complexity.Work.Text == nil {
-			break
-		}
-
-		return e.complexity.Work.Text(childComplexity), true
 
 	case "Work.title":
 		if e.complexity.Work.Title == nil {
@@ -413,22 +399,23 @@ type Work implements Node {
   id: ID!
   createdAt: Time
   updatedAt: Time
-  status: Status!
-  priority: Int!
-  text: String!
   title: String!
   description: String!
   image_url: String!
-  parent: Work
-  children: [Work!]
+  category: Category!
+}
+
+type Category implements Node {
+  id: ID!
+  name: String!
 }
 
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
-  createWork(input: CreateWorkInput!): Work!
-  updateWork(id: ID!, input: UpdateWorkInput!): Work!
-  updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
+  createWork(input: CreateWorkInput!, categoryID: ID!): Work!
+  updateWork(id: ID!, input: UpdateWorkInput!, categoryID: ID): Work!
+  updateWorks(ids: [ID!]!, input: UpdateWorkInput!, categoryID: ID): [Work!]!
 }
 
 # Define a query for getting all works.
@@ -485,25 +472,13 @@ input WorkOrder {
 }
 
 input UpdateWorkInput {
-  status: Status
-  priority: Int
-  text: String
   title: String
   description: String
-  parentID: ID
-  clearParent: Boolean
-  addChildIDs: [ID!]
-  removeChildIDs: [ID!]
 }
 
 input CreateWorkInput {
-  status: Status! = IN_PROGRESS
-  priority: Int
-  text: String!
   title: String!
   description: String!
-  parentID: ID
-  childIDs: [ID!]
 }
 `, BuiltIn: false},
 }
@@ -525,6 +500,15 @@ func (ec *executionContext) field_Mutation_createWork_args(ctx context.Context, 
 		}
 	}
 	args["input"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["categoryID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
+		arg1, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryID"] = arg1
 	return args, nil
 }
 
@@ -549,6 +533,15 @@ func (ec *executionContext) field_Mutation_updateWork_args(ctx context.Context, 
 		}
 	}
 	args["input"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["categoryID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
+		arg2, err = ec.unmarshalOID2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryID"] = arg2
 	return args, nil
 }
 
@@ -573,6 +566,15 @@ func (ec *executionContext) field_Mutation_updateWorks_args(ctx context.Context,
 		}
 	}
 	args["input"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["categoryID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
+		arg2, err = ec.unmarshalOID2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryID"] = arg2
 	return args, nil
 }
 
@@ -710,6 +712,76 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Category_id(ctx context.Context, field graphql.CollectedField, obj *ent.Category) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Category",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Category_name(ctx context.Context, field graphql.CollectedField, obj *ent.Category) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Category",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createWork(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -735,7 +807,7 @@ func (ec *executionContext) _Mutation_createWork(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWork(rctx, args["input"].(ent.CreateWorkInput))
+		return ec.resolvers.Mutation().CreateWork(rctx, args["input"].(ent.CreateWorkInput), args["categoryID"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -777,7 +849,7 @@ func (ec *executionContext) _Mutation_updateWork(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateWork(rctx, args["id"].(int), args["input"].(ent.UpdateWorkInput))
+		return ec.resolvers.Mutation().UpdateWork(rctx, args["id"].(int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -819,7 +891,7 @@ func (ec *executionContext) _Mutation_updateWorks(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateWorks(rctx, args["ids"].([]int), args["input"].(ent.UpdateWorkInput))
+		return ec.resolvers.Mutation().UpdateWorks(rctx, args["ids"].([]int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1260,111 +1332,6 @@ func (ec *executionContext) _Work_updatedAt(ctx context.Context, field graphql.C
 	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Work_status(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Work",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(work.Status)
-	fc.Result = res
-	return ec.marshalNStatus2artsignᚋentᚋworkᚐStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Work_priority(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Work",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Priority, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Work_text(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Work",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Text, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Work_title(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1470,7 +1437,7 @@ func (ec *executionContext) _Work_image_url(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Work_parent(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+func (ec *executionContext) _Work_category(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1488,50 +1455,21 @@ func (ec *executionContext) _Work_parent(ctx context.Context, field graphql.Coll
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Parent(ctx)
+		return obj.Category(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*ent.Work)
-	fc.Result = res
-	return ec.marshalOWork2ᚖartsignᚋentᚐWork(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Work_children(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
 		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Work",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Children(ctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*ent.Work)
+	res := resTmp.(*ent.Category)
 	fc.Result = res
-	return ec.marshalOWork2ᚕᚖartsignᚋentᚐWorkᚄ(ctx, field.Selections, res)
+	return ec.marshalNCategory2ᚖartsignᚋentᚐCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.WorkConnection) (ret graphql.Marshaler) {
@@ -2832,36 +2770,8 @@ func (ec *executionContext) unmarshalInputCreateWorkInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	if _, present := asMap["status"]; !present {
-		asMap["status"] = "IN_PROGRESS"
-	}
-
 	for k, v := range asMap {
 		switch k {
-		case "status":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			it.Status, err = ec.unmarshalNStatus2ᚖartsignᚋentᚋworkᚐStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "priority":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
-			it.Priority, err = ec.unmarshalOInt2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "text":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
-			it.Text, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "title":
 			var err error
 
@@ -2875,22 +2785,6 @@ func (ec *executionContext) unmarshalInputCreateWorkInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "parentID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentID"))
-			it.ParentID, err = ec.unmarshalOID2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "childIDs":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("childIDs"))
-			it.ChildIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2909,30 +2803,6 @@ func (ec *executionContext) unmarshalInputUpdateWorkInput(ctx context.Context, o
 
 	for k, v := range asMap {
 		switch k {
-		case "status":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			it.Status, err = ec.unmarshalOStatus2ᚖartsignᚋentᚋworkᚐStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "priority":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
-			it.Priority, err = ec.unmarshalOInt2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "text":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
-			it.Text, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "title":
 			var err error
 
@@ -2946,38 +2816,6 @@ func (ec *executionContext) unmarshalInputUpdateWorkInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "parentID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentID"))
-			it.ParentID, err = ec.unmarshalOID2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "clearParent":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearParent"))
-			it.ClearParent, err = ec.unmarshalOBoolean2bool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "addChildIDs":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addChildIDs"))
-			it.AddChildIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "removeChildIDs":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeChildIDs"))
-			it.RemoveChildIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3031,6 +2869,11 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Work(ctx, sel, obj)
+	case *ent.Category:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Category(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -3039,6 +2882,38 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var categoryImplementors = []string{"Category", "Node"}
+
+func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet, obj *ent.Category) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, categoryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Category")
+		case "id":
+			out.Values[i] = ec._Category_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Category_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var mutationImplementors = []string{"Mutation"}
 
@@ -3203,21 +3078,6 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Work_createdAt(ctx, field, obj)
 		case "updatedAt":
 			out.Values[i] = ec._Work_updatedAt(ctx, field, obj)
-		case "status":
-			out.Values[i] = ec._Work_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "priority":
-			out.Values[i] = ec._Work_priority(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "text":
-			out.Values[i] = ec._Work_text(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "title":
 			out.Values[i] = ec._Work_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3233,7 +3093,7 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "parent":
+		case "category":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -3241,18 +3101,10 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Work_parent(ctx, field, obj)
-				return res
-			})
-		case "children":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Work_children(ctx, field, obj)
+				res = ec._Work_category(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		default:
@@ -3594,6 +3446,16 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNCategory2ᚖartsignᚋentᚐCategory(ctx context.Context, sel ast.SelectionSet, v *ent.Category) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Category(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNCreateWorkInput2artsignᚋentᚐCreateWorkInput(ctx context.Context, v interface{}) (ent.CreateWorkInput, error) {
 	res, err := ec.unmarshalInputCreateWorkInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3725,32 +3587,6 @@ func (ec *executionContext) marshalNOrderDirection2artsignᚋentᚐOrderDirectio
 
 func (ec *executionContext) marshalNPageInfo2artsignᚋentᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v ent.PageInfo) graphql.Marshaler {
 	return ec._PageInfo(ctx, sel, &v)
-}
-
-func (ec *executionContext) unmarshalNStatus2artsignᚋentᚋworkᚐStatus(ctx context.Context, v interface{}) (work.Status, error) {
-	var res work.Status
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNStatus2artsignᚋentᚋworkᚐStatus(ctx context.Context, sel ast.SelectionSet, v work.Status) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNStatus2ᚖartsignᚋentᚋworkᚐStatus(ctx context.Context, v interface{}) (*work.Status, error) {
-	var res = new(work.Status)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNStatus2ᚖartsignᚋentᚋworkᚐStatus(ctx context.Context, sel ast.SelectionSet, v *work.Status) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -4128,48 +3964,6 @@ func (ec *executionContext) marshalOCursor2ᚖartsignᚋentᚐCursor(ctx context
 	return v
 }
 
-func (ec *executionContext) unmarshalOID2ᚕintᚄ(ctx context.Context, v interface{}) ([]int, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]int, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2int(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOID2ᚕintᚄ(ctx context.Context, sel ast.SelectionSet, v []int) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNID2int(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) unmarshalOID2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -4207,22 +4001,6 @@ func (ec *executionContext) marshalONode2artsignᚋentᚐNoder(ctx context.Conte
 	return ec._Node(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOStatus2ᚖartsignᚋentᚋworkᚐStatus(ctx context.Context, v interface{}) (*work.Status, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(work.Status)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOStatus2ᚖartsignᚋentᚋworkᚐStatus(ctx context.Context, sel ast.SelectionSet, v *work.Status) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4254,53 +4032,6 @@ func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v in
 
 func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	return graphql.MarshalTime(v)
-}
-
-func (ec *executionContext) marshalOWork2ᚕᚖartsignᚋentᚐWorkᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.Work) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNWork2ᚖartsignᚋentᚐWork(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalOWork2ᚖartsignᚋentᚐWork(ctx context.Context, sel ast.SelectionSet, v *ent.Work) graphql.Marshaler {

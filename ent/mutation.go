@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"artsign/ent/category"
 	"artsign/ent/predicate"
 	"artsign/ent/work"
 	"context"
@@ -22,8 +23,394 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeWork = "Work"
+	TypeCategory = "Category"
+	TypeWork     = "Work"
 )
+
+// CategoryMutation represents an operation that mutates the Category nodes in the graph.
+type CategoryMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	name          *string
+	clearedFields map[string]struct{}
+	works         map[int]struct{}
+	removedworks  map[int]struct{}
+	clearedworks  bool
+	done          bool
+	oldValue      func(context.Context) (*Category, error)
+	predicates    []predicate.Category
+}
+
+var _ ent.Mutation = (*CategoryMutation)(nil)
+
+// categoryOption allows management of the mutation configuration using functional options.
+type categoryOption func(*CategoryMutation)
+
+// newCategoryMutation creates new mutation for the Category entity.
+func newCategoryMutation(c config, op Op, opts ...categoryOption) *CategoryMutation {
+	m := &CategoryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCategory,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCategoryID sets the ID field of the mutation.
+func withCategoryID(id int) categoryOption {
+	return func(m *CategoryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Category
+		)
+		m.oldValue = func(ctx context.Context) (*Category, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Category.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCategory sets the old Category of the mutation.
+func withCategory(node *Category) categoryOption {
+	return func(m *CategoryMutation) {
+		m.oldValue = func(context.Context) (*Category, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CategoryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CategoryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CategoryMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetName sets the "name" field.
+func (m *CategoryMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *CategoryMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Category entity.
+// If the Category object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CategoryMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *CategoryMutation) ResetName() {
+	m.name = nil
+}
+
+// AddWorkIDs adds the "works" edge to the Work entity by ids.
+func (m *CategoryMutation) AddWorkIDs(ids ...int) {
+	if m.works == nil {
+		m.works = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.works[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorks clears the "works" edge to the Work entity.
+func (m *CategoryMutation) ClearWorks() {
+	m.clearedworks = true
+}
+
+// WorksCleared reports if the "works" edge to the Work entity was cleared.
+func (m *CategoryMutation) WorksCleared() bool {
+	return m.clearedworks
+}
+
+// RemoveWorkIDs removes the "works" edge to the Work entity by IDs.
+func (m *CategoryMutation) RemoveWorkIDs(ids ...int) {
+	if m.removedworks == nil {
+		m.removedworks = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.works, ids[i])
+		m.removedworks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorks returns the removed IDs of the "works" edge to the Work entity.
+func (m *CategoryMutation) RemovedWorksIDs() (ids []int) {
+	for id := range m.removedworks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorksIDs returns the "works" edge IDs in the mutation.
+func (m *CategoryMutation) WorksIDs() (ids []int) {
+	for id := range m.works {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorks resets all changes to the "works" edge.
+func (m *CategoryMutation) ResetWorks() {
+	m.works = nil
+	m.clearedworks = false
+	m.removedworks = nil
+}
+
+// Where appends a list predicates to the CategoryMutation builder.
+func (m *CategoryMutation) Where(ps ...predicate.Category) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *CategoryMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Category).
+func (m *CategoryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CategoryMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.name != nil {
+		fields = append(fields, category.FieldName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CategoryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case category.FieldName:
+		return m.Name()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CategoryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case category.FieldName:
+		return m.OldName(ctx)
+	}
+	return nil, fmt.Errorf("unknown Category field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CategoryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case category.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Category field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CategoryMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CategoryMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CategoryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Category numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CategoryMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CategoryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CategoryMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Category nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CategoryMutation) ResetField(name string) error {
+	switch name {
+	case category.FieldName:
+		m.ResetName()
+		return nil
+	}
+	return fmt.Errorf("unknown Category field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CategoryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.works != nil {
+		edges = append(edges, category.EdgeWorks)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CategoryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case category.EdgeWorks:
+		ids := make([]ent.Value, 0, len(m.works))
+		for id := range m.works {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CategoryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedworks != nil {
+		edges = append(edges, category.EdgeWorks)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CategoryMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case category.EdgeWorks:
+		ids := make([]ent.Value, 0, len(m.removedworks))
+		for id := range m.removedworks {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CategoryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedworks {
+		edges = append(edges, category.EdgeWorks)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CategoryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case category.EdgeWorks:
+		return m.clearedworks
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CategoryMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Category unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CategoryMutation) ResetEdge(name string) error {
+	switch name {
+	case category.EdgeWorks:
+		m.ResetWorks()
+		return nil
+	}
+	return fmt.Errorf("unknown Category edge %s", name)
+}
 
 // WorkMutation represents an operation that mutates the Work nodes in the graph.
 type WorkMutation struct {
@@ -34,18 +421,11 @@ type WorkMutation struct {
 	title           *string
 	description     *string
 	image_url       *string
-	updated_at      *time.Time
-	text            *string
 	created_at      *time.Time
-	status          *work.Status
-	priority        *int
-	addpriority     *int
+	updated_at      *time.Time
 	clearedFields   map[string]struct{}
-	children        map[int]struct{}
-	removedchildren map[int]struct{}
-	clearedchildren bool
-	parent          *int
-	clearedparent   bool
+	category        *int
+	clearedcategory bool
 	done            bool
 	oldValue        func(context.Context) (*Work, error)
 	predicates      []predicate.Work
@@ -238,78 +618,6 @@ func (m *WorkMutation) ResetImageURL() {
 	m.image_url = nil
 }
 
-// SetUpdatedAt sets the "updated_at" field.
-func (m *WorkMutation) SetUpdatedAt(t time.Time) {
-	m.updated_at = &t
-}
-
-// UpdatedAt returns the value of the "updated_at" field in the mutation.
-func (m *WorkMutation) UpdatedAt() (r time.Time, exists bool) {
-	v := m.updated_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldUpdatedAt returns the old "updated_at" field's value of the Work entity.
-// If the Work object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
-	}
-	return oldValue.UpdatedAt, nil
-}
-
-// ResetUpdatedAt resets all changes to the "updated_at" field.
-func (m *WorkMutation) ResetUpdatedAt() {
-	m.updated_at = nil
-}
-
-// SetText sets the "text" field.
-func (m *WorkMutation) SetText(s string) {
-	m.text = &s
-}
-
-// Text returns the value of the "text" field in the mutation.
-func (m *WorkMutation) Text() (r string, exists bool) {
-	v := m.text
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldText returns the old "text" field's value of the Work entity.
-// If the Work object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkMutation) OldText(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldText is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldText requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldText: %w", err)
-	}
-	return oldValue.Text, nil
-}
-
-// ResetText resets all changes to the "text" field.
-func (m *WorkMutation) ResetText() {
-	m.text = nil
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (m *WorkMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -346,189 +654,79 @@ func (m *WorkMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetStatus sets the "status" field.
-func (m *WorkMutation) SetStatus(w work.Status) {
-	m.status = &w
+// SetUpdatedAt sets the "updated_at" field.
+func (m *WorkMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
 }
 
-// Status returns the value of the "status" field in the mutation.
-func (m *WorkMutation) Status() (r work.Status, exists bool) {
-	v := m.status
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *WorkMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldStatus returns the old "status" field's value of the Work entity.
+// OldUpdatedAt returns the old "updated_at" field's value of the Work entity.
 // If the Work object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkMutation) OldStatus(ctx context.Context) (v work.Status, err error) {
+func (m *WorkMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStatus is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldStatus requires an ID field in the mutation")
+		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
 	}
-	return oldValue.Status, nil
+	return oldValue.UpdatedAt, nil
 }
 
-// ResetStatus resets all changes to the "status" field.
-func (m *WorkMutation) ResetStatus() {
-	m.status = nil
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *WorkMutation) ResetUpdatedAt() {
+	m.updated_at = nil
 }
 
-// SetPriority sets the "priority" field.
-func (m *WorkMutation) SetPriority(i int) {
-	m.priority = &i
-	m.addpriority = nil
+// SetCategoryID sets the "category" edge to the Category entity by id.
+func (m *WorkMutation) SetCategoryID(id int) {
+	m.category = &id
 }
 
-// Priority returns the value of the "priority" field in the mutation.
-func (m *WorkMutation) Priority() (r int, exists bool) {
-	v := m.priority
-	if v == nil {
-		return
-	}
-	return *v, true
+// ClearCategory clears the "category" edge to the Category entity.
+func (m *WorkMutation) ClearCategory() {
+	m.clearedcategory = true
 }
 
-// OldPriority returns the old "priority" field's value of the Work entity.
-// If the Work object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkMutation) OldPriority(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldPriority is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldPriority requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
-	}
-	return oldValue.Priority, nil
+// CategoryCleared reports if the "category" edge to the Category entity was cleared.
+func (m *WorkMutation) CategoryCleared() bool {
+	return m.clearedcategory
 }
 
-// AddPriority adds i to the "priority" field.
-func (m *WorkMutation) AddPriority(i int) {
-	if m.addpriority != nil {
-		*m.addpriority += i
-	} else {
-		m.addpriority = &i
-	}
-}
-
-// AddedPriority returns the value that was added to the "priority" field in this mutation.
-func (m *WorkMutation) AddedPriority() (r int, exists bool) {
-	v := m.addpriority
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetPriority resets all changes to the "priority" field.
-func (m *WorkMutation) ResetPriority() {
-	m.priority = nil
-	m.addpriority = nil
-}
-
-// AddChildIDs adds the "children" edge to the Work entity by ids.
-func (m *WorkMutation) AddChildIDs(ids ...int) {
-	if m.children == nil {
-		m.children = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.children[ids[i]] = struct{}{}
-	}
-}
-
-// ClearChildren clears the "children" edge to the Work entity.
-func (m *WorkMutation) ClearChildren() {
-	m.clearedchildren = true
-}
-
-// ChildrenCleared reports if the "children" edge to the Work entity was cleared.
-func (m *WorkMutation) ChildrenCleared() bool {
-	return m.clearedchildren
-}
-
-// RemoveChildIDs removes the "children" edge to the Work entity by IDs.
-func (m *WorkMutation) RemoveChildIDs(ids ...int) {
-	if m.removedchildren == nil {
-		m.removedchildren = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.children, ids[i])
-		m.removedchildren[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedChildren returns the removed IDs of the "children" edge to the Work entity.
-func (m *WorkMutation) RemovedChildrenIDs() (ids []int) {
-	for id := range m.removedchildren {
-		ids = append(ids, id)
+// CategoryID returns the "category" edge ID in the mutation.
+func (m *WorkMutation) CategoryID() (id int, exists bool) {
+	if m.category != nil {
+		return *m.category, true
 	}
 	return
 }
 
-// ChildrenIDs returns the "children" edge IDs in the mutation.
-func (m *WorkMutation) ChildrenIDs() (ids []int) {
-	for id := range m.children {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetChildren resets all changes to the "children" edge.
-func (m *WorkMutation) ResetChildren() {
-	m.children = nil
-	m.clearedchildren = false
-	m.removedchildren = nil
-}
-
-// SetParentID sets the "parent" edge to the Work entity by id.
-func (m *WorkMutation) SetParentID(id int) {
-	m.parent = &id
-}
-
-// ClearParent clears the "parent" edge to the Work entity.
-func (m *WorkMutation) ClearParent() {
-	m.clearedparent = true
-}
-
-// ParentCleared reports if the "parent" edge to the Work entity was cleared.
-func (m *WorkMutation) ParentCleared() bool {
-	return m.clearedparent
-}
-
-// ParentID returns the "parent" edge ID in the mutation.
-func (m *WorkMutation) ParentID() (id int, exists bool) {
-	if m.parent != nil {
-		return *m.parent, true
-	}
-	return
-}
-
-// ParentIDs returns the "parent" edge IDs in the mutation.
+// CategoryIDs returns the "category" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// ParentID instead. It exists only for internal usage by the builders.
-func (m *WorkMutation) ParentIDs() (ids []int) {
-	if id := m.parent; id != nil {
+// CategoryID instead. It exists only for internal usage by the builders.
+func (m *WorkMutation) CategoryIDs() (ids []int) {
+	if id := m.category; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetParent resets all changes to the "parent" edge.
-func (m *WorkMutation) ResetParent() {
-	m.parent = nil
-	m.clearedparent = false
+// ResetCategory resets all changes to the "category" edge.
+func (m *WorkMutation) ResetCategory() {
+	m.category = nil
+	m.clearedcategory = false
 }
 
 // Where appends a list predicates to the WorkMutation builder.
@@ -550,7 +748,7 @@ func (m *WorkMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 5)
 	if m.title != nil {
 		fields = append(fields, work.FieldTitle)
 	}
@@ -560,20 +758,11 @@ func (m *WorkMutation) Fields() []string {
 	if m.image_url != nil {
 		fields = append(fields, work.FieldImageURL)
 	}
-	if m.updated_at != nil {
-		fields = append(fields, work.FieldUpdatedAt)
-	}
-	if m.text != nil {
-		fields = append(fields, work.FieldText)
-	}
 	if m.created_at != nil {
 		fields = append(fields, work.FieldCreatedAt)
 	}
-	if m.status != nil {
-		fields = append(fields, work.FieldStatus)
-	}
-	if m.priority != nil {
-		fields = append(fields, work.FieldPriority)
+	if m.updated_at != nil {
+		fields = append(fields, work.FieldUpdatedAt)
 	}
 	return fields
 }
@@ -589,16 +778,10 @@ func (m *WorkMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case work.FieldImageURL:
 		return m.ImageURL()
-	case work.FieldUpdatedAt:
-		return m.UpdatedAt()
-	case work.FieldText:
-		return m.Text()
 	case work.FieldCreatedAt:
 		return m.CreatedAt()
-	case work.FieldStatus:
-		return m.Status()
-	case work.FieldPriority:
-		return m.Priority()
+	case work.FieldUpdatedAt:
+		return m.UpdatedAt()
 	}
 	return nil, false
 }
@@ -614,16 +797,10 @@ func (m *WorkMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDescription(ctx)
 	case work.FieldImageURL:
 		return m.OldImageURL(ctx)
-	case work.FieldUpdatedAt:
-		return m.OldUpdatedAt(ctx)
-	case work.FieldText:
-		return m.OldText(ctx)
 	case work.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case work.FieldStatus:
-		return m.OldStatus(ctx)
-	case work.FieldPriority:
-		return m.OldPriority(ctx)
+	case work.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Work field %s", name)
 }
@@ -654,20 +831,6 @@ func (m *WorkMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetImageURL(v)
 		return nil
-	case work.FieldUpdatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetUpdatedAt(v)
-		return nil
-	case work.FieldText:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetText(v)
-		return nil
 	case work.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -675,19 +838,12 @@ func (m *WorkMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCreatedAt(v)
 		return nil
-	case work.FieldStatus:
-		v, ok := value.(work.Status)
+	case work.FieldUpdatedAt:
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetStatus(v)
-		return nil
-	case work.FieldPriority:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetPriority(v)
+		m.SetUpdatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Work field %s", name)
@@ -696,21 +852,13 @@ func (m *WorkMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *WorkMutation) AddedFields() []string {
-	var fields []string
-	if m.addpriority != nil {
-		fields = append(fields, work.FieldPriority)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *WorkMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case work.FieldPriority:
-		return m.AddedPriority()
-	}
 	return nil, false
 }
 
@@ -719,13 +867,6 @@ func (m *WorkMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *WorkMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case work.FieldPriority:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddPriority(v)
-		return nil
 	}
 	return fmt.Errorf("unknown Work numeric field %s", name)
 }
@@ -762,20 +903,11 @@ func (m *WorkMutation) ResetField(name string) error {
 	case work.FieldImageURL:
 		m.ResetImageURL()
 		return nil
-	case work.FieldUpdatedAt:
-		m.ResetUpdatedAt()
-		return nil
-	case work.FieldText:
-		m.ResetText()
-		return nil
 	case work.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case work.FieldStatus:
-		m.ResetStatus()
-		return nil
-	case work.FieldPriority:
-		m.ResetPriority()
+	case work.FieldUpdatedAt:
+		m.ResetUpdatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Work field %s", name)
@@ -783,12 +915,9 @@ func (m *WorkMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.children != nil {
-		edges = append(edges, work.EdgeChildren)
-	}
-	if m.parent != nil {
-		edges = append(edges, work.EdgeParent)
+	edges := make([]string, 0, 1)
+	if m.category != nil {
+		edges = append(edges, work.EdgeCategory)
 	}
 	return edges
 }
@@ -797,14 +926,8 @@ func (m *WorkMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case work.EdgeChildren:
-		ids := make([]ent.Value, 0, len(m.children))
-		for id := range m.children {
-			ids = append(ids, id)
-		}
-		return ids
-	case work.EdgeParent:
-		if id := m.parent; id != nil {
+	case work.EdgeCategory:
+		if id := m.category; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -813,10 +936,7 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.removedchildren != nil {
-		edges = append(edges, work.EdgeChildren)
-	}
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -824,24 +944,15 @@ func (m *WorkMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case work.EdgeChildren:
-		ids := make([]ent.Value, 0, len(m.removedchildren))
-		for id := range m.removedchildren {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.clearedchildren {
-		edges = append(edges, work.EdgeChildren)
-	}
-	if m.clearedparent {
-		edges = append(edges, work.EdgeParent)
+	edges := make([]string, 0, 1)
+	if m.clearedcategory {
+		edges = append(edges, work.EdgeCategory)
 	}
 	return edges
 }
@@ -850,10 +961,8 @@ func (m *WorkMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WorkMutation) EdgeCleared(name string) bool {
 	switch name {
-	case work.EdgeChildren:
-		return m.clearedchildren
-	case work.EdgeParent:
-		return m.clearedparent
+	case work.EdgeCategory:
+		return m.clearedcategory
 	}
 	return false
 }
@@ -862,8 +971,8 @@ func (m *WorkMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *WorkMutation) ClearEdge(name string) error {
 	switch name {
-	case work.EdgeParent:
-		m.ClearParent()
+	case work.EdgeCategory:
+		m.ClearCategory()
 		return nil
 	}
 	return fmt.Errorf("unknown Work unique edge %s", name)
@@ -873,11 +982,8 @@ func (m *WorkMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkMutation) ResetEdge(name string) error {
 	switch name {
-	case work.EdgeChildren:
-		m.ResetChildren()
-		return nil
-	case work.EdgeParent:
-		m.ResetParent()
+	case work.EdgeCategory:
+		m.ResetCategory()
 		return nil
 	}
 	return fmt.Errorf("unknown Work edge %s", name)

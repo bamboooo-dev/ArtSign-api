@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"artsign/ent/category"
 	"artsign/ent/work"
 	"context"
 	"errors"
@@ -38,26 +39,6 @@ func (wc *WorkCreate) SetImageURL(s string) *WorkCreate {
 	return wc
 }
 
-// SetUpdatedAt sets the "updated_at" field.
-func (wc *WorkCreate) SetUpdatedAt(t time.Time) *WorkCreate {
-	wc.mutation.SetUpdatedAt(t)
-	return wc
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (wc *WorkCreate) SetNillableUpdatedAt(t *time.Time) *WorkCreate {
-	if t != nil {
-		wc.SetUpdatedAt(*t)
-	}
-	return wc
-}
-
-// SetText sets the "text" field.
-func (wc *WorkCreate) SetText(s string) *WorkCreate {
-	wc.mutation.SetText(s)
-	return wc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (wc *WorkCreate) SetCreatedAt(t time.Time) *WorkCreate {
 	wc.mutation.SetCreatedAt(t)
@@ -72,66 +53,37 @@ func (wc *WorkCreate) SetNillableCreatedAt(t *time.Time) *WorkCreate {
 	return wc
 }
 
-// SetStatus sets the "status" field.
-func (wc *WorkCreate) SetStatus(w work.Status) *WorkCreate {
-	wc.mutation.SetStatus(w)
+// SetUpdatedAt sets the "updated_at" field.
+func (wc *WorkCreate) SetUpdatedAt(t time.Time) *WorkCreate {
+	wc.mutation.SetUpdatedAt(t)
 	return wc
 }
 
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wc *WorkCreate) SetNillableStatus(w *work.Status) *WorkCreate {
-	if w != nil {
-		wc.SetStatus(*w)
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (wc *WorkCreate) SetNillableUpdatedAt(t *time.Time) *WorkCreate {
+	if t != nil {
+		wc.SetUpdatedAt(*t)
 	}
 	return wc
 }
 
-// SetPriority sets the "priority" field.
-func (wc *WorkCreate) SetPriority(i int) *WorkCreate {
-	wc.mutation.SetPriority(i)
+// SetCategoryID sets the "category" edge to the Category entity by ID.
+func (wc *WorkCreate) SetCategoryID(id int) *WorkCreate {
+	wc.mutation.SetCategoryID(id)
 	return wc
 }
 
-// SetNillablePriority sets the "priority" field if the given value is not nil.
-func (wc *WorkCreate) SetNillablePriority(i *int) *WorkCreate {
-	if i != nil {
-		wc.SetPriority(*i)
-	}
-	return wc
-}
-
-// AddChildIDs adds the "children" edge to the Work entity by IDs.
-func (wc *WorkCreate) AddChildIDs(ids ...int) *WorkCreate {
-	wc.mutation.AddChildIDs(ids...)
-	return wc
-}
-
-// AddChildren adds the "children" edges to the Work entity.
-func (wc *WorkCreate) AddChildren(w ...*Work) *WorkCreate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wc.AddChildIDs(ids...)
-}
-
-// SetParentID sets the "parent" edge to the Work entity by ID.
-func (wc *WorkCreate) SetParentID(id int) *WorkCreate {
-	wc.mutation.SetParentID(id)
-	return wc
-}
-
-// SetNillableParentID sets the "parent" edge to the Work entity by ID if the given value is not nil.
-func (wc *WorkCreate) SetNillableParentID(id *int) *WorkCreate {
+// SetNillableCategoryID sets the "category" edge to the Category entity by ID if the given value is not nil.
+func (wc *WorkCreate) SetNillableCategoryID(id *int) *WorkCreate {
 	if id != nil {
-		wc = wc.SetParentID(*id)
+		wc = wc.SetCategoryID(*id)
 	}
 	return wc
 }
 
-// SetParent sets the "parent" edge to the Work entity.
-func (wc *WorkCreate) SetParent(w *Work) *WorkCreate {
-	return wc.SetParentID(w.ID)
+// SetCategory sets the "category" edge to the Category entity.
+func (wc *WorkCreate) SetCategory(c *Category) *WorkCreate {
+	return wc.SetCategoryID(c.ID)
 }
 
 // Mutation returns the WorkMutation object of the builder.
@@ -205,21 +157,13 @@ func (wc *WorkCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (wc *WorkCreate) defaults() {
-	if _, ok := wc.mutation.UpdatedAt(); !ok {
-		v := work.DefaultUpdatedAt()
-		wc.mutation.SetUpdatedAt(v)
-	}
 	if _, ok := wc.mutation.CreatedAt(); !ok {
 		v := work.DefaultCreatedAt()
 		wc.mutation.SetCreatedAt(v)
 	}
-	if _, ok := wc.mutation.Status(); !ok {
-		v := work.DefaultStatus
-		wc.mutation.SetStatus(v)
-	}
-	if _, ok := wc.mutation.Priority(); !ok {
-		v := work.DefaultPriority
-		wc.mutation.SetPriority(v)
+	if _, ok := wc.mutation.UpdatedAt(); !ok {
+		v := work.DefaultUpdatedAt()
+		wc.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -244,30 +188,11 @@ func (wc *WorkCreate) check() error {
 	if _, ok := wc.mutation.ImageURL(); !ok {
 		return &ValidationError{Name: "image_url", err: errors.New(`ent: missing required field "image_url"`)}
 	}
-	if _, ok := wc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
-	}
-	if _, ok := wc.mutation.Text(); !ok {
-		return &ValidationError{Name: "text", err: errors.New(`ent: missing required field "text"`)}
-	}
-	if v, ok := wc.mutation.Text(); ok {
-		if err := work.TextValidator(v); err != nil {
-			return &ValidationError{Name: "text", err: fmt.Errorf(`ent: validator failed for field "text": %w`, err)}
-		}
-	}
 	if _, ok := wc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
-	if _, ok := wc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
-	}
-	if v, ok := wc.mutation.Status(); ok {
-		if err := work.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "status": %w`, err)}
-		}
-	}
-	if _, ok := wc.mutation.Priority(); !ok {
-		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "priority"`)}
+	if _, ok := wc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	return nil
 }
@@ -320,22 +245,6 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 		})
 		_node.ImageURL = value
 	}
-	if value, ok := wc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: work.FieldUpdatedAt,
-		})
-		_node.UpdatedAt = value
-	}
-	if value, ok := wc.mutation.Text(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: work.FieldText,
-		})
-		_node.Text = value
-	}
 	if value, ok := wc.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -344,59 +253,32 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 		})
 		_node.CreatedAt = value
 	}
-	if value, ok := wc.mutation.Status(); ok {
+	if value, ok := wc.mutation.UpdatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
+			Type:   field.TypeTime,
 			Value:  value,
-			Column: work.FieldStatus,
+			Column: work.FieldUpdatedAt,
 		})
-		_node.Status = value
+		_node.UpdatedAt = value
 	}
-	if value, ok := wc.mutation.Priority(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: work.FieldPriority,
-		})
-		_node.Priority = value
-	}
-	if nodes := wc.mutation.ChildrenIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   work.ChildrenTable,
-			Columns: []string{work.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: work.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := wc.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := wc.mutation.CategoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   work.ParentTable,
-			Columns: []string{work.ParentColumn},
+			Inverse: true,
+			Table:   work.CategoryTable,
+			Columns: []string{work.CategoryColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.work_parent = &nodes[0]
+		_node.category_works = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

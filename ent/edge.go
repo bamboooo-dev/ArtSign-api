@@ -4,18 +4,18 @@ package ent
 
 import "context"
 
-func (w *Work) Children(ctx context.Context) ([]*Work, error) {
-	result, err := w.Edges.ChildrenOrErr()
+func (c *Category) Works(ctx context.Context) ([]*Work, error) {
+	result, err := c.Edges.WorksOrErr()
 	if IsNotLoaded(err) {
-		result, err = w.QueryChildren().All(ctx)
+		result, err = c.QueryWorks().All(ctx)
 	}
 	return result, err
 }
 
-func (w *Work) Parent(ctx context.Context) (*Work, error) {
-	result, err := w.Edges.ParentOrErr()
+func (w *Work) Category(ctx context.Context) (*Category, error) {
+	result, err := w.Edges.CategoryOrErr()
 	if IsNotLoaded(err) {
-		result, err = w.QueryParent().Only(ctx)
+		result, err = w.QueryCategory().Only(ctx)
 	}
 	return result, MaskNotFound(err)
 }

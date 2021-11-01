@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"artsign/ent/category"
 	"artsign/ent/predicate"
 	"artsign/ent/work"
 	"context"
@@ -59,79 +60,23 @@ func (wu *WorkUpdate) SetNillableUpdatedAt(t *time.Time) *WorkUpdate {
 	return wu
 }
 
-// SetText sets the "text" field.
-func (wu *WorkUpdate) SetText(s string) *WorkUpdate {
-	wu.mutation.SetText(s)
+// SetCategoryID sets the "category" edge to the Category entity by ID.
+func (wu *WorkUpdate) SetCategoryID(id int) *WorkUpdate {
+	wu.mutation.SetCategoryID(id)
 	return wu
 }
 
-// SetStatus sets the "status" field.
-func (wu *WorkUpdate) SetStatus(w work.Status) *WorkUpdate {
-	wu.mutation.SetStatus(w)
-	return wu
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wu *WorkUpdate) SetNillableStatus(w *work.Status) *WorkUpdate {
-	if w != nil {
-		wu.SetStatus(*w)
-	}
-	return wu
-}
-
-// SetPriority sets the "priority" field.
-func (wu *WorkUpdate) SetPriority(i int) *WorkUpdate {
-	wu.mutation.ResetPriority()
-	wu.mutation.SetPriority(i)
-	return wu
-}
-
-// SetNillablePriority sets the "priority" field if the given value is not nil.
-func (wu *WorkUpdate) SetNillablePriority(i *int) *WorkUpdate {
-	if i != nil {
-		wu.SetPriority(*i)
-	}
-	return wu
-}
-
-// AddPriority adds i to the "priority" field.
-func (wu *WorkUpdate) AddPriority(i int) *WorkUpdate {
-	wu.mutation.AddPriority(i)
-	return wu
-}
-
-// AddChildIDs adds the "children" edge to the Work entity by IDs.
-func (wu *WorkUpdate) AddChildIDs(ids ...int) *WorkUpdate {
-	wu.mutation.AddChildIDs(ids...)
-	return wu
-}
-
-// AddChildren adds the "children" edges to the Work entity.
-func (wu *WorkUpdate) AddChildren(w ...*Work) *WorkUpdate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wu.AddChildIDs(ids...)
-}
-
-// SetParentID sets the "parent" edge to the Work entity by ID.
-func (wu *WorkUpdate) SetParentID(id int) *WorkUpdate {
-	wu.mutation.SetParentID(id)
-	return wu
-}
-
-// SetNillableParentID sets the "parent" edge to the Work entity by ID if the given value is not nil.
-func (wu *WorkUpdate) SetNillableParentID(id *int) *WorkUpdate {
+// SetNillableCategoryID sets the "category" edge to the Category entity by ID if the given value is not nil.
+func (wu *WorkUpdate) SetNillableCategoryID(id *int) *WorkUpdate {
 	if id != nil {
-		wu = wu.SetParentID(*id)
+		wu = wu.SetCategoryID(*id)
 	}
 	return wu
 }
 
-// SetParent sets the "parent" edge to the Work entity.
-func (wu *WorkUpdate) SetParent(w *Work) *WorkUpdate {
-	return wu.SetParentID(w.ID)
+// SetCategory sets the "category" edge to the Category entity.
+func (wu *WorkUpdate) SetCategory(c *Category) *WorkUpdate {
+	return wu.SetCategoryID(c.ID)
 }
 
 // Mutation returns the WorkMutation object of the builder.
@@ -139,30 +84,9 @@ func (wu *WorkUpdate) Mutation() *WorkMutation {
 	return wu.mutation
 }
 
-// ClearChildren clears all "children" edges to the Work entity.
-func (wu *WorkUpdate) ClearChildren() *WorkUpdate {
-	wu.mutation.ClearChildren()
-	return wu
-}
-
-// RemoveChildIDs removes the "children" edge to Work entities by IDs.
-func (wu *WorkUpdate) RemoveChildIDs(ids ...int) *WorkUpdate {
-	wu.mutation.RemoveChildIDs(ids...)
-	return wu
-}
-
-// RemoveChildren removes "children" edges to Work entities.
-func (wu *WorkUpdate) RemoveChildren(w ...*Work) *WorkUpdate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wu.RemoveChildIDs(ids...)
-}
-
-// ClearParent clears the "parent" edge to the Work entity.
-func (wu *WorkUpdate) ClearParent() *WorkUpdate {
-	wu.mutation.ClearParent()
+// ClearCategory clears the "category" edge to the Category entity.
+func (wu *WorkUpdate) ClearCategory() *WorkUpdate {
+	wu.mutation.ClearCategory()
 	return wu
 }
 
@@ -238,16 +162,6 @@ func (wu *WorkUpdate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf("ent: validator failed for field \"description\": %w", err)}
 		}
 	}
-	if v, ok := wu.mutation.Text(); ok {
-		if err := work.TextValidator(v); err != nil {
-			return &ValidationError{Name: "text", err: fmt.Errorf("ent: validator failed for field \"text\": %w", err)}
-		}
-	}
-	if v, ok := wu.mutation.Status(); ok {
-		if err := work.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf("ent: validator failed for field \"status\": %w", err)}
-		}
-	}
 	return nil
 }
 
@@ -297,115 +211,33 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: work.FieldUpdatedAt,
 		})
 	}
-	if value, ok := wu.mutation.Text(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: work.FieldText,
-		})
-	}
-	if value, ok := wu.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: work.FieldStatus,
-		})
-	}
-	if value, ok := wu.mutation.Priority(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: work.FieldPriority,
-		})
-	}
-	if value, ok := wu.mutation.AddedPriority(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: work.FieldPriority,
-		})
-	}
-	if wu.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   work.ChildrenTable,
-			Columns: []string{work.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: work.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wu.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !wu.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   work.ChildrenTable,
-			Columns: []string{work.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: work.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wu.mutation.ChildrenIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   work.ChildrenTable,
-			Columns: []string{work.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: work.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if wu.mutation.ParentCleared() {
+	if wu.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   work.ParentTable,
-			Columns: []string{work.ParentColumn},
+			Inverse: true,
+			Table:   work.CategoryTable,
+			Columns: []string{work.CategoryColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wu.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := wu.mutation.CategoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   work.ParentTable,
-			Columns: []string{work.ParentColumn},
+			Inverse: true,
+			Table:   work.CategoryTable,
+			Columns: []string{work.CategoryColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
@@ -465,79 +297,23 @@ func (wuo *WorkUpdateOne) SetNillableUpdatedAt(t *time.Time) *WorkUpdateOne {
 	return wuo
 }
 
-// SetText sets the "text" field.
-func (wuo *WorkUpdateOne) SetText(s string) *WorkUpdateOne {
-	wuo.mutation.SetText(s)
+// SetCategoryID sets the "category" edge to the Category entity by ID.
+func (wuo *WorkUpdateOne) SetCategoryID(id int) *WorkUpdateOne {
+	wuo.mutation.SetCategoryID(id)
 	return wuo
 }
 
-// SetStatus sets the "status" field.
-func (wuo *WorkUpdateOne) SetStatus(w work.Status) *WorkUpdateOne {
-	wuo.mutation.SetStatus(w)
-	return wuo
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wuo *WorkUpdateOne) SetNillableStatus(w *work.Status) *WorkUpdateOne {
-	if w != nil {
-		wuo.SetStatus(*w)
-	}
-	return wuo
-}
-
-// SetPriority sets the "priority" field.
-func (wuo *WorkUpdateOne) SetPriority(i int) *WorkUpdateOne {
-	wuo.mutation.ResetPriority()
-	wuo.mutation.SetPriority(i)
-	return wuo
-}
-
-// SetNillablePriority sets the "priority" field if the given value is not nil.
-func (wuo *WorkUpdateOne) SetNillablePriority(i *int) *WorkUpdateOne {
-	if i != nil {
-		wuo.SetPriority(*i)
-	}
-	return wuo
-}
-
-// AddPriority adds i to the "priority" field.
-func (wuo *WorkUpdateOne) AddPriority(i int) *WorkUpdateOne {
-	wuo.mutation.AddPriority(i)
-	return wuo
-}
-
-// AddChildIDs adds the "children" edge to the Work entity by IDs.
-func (wuo *WorkUpdateOne) AddChildIDs(ids ...int) *WorkUpdateOne {
-	wuo.mutation.AddChildIDs(ids...)
-	return wuo
-}
-
-// AddChildren adds the "children" edges to the Work entity.
-func (wuo *WorkUpdateOne) AddChildren(w ...*Work) *WorkUpdateOne {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wuo.AddChildIDs(ids...)
-}
-
-// SetParentID sets the "parent" edge to the Work entity by ID.
-func (wuo *WorkUpdateOne) SetParentID(id int) *WorkUpdateOne {
-	wuo.mutation.SetParentID(id)
-	return wuo
-}
-
-// SetNillableParentID sets the "parent" edge to the Work entity by ID if the given value is not nil.
-func (wuo *WorkUpdateOne) SetNillableParentID(id *int) *WorkUpdateOne {
+// SetNillableCategoryID sets the "category" edge to the Category entity by ID if the given value is not nil.
+func (wuo *WorkUpdateOne) SetNillableCategoryID(id *int) *WorkUpdateOne {
 	if id != nil {
-		wuo = wuo.SetParentID(*id)
+		wuo = wuo.SetCategoryID(*id)
 	}
 	return wuo
 }
 
-// SetParent sets the "parent" edge to the Work entity.
-func (wuo *WorkUpdateOne) SetParent(w *Work) *WorkUpdateOne {
-	return wuo.SetParentID(w.ID)
+// SetCategory sets the "category" edge to the Category entity.
+func (wuo *WorkUpdateOne) SetCategory(c *Category) *WorkUpdateOne {
+	return wuo.SetCategoryID(c.ID)
 }
 
 // Mutation returns the WorkMutation object of the builder.
@@ -545,30 +321,9 @@ func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 	return wuo.mutation
 }
 
-// ClearChildren clears all "children" edges to the Work entity.
-func (wuo *WorkUpdateOne) ClearChildren() *WorkUpdateOne {
-	wuo.mutation.ClearChildren()
-	return wuo
-}
-
-// RemoveChildIDs removes the "children" edge to Work entities by IDs.
-func (wuo *WorkUpdateOne) RemoveChildIDs(ids ...int) *WorkUpdateOne {
-	wuo.mutation.RemoveChildIDs(ids...)
-	return wuo
-}
-
-// RemoveChildren removes "children" edges to Work entities.
-func (wuo *WorkUpdateOne) RemoveChildren(w ...*Work) *WorkUpdateOne {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wuo.RemoveChildIDs(ids...)
-}
-
-// ClearParent clears the "parent" edge to the Work entity.
-func (wuo *WorkUpdateOne) ClearParent() *WorkUpdateOne {
-	wuo.mutation.ClearParent()
+// ClearCategory clears the "category" edge to the Category entity.
+func (wuo *WorkUpdateOne) ClearCategory() *WorkUpdateOne {
+	wuo.mutation.ClearCategory()
 	return wuo
 }
 
@@ -651,16 +406,6 @@ func (wuo *WorkUpdateOne) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf("ent: validator failed for field \"description\": %w", err)}
 		}
 	}
-	if v, ok := wuo.mutation.Text(); ok {
-		if err := work.TextValidator(v); err != nil {
-			return &ValidationError{Name: "text", err: fmt.Errorf("ent: validator failed for field \"text\": %w", err)}
-		}
-	}
-	if v, ok := wuo.mutation.Status(); ok {
-		if err := work.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf("ent: validator failed for field \"status\": %w", err)}
-		}
-	}
 	return nil
 }
 
@@ -727,115 +472,33 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 			Column: work.FieldUpdatedAt,
 		})
 	}
-	if value, ok := wuo.mutation.Text(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: work.FieldText,
-		})
-	}
-	if value, ok := wuo.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: work.FieldStatus,
-		})
-	}
-	if value, ok := wuo.mutation.Priority(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: work.FieldPriority,
-		})
-	}
-	if value, ok := wuo.mutation.AddedPriority(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: work.FieldPriority,
-		})
-	}
-	if wuo.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   work.ChildrenTable,
-			Columns: []string{work.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: work.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wuo.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !wuo.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   work.ChildrenTable,
-			Columns: []string{work.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: work.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wuo.mutation.ChildrenIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   work.ChildrenTable,
-			Columns: []string{work.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: work.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if wuo.mutation.ParentCleared() {
+	if wuo.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   work.ParentTable,
-			Columns: []string{work.ParentColumn},
+			Inverse: true,
+			Table:   work.CategoryTable,
+			Columns: []string{work.CategoryColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wuo.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := wuo.mutation.CategoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   work.ParentTable,
-			Columns: []string{work.ParentColumn},
+			Inverse: true,
+			Table:   work.CategoryTable,
+			Columns: []string{work.CategoryColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}

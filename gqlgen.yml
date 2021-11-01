@@ -25,6 +25,3 @@ models:
   Node:
     model:
       - artsign/ent.Noder
-  Status:
-    model:
-      - artsign/ent/work.Status

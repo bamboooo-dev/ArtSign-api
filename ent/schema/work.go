@@ -25,46 +25,26 @@ func (Work) Fields() []ent.Field {
 		field.Text("description").
 			NotEmpty(),
 		field.String("image_url"),
-		field.Time("updated_at").
-			Default(time.Now).
-			Annotations(
-				entgql.OrderField("UPDATED_AT"),
-			),
-		field.Text("text").
-			NotEmpty().
-			Annotations(
-				entgql.OrderField("TEXT"),
-			),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
 			Annotations(
 				entgql.OrderField("CREATED_AT"),
 			),
-		field.Enum("status").
-			NamedValues(
-				"InProgress", "IN_PROGRESS",
-				"Completed", "COMPLETED",
-			).
-			Default("IN_PROGRESS").
+		field.Time("updated_at").
+			Default(time.Now).
 			Annotations(
-				entgql.OrderField("STATUS"),
-			),
-		field.Int("priority").
-			Default(0).
-			Annotations(
-				entgql.OrderField("PRIORITY"),
+				entgql.OrderField("UPDATED_AT"),
 			),
 	}
 }
 
 // Edges of the Work.
+// TODO: Annotations(entgql.Bind()) を加える
 func (Work) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("parent", Work.Type).
-			Annotations(entgql.Bind()).
-			Unique().
-			From("children").
-			Annotations(entgql.Bind()),
+		edge.From("category", Category.Type).
+			Ref("works").
+			Unique(),
 	}
 }

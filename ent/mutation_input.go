@@ -3,22 +3,69 @@
 package ent
 
 import (
-	"artsign/ent/work"
 	"time"
 )
+
+// CreateCategoryInput represents a mutation input for creating categories.
+type CreateCategoryInput struct {
+	Name    string
+	WorkIDs []int
+}
+
+// Mutate applies the CreateCategoryInput on the CategoryCreate builder.
+func (i *CreateCategoryInput) Mutate(m *CategoryCreate) {
+	m.SetName(i.Name)
+	if ids := i.WorkIDs; len(ids) > 0 {
+		m.AddWorkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the CreateCategoryInput on the create builder.
+func (c *CategoryCreate) SetInput(i CreateCategoryInput) *CategoryCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateCategoryInput represents a mutation input for updating categories.
+type UpdateCategoryInput struct {
+	Name          *string
+	AddWorkIDs    []int
+	RemoveWorkIDs []int
+}
+
+// Mutate applies the UpdateCategoryInput on the CategoryMutation.
+func (i *UpdateCategoryInput) Mutate(m *CategoryMutation) {
+	if v := i.Name; v != nil {
+		m.SetName(*v)
+	}
+	if ids := i.AddWorkIDs; len(ids) > 0 {
+		m.AddWorkIDs(ids...)
+	}
+	if ids := i.RemoveWorkIDs; len(ids) > 0 {
+		m.RemoveWorkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the UpdateCategoryInput on the update builder.
+func (u *CategoryUpdate) SetInput(i UpdateCategoryInput) *CategoryUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateCategoryInput on the update-one builder.
+func (u *CategoryUpdateOne) SetInput(i UpdateCategoryInput) *CategoryUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
 
 // CreateWorkInput represents a mutation input for creating works.
 type CreateWorkInput struct {
 	Title       string
 	Description string
 	ImageURL    string
-	UpdatedAt   *time.Time
-	Text        string
 	CreatedAt   *time.Time
-	Status      *work.Status
-	Priority    *int
-	ChildIDs    []int
-	ParentID    *int
+	UpdatedAt   *time.Time
+	CategoryID  *int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
@@ -26,24 +73,14 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	m.SetTitle(i.Title)
 	m.SetDescription(i.Description)
 	m.SetImageURL(i.ImageURL)
-	if v := i.UpdatedAt; v != nil {
-		m.SetUpdatedAt(*v)
-	}
-	m.SetText(i.Text)
 	if v := i.CreatedAt; v != nil {
 		m.SetCreatedAt(*v)
 	}
-	if v := i.Status; v != nil {
-		m.SetStatus(*v)
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
 	}
-	if v := i.Priority; v != nil {
-		m.SetPriority(*v)
-	}
-	if ids := i.ChildIDs; len(ids) > 0 {
-		m.AddChildIDs(ids...)
-	}
-	if v := i.ParentID; v != nil {
-		m.SetParentID(*v)
+	if v := i.CategoryID; v != nil {
+		m.SetCategoryID(*v)
 	}
 }
 
@@ -55,17 +92,12 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 
 // UpdateWorkInput represents a mutation input for updating works.
 type UpdateWorkInput struct {
-	Title          *string
-	Description    *string
-	ImageURL       *string
-	UpdatedAt      *time.Time
-	Text           *string
-	Status         *work.Status
-	Priority       *int
-	AddChildIDs    []int
-	RemoveChildIDs []int
-	ParentID       *int
-	ClearParent    bool
+	Title         *string
+	Description   *string
+	ImageURL      *string
+	UpdatedAt     *time.Time
+	CategoryID    *int
+	ClearCategory bool
 }
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
@@ -82,26 +114,11 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	if v := i.UpdatedAt; v != nil {
 		m.SetUpdatedAt(*v)
 	}
-	if v := i.Text; v != nil {
-		m.SetText(*v)
+	if i.ClearCategory {
+		m.ClearCategory()
 	}
-	if v := i.Status; v != nil {
-		m.SetStatus(*v)
-	}
-	if v := i.Priority; v != nil {
-		m.SetPriority(*v)
-	}
-	if ids := i.AddChildIDs; len(ids) > 0 {
-		m.AddChildIDs(ids...)
-	}
-	if ids := i.RemoveChildIDs; len(ids) > 0 {
-		m.RemoveChildIDs(ids...)
-	}
-	if i.ClearParent {
-		m.ClearParent()
-	}
-	if v := i.ParentID; v != nil {
-		m.SetParentID(*v)
+	if v := i.CategoryID; v != nil {
+		m.SetCategoryID(*v)
 	}
 }
 

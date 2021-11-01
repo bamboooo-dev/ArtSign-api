@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"artsign/ent/category"
 	"artsign/ent/schema"
 	"artsign/ent/work"
 	"time"
@@ -12,6 +13,12 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	categoryFields := schema.Category{}.Fields()
+	_ = categoryFields
+	// categoryDescName is the schema descriptor for name field.
+	categoryDescName := categoryFields[0].Descriptor()
+	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
 	workFields := schema.Work{}.Fields()
 	_ = workFields
 	// workDescTitle is the schema descriptor for title field.
@@ -22,20 +29,12 @@ func init() {
 	workDescDescription := workFields[1].Descriptor()
 	// work.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	work.DescriptionValidator = workDescDescription.Validators[0].(func(string) error)
-	// workDescUpdatedAt is the schema descriptor for updated_at field.
-	workDescUpdatedAt := workFields[3].Descriptor()
-	// work.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	work.DefaultUpdatedAt = workDescUpdatedAt.Default.(func() time.Time)
-	// workDescText is the schema descriptor for text field.
-	workDescText := workFields[4].Descriptor()
-	// work.TextValidator is a validator for the "text" field. It is called by the builders before save.
-	work.TextValidator = workDescText.Validators[0].(func(string) error)
 	// workDescCreatedAt is the schema descriptor for created_at field.
-	workDescCreatedAt := workFields[5].Descriptor()
+	workDescCreatedAt := workFields[3].Descriptor()
 	// work.DefaultCreatedAt holds the default value on creation for the created_at field.
 	work.DefaultCreatedAt = workDescCreatedAt.Default.(func() time.Time)
-	// workDescPriority is the schema descriptor for priority field.
-	workDescPriority := workFields[7].Descriptor()
-	// work.DefaultPriority holds the default value on creation for the priority field.
-	work.DefaultPriority = workDescPriority.Default.(int)
+	// workDescUpdatedAt is the schema descriptor for updated_at field.
+	workDescUpdatedAt := workFields[4].Descriptor()
+	// work.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	work.DefaultUpdatedAt = workDescUpdatedAt.Default.(func() time.Time)
 }

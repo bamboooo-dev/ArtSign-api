@@ -18,22 +18,23 @@ type Work implements Node {
   id: ID!
   createdAt: Time
   updatedAt: Time
-  status: Status!
-  priority: Int!
-  text: String!
   title: String!
   description: String!
   image_url: String!
-  parent: Work
-  children: [Work!]
+  category: Category!
+}
+
+type Category implements Node {
+  id: ID!
+  name: String!
 }
 
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
-  createWork(input: CreateWorkInput!): Work!
-  updateWork(id: ID!, input: UpdateWorkInput!): Work!
-  updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
+  createWork(input: CreateWorkInput!, categoryID: ID!): Work!
+  updateWork(id: ID!, input: UpdateWorkInput!, categoryID: ID): Work!
+  updateWorks(ids: [ID!]!, input: UpdateWorkInput!, categoryID: ID): [Work!]!
 }
 
 # Define a query for getting all works.
@@ -90,23 +91,11 @@ input WorkOrder {
 }
 
 input UpdateWorkInput {
-  status: Status
-  priority: Int
-  text: String
   title: String
   description: String
-  parentID: ID
-  clearParent: Boolean
-  addChildIDs: [ID!]
-  removeChildIDs: [ID!]
 }
 
 input CreateWorkInput {
-  status: Status! = IN_PROGRESS
-  priority: Int
-  text: String!
   title: String!
   description: String!
-  parentID: ID
-  childIDs: [ID!]
 }
