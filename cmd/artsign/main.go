@@ -2,37 +2,72 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	"artsign"
-	"artsign/ent"
-	"artsign/ent/migrate"
+	"artsign/app/interface/mysql"
+	"artsign/pkg/env"
 
 	"entgo.io/contrib/entgql"
-	"entgo.io/ent/dialect"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"go.uber.org/zap"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var revision = "undefined"
+
 func main() {
-	// Create ent.Client and run the schema migration.
-	client, err := ent.Open(dialect.SQLite, "file:ent?mode=memory&cache=shared&_fk=1")
+
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("Panic '%v' captured\n", err)
+		}
+	}()
+
+	fmt.Printf("Version is %s\n", revision)
+
+	cfg, err := env.LoadConfig()
 	if err != nil {
-		log.Fatal("opening ent client", err)
-	}
-	if err := client.Schema.Create(
-		context.Background(),
-		migrate.WithGlobalUniqueID(true),
-	); err != nil {
-		log.Fatal("opening ent client", err)
+		panic(err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	logger, _ := zap.NewProduction()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			logger.Error(err.Error())
+			return
+		}
+	}()
+
+	sugar := logger.Sugar()
+
+	artsignDB, err := mysql.NewDB(cfg.ArtsignMySQL)
+	if err != nil {
+		sugar.Error(ctx, err)
+		return
+	}
+	entClient, err := mysql.NewClient(artsignDB)
+	if err != nil {
+		sugar.Error(ctx, err)
+		return
+	}
+	defer func() {
+		if err := entClient.Close(); err != nil {
+			sugar.Error(ctx, err)
+			return
+		}
+	}()
+
 	// Configure the server and start listening on :8081.
-	srv := handler.NewDefaultServer(artsign.NewSchema(client))
-	srv.Use(entgql.Transactioner{TxOpener: client})
+	srv := handler.NewDefaultServer(artsign.NewSchema(entClient))
+	srv.Use(entgql.Transactioner{TxOpener: entClient})
 	http.Handle("/",
 		playground.Handler("Todo", "/query"),
 	)

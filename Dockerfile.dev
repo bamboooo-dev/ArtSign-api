@@ -1,0 +1,19 @@
+FROM golang:1.17.2-alpine3.14
+
+RUN apk --update --no-cache add git build-base openssh curl nmap mysql-client tzdata bash ca-certificates jq && \
+  update-ca-certificates
+
+ENV TZ Asia/Tokyo
+
+COPY install.sh ./
+RUN cat install.sh | sh -s -- -b $(go env GOPATH)/bin
+
+WORKDIR /artsign
+
+COPY go.mod /artsign/
+RUN go mod download
+
+COPY . /artsign/
+
+RUN chmod 755 ./entry-point.sh
+ENTRYPOINT [ "./entry-point.sh" ]
