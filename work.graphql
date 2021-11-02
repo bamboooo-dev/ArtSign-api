@@ -32,9 +32,9 @@ type Category implements Node {
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
-  createWork(input: CreateWorkInput!, categoryID: ID!): Work!
-  updateWork(id: ID!, input: UpdateWorkInput!, categoryID: ID): Work!
-  updateWorks(ids: [ID!]!, input: UpdateWorkInput!, categoryID: ID): [Work!]!
+  createWork(input: CreateWorkInput!): Work!
+  updateWork(id: ID!, input: UpdateWorkInput!): Work!
+  updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
 }
 
 # Define a query for getting all works.
@@ -93,9 +93,11 @@ input WorkOrder {
 input UpdateWorkInput {
   title: String
   description: String
+  categoryID: ID
 }
 
 input CreateWorkInput {
   title: String!
   description: String!
+  categoryID: ID!
 }

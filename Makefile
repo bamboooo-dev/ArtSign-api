@@ -9,3 +9,6 @@ gen:
 
 run:
 	go run ./cmd/artsign
+
+up:
+	docker-compose up

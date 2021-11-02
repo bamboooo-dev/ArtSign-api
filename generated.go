@@ -51,9 +51,9 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateWork  func(childComplexity int, input ent.CreateWorkInput, categoryID int) int
-		UpdateWork  func(childComplexity int, id int, input ent.UpdateWorkInput, categoryID *int) int
-		UpdateWorks func(childComplexity int, ids []int, input ent.UpdateWorkInput, categoryID *int) int
+		CreateWork  func(childComplexity int, input ent.CreateWorkInput) int
+		UpdateWork  func(childComplexity int, id int, input ent.UpdateWorkInput) int
+		UpdateWorks func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
 	}
 
 	PageInfo struct {
@@ -92,9 +92,9 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateWork(ctx context.Context, input ent.CreateWorkInput, categoryID int) (*ent.Work, error)
-	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput, categoryID *int) (*ent.Work, error)
-	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput, categoryID *int) ([]*ent.Work, error)
+	CreateWork(ctx context.Context, input ent.CreateWorkInput) (*ent.Work, error)
+	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error)
+	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error)
 }
 type QueryResolver interface {
 	Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
@@ -141,7 +141,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput), args["categoryID"].(int)), true
+		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput)), true
 
 	case "Mutation.updateWork":
 		if e.complexity.Mutation.UpdateWork == nil {
@@ -153,7 +153,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateWork(childComplexity, args["id"].(int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int)), true
+		return e.complexity.Mutation.UpdateWork(childComplexity, args["id"].(int), args["input"].(ent.UpdateWorkInput)), true
 
 	case "Mutation.updateWorks":
 		if e.complexity.Mutation.UpdateWorks == nil {
@@ -165,7 +165,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateWorks(childComplexity, args["ids"].([]int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int)), true
+		return e.complexity.Mutation.UpdateWorks(childComplexity, args["ids"].([]int), args["input"].(ent.UpdateWorkInput)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -413,9 +413,9 @@ type Category implements Node {
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
-  createWork(input: CreateWorkInput!, categoryID: ID!): Work!
-  updateWork(id: ID!, input: UpdateWorkInput!, categoryID: ID): Work!
-  updateWorks(ids: [ID!]!, input: UpdateWorkInput!, categoryID: ID): [Work!]!
+  createWork(input: CreateWorkInput!): Work!
+  updateWork(id: ID!, input: UpdateWorkInput!): Work!
+  updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
 }
 
 # Define a query for getting all works.
@@ -474,11 +474,13 @@ input WorkOrder {
 input UpdateWorkInput {
   title: String
   description: String
+  categoryID: ID
 }
 
 input CreateWorkInput {
   title: String!
   description: String!
+  categoryID: ID!
 }
 `, BuiltIn: false},
 }
@@ -500,15 +502,6 @@ func (ec *executionContext) field_Mutation_createWork_args(ctx context.Context, 
 		}
 	}
 	args["input"] = arg0
-	var arg1 int
-	if tmp, ok := rawArgs["categoryID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
-		arg1, err = ec.unmarshalNID2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["categoryID"] = arg1
 	return args, nil
 }
 
@@ -533,15 +526,6 @@ func (ec *executionContext) field_Mutation_updateWork_args(ctx context.Context, 
 		}
 	}
 	args["input"] = arg1
-	var arg2 *int
-	if tmp, ok := rawArgs["categoryID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
-		arg2, err = ec.unmarshalOID2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["categoryID"] = arg2
 	return args, nil
 }
 
@@ -566,15 +550,6 @@ func (ec *executionContext) field_Mutation_updateWorks_args(ctx context.Context,
 		}
 	}
 	args["input"] = arg1
-	var arg2 *int
-	if tmp, ok := rawArgs["categoryID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
-		arg2, err = ec.unmarshalOID2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["categoryID"] = arg2
 	return args, nil
 }
 
@@ -807,7 +782,7 @@ func (ec *executionContext) _Mutation_createWork(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWork(rctx, args["input"].(ent.CreateWorkInput), args["categoryID"].(int))
+		return ec.resolvers.Mutation().CreateWork(rctx, args["input"].(ent.CreateWorkInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -849,7 +824,7 @@ func (ec *executionContext) _Mutation_updateWork(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateWork(rctx, args["id"].(int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int))
+		return ec.resolvers.Mutation().UpdateWork(rctx, args["id"].(int), args["input"].(ent.UpdateWorkInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -891,7 +866,7 @@ func (ec *executionContext) _Mutation_updateWorks(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateWorks(rctx, args["ids"].([]int), args["input"].(ent.UpdateWorkInput), args["categoryID"].(*int))
+		return ec.resolvers.Mutation().UpdateWorks(rctx, args["ids"].([]int), args["input"].(ent.UpdateWorkInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2788,6 +2763,14 @@ func (ec *executionContext) unmarshalInputCreateWorkInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "categoryID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
+			it.CategoryID, err = ec.unmarshalNID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -2816,6 +2799,14 @@ func (ec *executionContext) unmarshalInputUpdateWorkInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "categoryID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
+			it.CategoryID, err = ec.unmarshalOID2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3520,6 +3511,27 @@ func (ec *executionContext) marshalNID2ᚕintᚄ(ctx context.Context, sel ast.Se
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNID2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	res, err := graphql.UnmarshalIntID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalIntID(*v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {

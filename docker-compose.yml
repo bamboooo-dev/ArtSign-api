@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    entrypoint: "air"
+    entrypoint: "./wait-for-it.sh db:3306 -- air"
     env_file: ./docker.env
     volumes:
       - bin:/artsign/bin
