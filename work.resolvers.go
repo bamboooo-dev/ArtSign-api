@@ -6,13 +6,45 @@ package artsign
 import (
 	"artsign/ent"
 	"artsign/ent/work"
+	"bytes"
 	"context"
+	"encoding/base64"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/google/uuid"
 )
 
-func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkInput) (*ent.Work, error) {
+func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkInput, image *string, fileExtension *string) (*ent.Work, error) {
+	data, err := base64.StdEncoding.DecodeString(*image)
+	if err != nil {
+		return nil, err
+	}
+	wb := new(bytes.Buffer)
+	_, err = wb.Write(data)
+	if err != nil {
+		return nil, err
+	}
+
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+	output, err := r.uploader.Upload(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(r.config.S3.BucketName),
+		Key:         aws.String(fmt.Sprintf("%s.%s", uuid.String(), *fileExtension)),
+		Body:        wb,
+		ContentType: aws.String(fmt.Sprintf("image/%s)", *fileExtension)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return ent.FromContext(ctx).Work.
 		Create().
 		SetInput(input).
+		SetImageURL(output.Location).
 		Save(ctx)
 }
 

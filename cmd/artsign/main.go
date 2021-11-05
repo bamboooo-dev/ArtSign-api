@@ -8,6 +8,7 @@ import (
 
 	"artsign"
 	"artsign/app/interface/mysql"
+	"artsign/app/interface/s3"
 	"artsign/pkg/env"
 
 	"entgo.io/contrib/entgql"
@@ -65,8 +66,14 @@ func main() {
 		}
 	}()
 
+	s3Uploader, err := s3.NewUploader(ctx, cfg.S3)
+	if err != nil {
+		sugar.Error(ctx, err)
+		return
+	}
+
 	// Configure the server and start listening on :8081.
-	srv := handler.NewDefaultServer(artsign.NewSchema(entClient))
+	srv := handler.NewDefaultServer(artsign.NewSchema(cfg, entClient, s3Uploader))
 	srv.Use(entgql.Transactioner{TxOpener: entClient})
 	http.Handle("/",
 		playground.Handler("Todo", "/query"),

@@ -2,8 +2,10 @@ package artsign
 
 import (
 	"artsign/ent"
+	"artsign/pkg/env"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 )
 
 // This file will not be regenerated automatically.
@@ -11,11 +13,15 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 // Resolver is the resolver root.
-type Resolver struct{ client *ent.Client }
+type Resolver struct {
+	config   *env.Config
+	client   *ent.Client
+	uploader *manager.Uploader
+}
 
 // NewSchema creates a graphql executable schema.
-func NewSchema(client *ent.Client) graphql.ExecutableSchema {
+func NewSchema(config *env.Config, client *ent.Client, uploader *manager.Uploader) graphql.ExecutableSchema {
 	return NewExecutableSchema(Config{
-		Resolvers: &Resolver{client},
+		Resolvers: &Resolver{config, client, uploader},
 	})
 }

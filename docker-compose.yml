@@ -13,6 +13,17 @@ services:
       # - ./db/conf.d:/etc/mysql/conf.d
     ports:
       - 4306:3306
+  storage:
+    image: minio/minio:latest
+    container_name: artsign_storage
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - ./tmp/s3/data:/data
+    entrypoint: sh
+    command: -c 'mkdir -p /data/unit-test /data/local && minio server /data --console-address ":9001"'
+    env_file: ./docker.env
   app:
     container_name: artsign_app
     build:

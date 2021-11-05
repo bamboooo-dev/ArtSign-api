@@ -51,7 +51,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateWork  func(childComplexity int, input ent.CreateWorkInput) int
+		CreateWork  func(childComplexity int, input ent.CreateWorkInput, image *string, fileExtension *string) int
 		UpdateWork  func(childComplexity int, id int, input ent.UpdateWorkInput) int
 		UpdateWorks func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
 	}
@@ -92,7 +92,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateWork(ctx context.Context, input ent.CreateWorkInput) (*ent.Work, error)
+	CreateWork(ctx context.Context, input ent.CreateWorkInput, image *string, fileExtension *string) (*ent.Work, error)
 	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error)
 	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error)
 }
@@ -141,7 +141,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput)), true
+		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput), args["image"].(*string), args["fileExtension"].(*string)), true
 
 	case "Mutation.updateWork":
 		if e.complexity.Mutation.UpdateWork == nil {
@@ -413,7 +413,11 @@ type Category implements Node {
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
-  createWork(input: CreateWorkInput!): Work!
+  createWork(
+    input: CreateWorkInput!
+    image: String
+    fileExtension: String
+  ): Work!
   updateWork(id: ID!, input: UpdateWorkInput!): Work!
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
 }
@@ -502,6 +506,24 @@ func (ec *executionContext) field_Mutation_createWork_args(ctx context.Context, 
 		}
 	}
 	args["input"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["image"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["image"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["fileExtension"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fileExtension"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fileExtension"] = arg2
 	return args, nil
 }
 
@@ -782,7 +804,7 @@ func (ec *executionContext) _Mutation_createWork(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWork(rctx, args["input"].(ent.CreateWorkInput))
+		return ec.resolvers.Mutation().CreateWork(rctx, args["input"].(ent.CreateWorkInput), args["image"].(*string), args["fileExtension"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
