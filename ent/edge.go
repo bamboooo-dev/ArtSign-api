@@ -12,10 +12,26 @@ func (c *Category) Works(ctx context.Context) ([]*Work, error) {
 	return result, err
 }
 
+func (u *User) Works(ctx context.Context) ([]*Work, error) {
+	result, err := u.Edges.WorksOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryWorks().All(ctx)
+	}
+	return result, err
+}
+
 func (w *Work) Category(ctx context.Context) (*Category, error) {
 	result, err := w.Edges.CategoryOrErr()
 	if IsNotLoaded(err) {
 		result, err = w.QueryCategory().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (w *Work) Owner(ctx context.Context) (*User, error) {
+	result, err := w.Edges.OwnerOrErr()
+	if IsNotLoaded(err) {
+		result, err = w.QueryOwner().Only(ctx)
 	}
 	return result, MaskNotFound(err)
 }

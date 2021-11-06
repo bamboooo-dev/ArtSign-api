@@ -19,6 +19,18 @@ var (
 		Columns:    CategoriesColumns,
 		PrimaryKey: []*schema.Column{CategoriesColumns[0]},
 	}
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Size: 2147483647},
+	}
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+	}
 	// WorksColumns holds the columns for the "works" table.
 	WorksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -28,6 +40,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "category_works", Type: field.TypeInt, Nullable: true},
+		{Name: "user_works", Type: field.TypeInt, Nullable: true},
 	}
 	// WorksTable holds the schema information for the "works" table.
 	WorksTable = &schema.Table{
@@ -41,15 +54,23 @@ var (
 				RefColumns: []*schema.Column{CategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
+			{
+				Symbol:     "works_users_works",
+				Columns:    []*schema.Column{WorksColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
 		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
+		UsersTable,
 		WorksTable,
 	}
 )
 
 func init() {
 	WorksTable.ForeignKeys[0].RefTable = CategoriesTable
+	WorksTable.ForeignKeys[1].RefTable = UsersTable
 }

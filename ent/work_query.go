@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/predicate"
+	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
 	"errors"
@@ -27,6 +28,7 @@ type WorkQuery struct {
 	predicates []predicate.Work
 	// eager-loading edges.
 	withCategory *CategoryQuery
+	withOwner    *UserQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -79,6 +81,28 @@ func (wq *WorkQuery) QueryCategory() *CategoryQuery {
 			sqlgraph.From(work.Table, work.FieldID, selector),
 			sqlgraph.To(category.Table, category.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, work.CategoryTable, work.CategoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOwner chains the current query on the "owner" edge.
+func (wq *WorkQuery) QueryOwner() *UserQuery {
+	query := &UserQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, work.OwnerTable, work.OwnerColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -268,6 +292,7 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 		order:        append([]OrderFunc{}, wq.order...),
 		predicates:   append([]predicate.Work{}, wq.predicates...),
 		withCategory: wq.withCategory.Clone(),
+		withOwner:    wq.withOwner.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
 		path: wq.path,
@@ -282,6 +307,17 @@ func (wq *WorkQuery) WithCategory(opts ...func(*CategoryQuery)) *WorkQuery {
 		opt(query)
 	}
 	wq.withCategory = query
+	return wq
+}
+
+// WithOwner tells the query-builder to eager-load the nodes that are connected to
+// the "owner" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithOwner(opts ...func(*UserQuery)) *WorkQuery {
+	query := &UserQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withOwner = query
 	return wq
 }
 
@@ -351,11 +387,12 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 		nodes       = []*Work{}
 		withFKs     = wq.withFKs
 		_spec       = wq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			wq.withCategory != nil,
+			wq.withOwner != nil,
 		}
 	)
-	if wq.withCategory != nil {
+	if wq.withCategory != nil || wq.withOwner != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -406,6 +443,35 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 			}
 			for i := range nodes {
 				nodes[i].Edges.Category = n
+			}
+		}
+	}
+
+	if query := wq.withOwner; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Work)
+		for i := range nodes {
+			if nodes[i].user_works == nil {
+				continue
+			}
+			fk := *nodes[i].user_works
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(user.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "user_works" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Owner = n
 			}
 		}
 	}

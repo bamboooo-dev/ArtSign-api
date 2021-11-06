@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Category is the client for interacting with the Category builders.
 	Category *CategoryClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
 	// Work is the client for interacting with the Work builders.
 	Work *WorkClient
 
@@ -152,6 +154,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Category = NewCategoryClient(tx.config)
+	tx.User = NewUserClient(tx.config)
 	tx.Work = NewWorkClient(tx.config)
 }
 

@@ -58,6 +58,64 @@ func (u *CategoryUpdateOne) SetInput(i UpdateCategoryInput) *CategoryUpdateOne {
 	return u
 }
 
+// CreateUserInput represents a mutation input for creating users.
+type CreateUserInput struct {
+	Title       string
+	Description string
+	WorkIDs     []int
+}
+
+// Mutate applies the CreateUserInput on the UserCreate builder.
+func (i *CreateUserInput) Mutate(m *UserCreate) {
+	m.SetTitle(i.Title)
+	m.SetDescription(i.Description)
+	if ids := i.WorkIDs; len(ids) > 0 {
+		m.AddWorkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the CreateUserInput on the create builder.
+func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateUserInput represents a mutation input for updating users.
+type UpdateUserInput struct {
+	Title         *string
+	Description   *string
+	AddWorkIDs    []int
+	RemoveWorkIDs []int
+}
+
+// Mutate applies the UpdateUserInput on the UserMutation.
+func (i *UpdateUserInput) Mutate(m *UserMutation) {
+	if v := i.Title; v != nil {
+		m.SetTitle(*v)
+	}
+	if v := i.Description; v != nil {
+		m.SetDescription(*v)
+	}
+	if ids := i.AddWorkIDs; len(ids) > 0 {
+		m.AddWorkIDs(ids...)
+	}
+	if ids := i.RemoveWorkIDs; len(ids) > 0 {
+		m.RemoveWorkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the UpdateUserInput on the update builder.
+func (u *UserUpdate) SetInput(i UpdateUserInput) *UserUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateUserInput on the update-one builder.
+func (u *UserUpdateOne) SetInput(i UpdateUserInput) *UserUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateWorkInput represents a mutation input for creating works.
 type CreateWorkInput struct {
 	Title       string
@@ -66,6 +124,7 @@ type CreateWorkInput struct {
 	CreatedAt   *time.Time
 	UpdatedAt   *time.Time
 	CategoryID  *int
+	OwnerID     *int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
@@ -81,6 +140,9 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	}
 	if v := i.CategoryID; v != nil {
 		m.SetCategoryID(*v)
+	}
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
 	}
 }
 
@@ -98,6 +160,8 @@ type UpdateWorkInput struct {
 	UpdatedAt     *time.Time
 	CategoryID    *int
 	ClearCategory bool
+	OwnerID       *int
+	ClearOwner    bool
 }
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
@@ -119,6 +183,12 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	}
 	if v := i.CategoryID; v != nil {
 		m.SetCategoryID(*v)
+	}
+	if i.ClearOwner {
+		m.ClearOwner()
+	}
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
 	}
 }
 

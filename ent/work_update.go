@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/predicate"
+	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
 	"fmt"
@@ -79,6 +80,25 @@ func (wu *WorkUpdate) SetCategory(c *Category) *WorkUpdate {
 	return wu.SetCategoryID(c.ID)
 }
 
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (wu *WorkUpdate) SetOwnerID(id int) *WorkUpdate {
+	wu.mutation.SetOwnerID(id)
+	return wu
+}
+
+// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
+func (wu *WorkUpdate) SetNillableOwnerID(id *int) *WorkUpdate {
+	if id != nil {
+		wu = wu.SetOwnerID(*id)
+	}
+	return wu
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (wu *WorkUpdate) SetOwner(u *User) *WorkUpdate {
+	return wu.SetOwnerID(u.ID)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wu *WorkUpdate) Mutation() *WorkMutation {
 	return wu.mutation
@@ -87,6 +107,12 @@ func (wu *WorkUpdate) Mutation() *WorkMutation {
 // ClearCategory clears the "category" edge to the Category entity.
 func (wu *WorkUpdate) ClearCategory() *WorkUpdate {
 	wu.mutation.ClearCategory()
+	return wu
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (wu *WorkUpdate) ClearOwner() *WorkUpdate {
+	wu.mutation.ClearOwner()
 	return wu
 }
 
@@ -246,6 +272,41 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if wu.mutation.OwnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   work.OwnerTable,
+			Columns: []string{work.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   work.OwnerTable,
+			Columns: []string{work.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, wu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{work.Label}
@@ -316,6 +377,25 @@ func (wuo *WorkUpdateOne) SetCategory(c *Category) *WorkUpdateOne {
 	return wuo.SetCategoryID(c.ID)
 }
 
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (wuo *WorkUpdateOne) SetOwnerID(id int) *WorkUpdateOne {
+	wuo.mutation.SetOwnerID(id)
+	return wuo
+}
+
+// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
+func (wuo *WorkUpdateOne) SetNillableOwnerID(id *int) *WorkUpdateOne {
+	if id != nil {
+		wuo = wuo.SetOwnerID(*id)
+	}
+	return wuo
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (wuo *WorkUpdateOne) SetOwner(u *User) *WorkUpdateOne {
+	return wuo.SetOwnerID(u.ID)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 	return wuo.mutation
@@ -324,6 +404,12 @@ func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 // ClearCategory clears the "category" edge to the Category entity.
 func (wuo *WorkUpdateOne) ClearCategory() *WorkUpdateOne {
 	wuo.mutation.ClearCategory()
+	return wuo
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (wuo *WorkUpdateOne) ClearOwner() *WorkUpdateOne {
+	wuo.mutation.ClearOwner()
 	return wuo
 }
 
@@ -499,6 +585,41 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.OwnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   work.OwnerTable,
+			Columns: []string{work.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   work.OwnerTable,
+			Columns: []string{work.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
 				},
 			},
 		}

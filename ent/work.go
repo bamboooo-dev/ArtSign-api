@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/category"
+	"artsign/ent/user"
 	"artsign/ent/work"
 	"fmt"
 	"strings"
@@ -31,15 +32,18 @@ type Work struct {
 	// The values are being populated by the WorkQuery when eager-loading is set.
 	Edges          WorkEdges `json:"edges"`
 	category_works *int
+	user_works     *int
 }
 
 // WorkEdges holds the relations/edges for other nodes in the graph.
 type WorkEdges struct {
 	// Category holds the value of the category edge.
 	Category *Category `json:"category,omitempty"`
+	// Owner holds the value of the owner edge.
+	Owner *User `json:"owner,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // CategoryOrErr returns the Category value or an error if the edge
@@ -56,6 +60,20 @@ func (e WorkEdges) CategoryOrErr() (*Category, error) {
 	return nil, &NotLoadedError{edge: "category"}
 }
 
+// OwnerOrErr returns the Owner value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e WorkEdges) OwnerOrErr() (*User, error) {
+	if e.loadedTypes[1] {
+		if e.Owner == nil {
+			// The edge owner was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.Owner, nil
+	}
+	return nil, &NotLoadedError{edge: "owner"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Work) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
@@ -68,6 +86,8 @@ func (*Work) scanValues(columns []string) ([]interface{}, error) {
 		case work.FieldCreatedAt, work.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case work.ForeignKeys[0]: // category_works
+			values[i] = new(sql.NullInt64)
+		case work.ForeignKeys[1]: // user_works
 			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Work", columns[i])
@@ -127,6 +147,13 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 				w.category_works = new(int)
 				*w.category_works = int(value.Int64)
 			}
+		case work.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_works", value)
+			} else if value.Valid {
+				w.user_works = new(int)
+				*w.user_works = int(value.Int64)
+			}
 		}
 	}
 	return nil
@@ -135,6 +162,11 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 // QueryCategory queries the "category" edge of the Work entity.
 func (w *Work) QueryCategory() *CategoryQuery {
 	return (&WorkClient{config: w.config}).QueryCategory(w)
+}
+
+// QueryOwner queries the "owner" edge of the Work entity.
+func (w *Work) QueryOwner() *UserQuery {
+	return (&WorkClient{config: w.config}).QueryOwner(w)
 }
 
 // Update returns a builder for updating this Work.

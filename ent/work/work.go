@@ -23,6 +23,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeCategory holds the string denoting the category edge name in mutations.
 	EdgeCategory = "category"
+	// EdgeOwner holds the string denoting the owner edge name in mutations.
+	EdgeOwner = "owner"
 	// Table holds the table name of the work in the database.
 	Table = "works"
 	// CategoryTable is the table that holds the category relation/edge.
@@ -32,6 +34,13 @@ const (
 	CategoryInverseTable = "categories"
 	// CategoryColumn is the table column denoting the category relation/edge.
 	CategoryColumn = "category_works"
+	// OwnerTable is the table that holds the owner relation/edge.
+	OwnerTable = "works"
+	// OwnerInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	OwnerInverseTable = "users"
+	// OwnerColumn is the table column denoting the owner relation/edge.
+	OwnerColumn = "user_works"
 )
 
 // Columns holds all SQL columns for work fields.
@@ -48,6 +57,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"category_works",
+	"user_works",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

@@ -46,5 +46,8 @@ func (Work) Edges() []ent.Edge {
 		edge.From("category", Category.Type).
 			Ref("works").
 			Unique(),
+		edge.From("owner", User.Type).
+			Ref("works").
+			Unique(),
 	}
 }

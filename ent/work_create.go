@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/category"
+	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
 	"errors"
@@ -84,6 +85,25 @@ func (wc *WorkCreate) SetNillableCategoryID(id *int) *WorkCreate {
 // SetCategory sets the "category" edge to the Category entity.
 func (wc *WorkCreate) SetCategory(c *Category) *WorkCreate {
 	return wc.SetCategoryID(c.ID)
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (wc *WorkCreate) SetOwnerID(id int) *WorkCreate {
+	wc.mutation.SetOwnerID(id)
+	return wc
+}
+
+// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
+func (wc *WorkCreate) SetNillableOwnerID(id *int) *WorkCreate {
+	if id != nil {
+		wc = wc.SetOwnerID(*id)
+	}
+	return wc
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (wc *WorkCreate) SetOwner(u *User) *WorkCreate {
+	return wc.SetOwnerID(u.ID)
 }
 
 // Mutation returns the WorkMutation object of the builder.
@@ -279,6 +299,26 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.category_works = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   work.OwnerTable,
+			Columns: []string{work.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_works = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

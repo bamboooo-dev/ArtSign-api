@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/category"
+	"artsign/ent/user"
 	"artsign/ent/work"
 	"errors"
 	"fmt"
@@ -31,6 +32,7 @@ type OrderFunc func(*sql.Selector)
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		category.Table: category.ValidColumn,
+		user.Table:     user.ValidColumn,
 		work.Table:     work.ValidColumn,
 	}
 	check, ok := checks[table]
