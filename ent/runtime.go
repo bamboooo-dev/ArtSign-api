@@ -24,6 +24,8 @@ func init() {
 	commentMixin := schema.Comment{}.Mixin()
 	commentMixinFields0 := commentMixin[0].Fields()
 	_ = commentMixinFields0
+	commentMixinFields1 := commentMixin[1].Fields()
+	_ = commentMixinFields1
 	commentFields := schema.Comment{}.Fields()
 	_ = commentFields
 	// commentDescCreateTime is the schema descriptor for create_time field.
@@ -31,7 +33,7 @@ func init() {
 	// comment.DefaultCreateTime holds the default value on creation for the create_time field.
 	comment.DefaultCreateTime = commentDescCreateTime.Default.(func() time.Time)
 	// commentDescUpdateTime is the schema descriptor for update_time field.
-	commentDescUpdateTime := commentMixinFields0[1].Descriptor()
+	commentDescUpdateTime := commentMixinFields1[0].Descriptor()
 	// comment.DefaultUpdateTime holds the default value on creation for the update_time field.
 	comment.DefaultUpdateTime = commentDescUpdateTime.Default.(func() time.Time)
 	// comment.UpdateDefaultUpdateTime holds the default value on update for the update_time field.

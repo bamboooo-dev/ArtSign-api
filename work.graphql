@@ -23,6 +23,13 @@ type Work implements Node {
   image_url: String!
   category: Category!
   owner: User!
+  commentConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: CommentOrder
+  ): CommentConnection
 }
 
 type Category implements Node {
@@ -97,8 +104,19 @@ type WorkConnection {
   edges: [WorkEdge]
 }
 
+type CommentConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [CommentEdge]
+}
+
 type WorkEdge {
   node: Work
+  cursor: Cursor!
+}
+
+type CommentEdge {
+  node: Comment
   cursor: Cursor!
 }
 
@@ -112,6 +130,11 @@ enum WorkOrderField {
   TEXT
 }
 
+enum CommentOrderField {
+  CREATE_TIME
+  UPDATE_TIME
+}
+
 enum OrderDirection {
   ASC
   DESC
@@ -120,6 +143,11 @@ enum OrderDirection {
 input WorkOrder {
   direction: OrderDirection!
   field: WorkOrderField
+}
+
+input CommentOrder {
+  direction: OrderDirection!
+  field: CommentOrderField
 }
 
 input UpdateWorkInput {

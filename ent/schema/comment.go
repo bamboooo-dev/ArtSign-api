@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -14,7 +15,14 @@ type Comment struct {
 
 func (Comment) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixin.Time{},
+		mixin.AnnotateFields(
+			mixin.CreateTime{},
+			entgql.OrderField("CREATE_TIME"),
+		),
+		mixin.AnnotateFields(
+			mixin.UpdateTime{},
+			entgql.OrderField("UPDATE_TIME"),
+		),
 	}
 }
 

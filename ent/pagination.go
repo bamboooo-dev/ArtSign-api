@@ -698,6 +698,63 @@ func (c *CommentQuery) Paginate(
 	return conn, nil
 }
 
+var (
+	// CommentOrderFieldCreateTime orders Comment by create_time.
+	CommentOrderFieldCreateTime = &CommentOrderField{
+		field: comment.FieldCreateTime,
+		toCursor: func(c *Comment) Cursor {
+			return Cursor{
+				ID:    c.ID,
+				Value: c.CreateTime,
+			}
+		},
+	}
+	// CommentOrderFieldUpdateTime orders Comment by update_time.
+	CommentOrderFieldUpdateTime = &CommentOrderField{
+		field: comment.FieldUpdateTime,
+		toCursor: func(c *Comment) Cursor {
+			return Cursor{
+				ID:    c.ID,
+				Value: c.UpdateTime,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f CommentOrderField) String() string {
+	var str string
+	switch f.field {
+	case comment.FieldCreateTime:
+		str = "CREATE_TIME"
+	case comment.FieldUpdateTime:
+		str = "UPDATE_TIME"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f CommentOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *CommentOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("CommentOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATE_TIME":
+		*f = *CommentOrderFieldCreateTime
+	case "UPDATE_TIME":
+		*f = *CommentOrderFieldUpdateTime
+	default:
+		return fmt.Errorf("%s is not a valid CommentOrderField", str)
+	}
+	return nil
+}
+
 // CommentOrderField defines the ordering field of Comment.
 type CommentOrderField struct {
 	field    string
