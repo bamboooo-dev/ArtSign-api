@@ -67,6 +67,10 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserI
 		Save(ctx)
 }
 
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error) {
+	return ent.FromContext(ctx).User.UpdateOneID(id).SetInput(input).Save(ctx)
+}
+
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,

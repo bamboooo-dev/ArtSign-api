@@ -53,6 +53,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateUser  func(childComplexity int, input ent.CreateUserInput) int
 		CreateWork  func(childComplexity int, input ent.CreateWorkInput, image *string, fileExtension *string) int
+		UpdateUser  func(childComplexity int, id int, input ent.UpdateUserInput) int
 		UpdateWork  func(childComplexity int, id int, input ent.UpdateWorkInput) int
 		UpdateWorks func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
 	}
@@ -104,6 +105,7 @@ type MutationResolver interface {
 	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error)
 	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error)
 	CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error)
+	UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error)
 }
 type QueryResolver interface {
 	Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
@@ -163,6 +165,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput), args["image"].(*string), args["fileExtension"].(*string)), true
+
+	case "Mutation.updateUser":
+		if e.complexity.Mutation.UpdateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(int), args["input"].(ent.UpdateUserInput)), true
 
 	case "Mutation.updateWork":
 		if e.complexity.Mutation.UpdateWork == nil {
@@ -477,6 +491,7 @@ type Mutation {
   updateWork(id: ID!, input: UpdateWorkInput!): Work!
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
   createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
 }
 
 # Define a query for getting all works.
@@ -549,6 +564,11 @@ input CreateUserInput {
   name: String!
   profile: String
 }
+
+input UpdateUserInput {
+  name: String
+  profile: String
+}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -602,6 +622,30 @@ func (ec *executionContext) field_Mutation_createWork_args(ctx context.Context, 
 		}
 	}
 	args["fileExtension"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 ent.UpdateUserInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateUserInput2artsignᚋentᚐUpdateUserInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -1009,6 +1053,48 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CreateUser(rctx, args["input"].(ent.CreateUserInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ent.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(int), args["input"].(ent.UpdateUserInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3095,6 +3181,37 @@ func (ec *executionContext) unmarshalInputCreateWorkInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, obj interface{}) (ent.UpdateUserInput, error) {
+	var it ent.UpdateUserInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "profile":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profile"))
+			it.Profile, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateWorkInput(ctx context.Context, obj interface{}) (ent.UpdateWorkInput, error) {
 	var it ent.UpdateWorkInput
 	asMap := map[string]interface{}{}
@@ -3261,6 +3378,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateUser":
+			out.Values[i] = ec._Mutation_updateUser(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3995,6 +4117,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUpdateUserInput2artsignᚋentᚐUpdateUserInput(ctx context.Context, v interface{}) (ent.UpdateUserInput, error) {
+	res, err := ec.unmarshalInputUpdateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateWorkInput2artsignᚋentᚐUpdateWorkInput(ctx context.Context, v interface{}) (ent.UpdateWorkInput, error) {

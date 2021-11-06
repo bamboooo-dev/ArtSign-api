@@ -47,6 +47,7 @@ type Mutation {
   updateWork(id: ID!, input: UpdateWorkInput!): Work!
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
   createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
 }
 
 # Define a query for getting all works.
@@ -117,5 +118,10 @@ input CreateWorkInput {
 
 input CreateUserInput {
   name: String!
+  profile: String
+}
+
+input UpdateUserInput {
+  name: String
   profile: String
 }
