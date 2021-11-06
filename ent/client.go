@@ -490,6 +490,22 @@ func (c *UserClient) QueryLikes(u *User) *WorkQuery {
 	return query
 }
 
+// QueryTreasures queries the treasures edge of a User.
+func (c *UserClient) QueryTreasures(u *User) *WorkQuery {
+	query := &WorkQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(work.Table, work.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.TreasuresTable, user.TreasuresPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryComments queries the comments edge of a User.
 func (c *UserClient) QueryComments(u *User) *CommentQuery {
 	query := &CommentQuery{config: c.config}
@@ -637,6 +653,22 @@ func (c *WorkClient) QueryLikers(w *Work) *UserQuery {
 			sqlgraph.From(work.Table, work.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, work.LikersTable, work.LikersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTreasurers queries the treasurers edge of a Work.
+func (c *WorkClient) QueryTreasurers(w *Work) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, work.TreasurersTable, work.TreasurersPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
 		return fromV, nil

@@ -62,6 +62,13 @@ type User implements Node {
     last: Int
     orderBy: WorkOrder
   ): WorkConnection
+  treasureConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+  ): WorkConnection
 }
 
 type Comment implements Node {
@@ -71,13 +78,11 @@ type Comment implements Node {
   updateTime: Time!
 }
 
-type UserLike {
-  id: ID!
-  userID: ID!
-  workID: ID!
+type CreateUserLikePayload {
+  clientMutationId: String
 }
 
-type CreateUserLikePayload {
+type CreateUserTreasurePayload {
   clientMutationId: String
 }
 
@@ -95,6 +100,7 @@ type Mutation {
   updateUser(id: ID!, input: UpdateUserInput!): User!
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
   createComment(input: CreateCommentInput!): Comment!
+  createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
 }
 
 # Define a query for getting all works.
@@ -224,6 +230,12 @@ input UpdateUserInput {
 }
 
 input CreateUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+input CreateUserTreasureInput {
   clientMutationId: String
   userID: ID!
   workID: ID!

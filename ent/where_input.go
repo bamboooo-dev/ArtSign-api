@@ -530,6 +530,10 @@ type UserWhereInput struct {
 	HasLikes     *bool             `json:"hasLikes,omitempty"`
 	HasLikesWith []*WorkWhereInput `json:"hasLikesWith,omitempty"`
 
+	// "treasures" edge predicates.
+	HasTreasures     *bool             `json:"hasTreasures,omitempty"`
+	HasTreasuresWith []*WorkWhereInput `json:"hasTreasuresWith,omitempty"`
+
 	// "comments" edge predicates.
 	HasComments     *bool                `json:"hasComments,omitempty"`
 	HasCommentsWith []*CommentWhereInput `json:"hasCommentsWith,omitempty"`
@@ -733,6 +737,24 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 		}
 		predicates = append(predicates, user.HasLikesWith(with...))
 	}
+	if i.HasTreasures != nil {
+		p := user.HasTreasures()
+		if !*i.HasTreasures {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTreasuresWith) > 0 {
+		with := make([]predicate.Work, 0, len(i.HasTreasuresWith))
+		for _, w := range i.HasTreasuresWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasTreasuresWith(with...))
+	}
 	if i.HasComments != nil {
 		p := user.HasComments()
 		if !*i.HasComments {
@@ -853,6 +875,10 @@ type WorkWhereInput struct {
 	// "likers" edge predicates.
 	HasLikers     *bool             `json:"hasLikers,omitempty"`
 	HasLikersWith []*UserWhereInput `json:"hasLikersWith,omitempty"`
+
+	// "treasurers" edge predicates.
+	HasTreasurers     *bool             `json:"hasTreasurers,omitempty"`
+	HasTreasurersWith []*UserWhereInput `json:"hasTreasurersWith,omitempty"`
 
 	// "comments" edge predicates.
 	HasComments     *bool                `json:"hasComments,omitempty"`
@@ -1161,6 +1187,24 @@ func (i *WorkWhereInput) P() (predicate.Work, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, work.HasLikersWith(with...))
+	}
+	if i.HasTreasurers != nil {
+		p := work.HasTreasurers()
+		if !*i.HasTreasurers {
+			p = work.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTreasurersWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasTreasurersWith))
+		for _, w := range i.HasTreasurersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, work.HasTreasurersWith(with...))
 	}
 	if i.HasComments != nil {
 		p := work.HasComments()

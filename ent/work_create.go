@@ -122,6 +122,21 @@ func (wc *WorkCreate) AddLikers(u ...*User) *WorkCreate {
 	return wc.AddLikerIDs(ids...)
 }
 
+// AddTreasurerIDs adds the "treasurers" edge to the User entity by IDs.
+func (wc *WorkCreate) AddTreasurerIDs(ids ...int) *WorkCreate {
+	wc.mutation.AddTreasurerIDs(ids...)
+	return wc
+}
+
+// AddTreasurers adds the "treasurers" edges to the User entity.
+func (wc *WorkCreate) AddTreasurers(u ...*User) *WorkCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return wc.AddTreasurerIDs(ids...)
+}
+
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
 func (wc *WorkCreate) AddCommentIDs(ids ...int) *WorkCreate {
 	wc.mutation.AddCommentIDs(ids...)
@@ -358,6 +373,25 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 			Inverse: true,
 			Table:   work.LikersTable,
 			Columns: work.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.TreasurersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.TreasurersTable,
+			Columns: work.TreasurersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

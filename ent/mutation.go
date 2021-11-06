@@ -947,24 +947,27 @@ func (m *CommentMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	name            *string
-	profile         *string
-	clearedFields   map[string]struct{}
-	works           map[int]struct{}
-	removedworks    map[int]struct{}
-	clearedworks    bool
-	likes           map[int]struct{}
-	removedlikes    map[int]struct{}
-	clearedlikes    bool
-	comments        map[int]struct{}
-	removedcomments map[int]struct{}
-	clearedcomments bool
-	done            bool
-	oldValue        func(context.Context) (*User, error)
-	predicates      []predicate.User
+	op               Op
+	typ              string
+	id               *int
+	name             *string
+	profile          *string
+	clearedFields    map[string]struct{}
+	works            map[int]struct{}
+	removedworks     map[int]struct{}
+	clearedworks     bool
+	likes            map[int]struct{}
+	removedlikes     map[int]struct{}
+	clearedlikes     bool
+	treasures        map[int]struct{}
+	removedtreasures map[int]struct{}
+	clearedtreasures bool
+	comments         map[int]struct{}
+	removedcomments  map[int]struct{}
+	clearedcomments  bool
+	done             bool
+	oldValue         func(context.Context) (*User, error)
+	predicates       []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -1226,6 +1229,60 @@ func (m *UserMutation) ResetLikes() {
 	m.removedlikes = nil
 }
 
+// AddTreasureIDs adds the "treasures" edge to the Work entity by ids.
+func (m *UserMutation) AddTreasureIDs(ids ...int) {
+	if m.treasures == nil {
+		m.treasures = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.treasures[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTreasures clears the "treasures" edge to the Work entity.
+func (m *UserMutation) ClearTreasures() {
+	m.clearedtreasures = true
+}
+
+// TreasuresCleared reports if the "treasures" edge to the Work entity was cleared.
+func (m *UserMutation) TreasuresCleared() bool {
+	return m.clearedtreasures
+}
+
+// RemoveTreasureIDs removes the "treasures" edge to the Work entity by IDs.
+func (m *UserMutation) RemoveTreasureIDs(ids ...int) {
+	if m.removedtreasures == nil {
+		m.removedtreasures = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.treasures, ids[i])
+		m.removedtreasures[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTreasures returns the removed IDs of the "treasures" edge to the Work entity.
+func (m *UserMutation) RemovedTreasuresIDs() (ids []int) {
+	for id := range m.removedtreasures {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TreasuresIDs returns the "treasures" edge IDs in the mutation.
+func (m *UserMutation) TreasuresIDs() (ids []int) {
+	for id := range m.treasures {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTreasures resets all changes to the "treasures" edge.
+func (m *UserMutation) ResetTreasures() {
+	m.treasures = nil
+	m.clearedtreasures = false
+	m.removedtreasures = nil
+}
+
 // AddCommentIDs adds the "comments" edge to the Comment entity by ids.
 func (m *UserMutation) AddCommentIDs(ids ...int) {
 	if m.comments == nil {
@@ -1415,12 +1472,15 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.works != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
 	if m.likes != nil {
 		edges = append(edges, user.EdgeLikes)
+	}
+	if m.treasures != nil {
+		edges = append(edges, user.EdgeTreasures)
 	}
 	if m.comments != nil {
 		edges = append(edges, user.EdgeComments)
@@ -1444,6 +1504,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeTreasures:
+		ids := make([]ent.Value, 0, len(m.treasures))
+		for id := range m.treasures {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.comments))
 		for id := range m.comments {
@@ -1456,12 +1522,15 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedworks != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
 	if m.removedlikes != nil {
 		edges = append(edges, user.EdgeLikes)
+	}
+	if m.removedtreasures != nil {
+		edges = append(edges, user.EdgeTreasures)
 	}
 	if m.removedcomments != nil {
 		edges = append(edges, user.EdgeComments)
@@ -1485,6 +1554,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeTreasures:
+		ids := make([]ent.Value, 0, len(m.removedtreasures))
+		for id := range m.removedtreasures {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.removedcomments))
 		for id := range m.removedcomments {
@@ -1497,12 +1572,15 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedworks {
 		edges = append(edges, user.EdgeWorks)
 	}
 	if m.clearedlikes {
 		edges = append(edges, user.EdgeLikes)
+	}
+	if m.clearedtreasures {
+		edges = append(edges, user.EdgeTreasures)
 	}
 	if m.clearedcomments {
 		edges = append(edges, user.EdgeComments)
@@ -1518,6 +1596,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedworks
 	case user.EdgeLikes:
 		return m.clearedlikes
+	case user.EdgeTreasures:
+		return m.clearedtreasures
 	case user.EdgeComments:
 		return m.clearedcomments
 	}
@@ -1542,6 +1622,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 	case user.EdgeLikes:
 		m.ResetLikes()
 		return nil
+	case user.EdgeTreasures:
+		m.ResetTreasures()
+		return nil
 	case user.EdgeComments:
 		m.ResetComments()
 		return nil
@@ -1552,28 +1635,31 @@ func (m *UserMutation) ResetEdge(name string) error {
 // WorkMutation represents an operation that mutates the Work nodes in the graph.
 type WorkMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	title           *string
-	description     *string
-	image_url       *string
-	created_at      *time.Time
-	updated_at      *time.Time
-	clearedFields   map[string]struct{}
-	category        *int
-	clearedcategory bool
-	owner           *int
-	clearedowner    bool
-	likers          map[int]struct{}
-	removedlikers   map[int]struct{}
-	clearedlikers   bool
-	comments        map[int]struct{}
-	removedcomments map[int]struct{}
-	clearedcomments bool
-	done            bool
-	oldValue        func(context.Context) (*Work, error)
-	predicates      []predicate.Work
+	op                Op
+	typ               string
+	id                *int
+	title             *string
+	description       *string
+	image_url         *string
+	created_at        *time.Time
+	updated_at        *time.Time
+	clearedFields     map[string]struct{}
+	category          *int
+	clearedcategory   bool
+	owner             *int
+	clearedowner      bool
+	likers            map[int]struct{}
+	removedlikers     map[int]struct{}
+	clearedlikers     bool
+	treasurers        map[int]struct{}
+	removedtreasurers map[int]struct{}
+	clearedtreasurers bool
+	comments          map[int]struct{}
+	removedcomments   map[int]struct{}
+	clearedcomments   bool
+	done              bool
+	oldValue          func(context.Context) (*Work, error)
+	predicates        []predicate.Work
 }
 
 var _ ent.Mutation = (*WorkMutation)(nil)
@@ -1967,6 +2053,60 @@ func (m *WorkMutation) ResetLikers() {
 	m.removedlikers = nil
 }
 
+// AddTreasurerIDs adds the "treasurers" edge to the User entity by ids.
+func (m *WorkMutation) AddTreasurerIDs(ids ...int) {
+	if m.treasurers == nil {
+		m.treasurers = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.treasurers[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTreasurers clears the "treasurers" edge to the User entity.
+func (m *WorkMutation) ClearTreasurers() {
+	m.clearedtreasurers = true
+}
+
+// TreasurersCleared reports if the "treasurers" edge to the User entity was cleared.
+func (m *WorkMutation) TreasurersCleared() bool {
+	return m.clearedtreasurers
+}
+
+// RemoveTreasurerIDs removes the "treasurers" edge to the User entity by IDs.
+func (m *WorkMutation) RemoveTreasurerIDs(ids ...int) {
+	if m.removedtreasurers == nil {
+		m.removedtreasurers = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.treasurers, ids[i])
+		m.removedtreasurers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTreasurers returns the removed IDs of the "treasurers" edge to the User entity.
+func (m *WorkMutation) RemovedTreasurersIDs() (ids []int) {
+	for id := range m.removedtreasurers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TreasurersIDs returns the "treasurers" edge IDs in the mutation.
+func (m *WorkMutation) TreasurersIDs() (ids []int) {
+	for id := range m.treasurers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTreasurers resets all changes to the "treasurers" edge.
+func (m *WorkMutation) ResetTreasurers() {
+	m.treasurers = nil
+	m.clearedtreasurers = false
+	m.removedtreasurers = nil
+}
+
 // AddCommentIDs adds the "comments" edge to the Comment entity by ids.
 func (m *WorkMutation) AddCommentIDs(ids ...int) {
 	if m.comments == nil {
@@ -2207,7 +2347,7 @@ func (m *WorkMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.category != nil {
 		edges = append(edges, work.EdgeCategory)
 	}
@@ -2216,6 +2356,9 @@ func (m *WorkMutation) AddedEdges() []string {
 	}
 	if m.likers != nil {
 		edges = append(edges, work.EdgeLikers)
+	}
+	if m.treasurers != nil {
+		edges = append(edges, work.EdgeTreasurers)
 	}
 	if m.comments != nil {
 		edges = append(edges, work.EdgeComments)
@@ -2241,6 +2384,12 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case work.EdgeTreasurers:
+		ids := make([]ent.Value, 0, len(m.treasurers))
+		for id := range m.treasurers {
+			ids = append(ids, id)
+		}
+		return ids
 	case work.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.comments))
 		for id := range m.comments {
@@ -2253,9 +2402,12 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedlikers != nil {
 		edges = append(edges, work.EdgeLikers)
+	}
+	if m.removedtreasurers != nil {
+		edges = append(edges, work.EdgeTreasurers)
 	}
 	if m.removedcomments != nil {
 		edges = append(edges, work.EdgeComments)
@@ -2273,6 +2425,12 @@ func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case work.EdgeTreasurers:
+		ids := make([]ent.Value, 0, len(m.removedtreasurers))
+		for id := range m.removedtreasurers {
+			ids = append(ids, id)
+		}
+		return ids
 	case work.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.removedcomments))
 		for id := range m.removedcomments {
@@ -2285,7 +2443,7 @@ func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedcategory {
 		edges = append(edges, work.EdgeCategory)
 	}
@@ -2294,6 +2452,9 @@ func (m *WorkMutation) ClearedEdges() []string {
 	}
 	if m.clearedlikers {
 		edges = append(edges, work.EdgeLikers)
+	}
+	if m.clearedtreasurers {
+		edges = append(edges, work.EdgeTreasurers)
 	}
 	if m.clearedcomments {
 		edges = append(edges, work.EdgeComments)
@@ -2311,6 +2472,8 @@ func (m *WorkMutation) EdgeCleared(name string) bool {
 		return m.clearedowner
 	case work.EdgeLikers:
 		return m.clearedlikers
+	case work.EdgeTreasurers:
+		return m.clearedtreasurers
 	case work.EdgeComments:
 		return m.clearedcomments
 	}
@@ -2343,6 +2506,9 @@ func (m *WorkMutation) ResetEdge(name string) error {
 		return nil
 	case work.EdgeLikers:
 		m.ResetLikers()
+		return nil
+	case work.EdgeTreasurers:
+		m.ResetTreasurers()
 		return nil
 	case work.EdgeComments:
 		m.ResetComments()

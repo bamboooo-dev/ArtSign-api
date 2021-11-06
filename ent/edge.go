@@ -44,6 +44,14 @@ func (u *User) Likes(ctx context.Context) ([]*Work, error) {
 	return result, err
 }
 
+func (u *User) Treasures(ctx context.Context) ([]*Work, error) {
+	result, err := u.Edges.TreasuresOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryTreasures().All(ctx)
+	}
+	return result, err
+}
+
 func (u *User) Comments(ctx context.Context) ([]*Comment, error) {
 	result, err := u.Edges.CommentsOrErr()
 	if IsNotLoaded(err) {
@@ -72,6 +80,14 @@ func (w *Work) Likers(ctx context.Context) ([]*User, error) {
 	result, err := w.Edges.LikersOrErr()
 	if IsNotLoaded(err) {
 		result, err = w.QueryLikers().All(ctx)
+	}
+	return result, err
+}
+
+func (w *Work) Treasurers(ctx context.Context) ([]*User, error) {
+	result, err := w.Edges.TreasurersOrErr()
+	if IsNotLoaded(err) {
+		result, err = w.QueryTreasurers().All(ctx)
 	}
 	return result, err
 }

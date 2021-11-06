@@ -29,11 +29,12 @@ type WorkQuery struct {
 	fields     []string
 	predicates []predicate.Work
 	// eager-loading edges.
-	withCategory *CategoryQuery
-	withOwner    *UserQuery
-	withLikers   *UserQuery
-	withComments *CommentQuery
-	withFKs      bool
+	withCategory   *CategoryQuery
+	withOwner      *UserQuery
+	withLikers     *UserQuery
+	withTreasurers *UserQuery
+	withComments   *CommentQuery
+	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -129,6 +130,28 @@ func (wq *WorkQuery) QueryLikers() *UserQuery {
 			sqlgraph.From(work.Table, work.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, work.LikersTable, work.LikersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTreasurers chains the current query on the "treasurers" edge.
+func (wq *WorkQuery) QueryTreasurers() *UserQuery {
+	query := &UserQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, work.TreasurersTable, work.TreasurersPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -334,15 +357,16 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 		return nil
 	}
 	return &WorkQuery{
-		config:       wq.config,
-		limit:        wq.limit,
-		offset:       wq.offset,
-		order:        append([]OrderFunc{}, wq.order...),
-		predicates:   append([]predicate.Work{}, wq.predicates...),
-		withCategory: wq.withCategory.Clone(),
-		withOwner:    wq.withOwner.Clone(),
-		withLikers:   wq.withLikers.Clone(),
-		withComments: wq.withComments.Clone(),
+		config:         wq.config,
+		limit:          wq.limit,
+		offset:         wq.offset,
+		order:          append([]OrderFunc{}, wq.order...),
+		predicates:     append([]predicate.Work{}, wq.predicates...),
+		withCategory:   wq.withCategory.Clone(),
+		withOwner:      wq.withOwner.Clone(),
+		withLikers:     wq.withLikers.Clone(),
+		withTreasurers: wq.withTreasurers.Clone(),
+		withComments:   wq.withComments.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
 		path: wq.path,
@@ -379,6 +403,17 @@ func (wq *WorkQuery) WithLikers(opts ...func(*UserQuery)) *WorkQuery {
 		opt(query)
 	}
 	wq.withLikers = query
+	return wq
+}
+
+// WithTreasurers tells the query-builder to eager-load the nodes that are connected to
+// the "treasurers" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithTreasurers(opts ...func(*UserQuery)) *WorkQuery {
+	query := &UserQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withTreasurers = query
 	return wq
 }
 
@@ -459,10 +494,11 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 		nodes       = []*Work{}
 		withFKs     = wq.withFKs
 		_spec       = wq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			wq.withCategory != nil,
 			wq.withOwner != nil,
 			wq.withLikers != nil,
+			wq.withTreasurers != nil,
 			wq.withComments != nil,
 		}
 	)
@@ -611,6 +647,71 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 			}
 			for i := range nodes {
 				nodes[i].Edges.Likers = append(nodes[i].Edges.Likers, n)
+			}
+		}
+	}
+
+	if query := wq.withTreasurers; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[int]*Work, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Treasurers = []*User{}
+		}
+		var (
+			edgeids []int
+			edges   = make(map[int][]*Work)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: true,
+				Table:   work.TreasurersTable,
+				Columns: work.TreasurersPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(work.TreasurersPrimaryKey[1], fks...))
+			},
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*sql.NullInt64)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*sql.NullInt64)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := int(eout.Int64)
+				inValue := int(ein.Int64)
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				if _, ok := edges[inValue]; !ok {
+					edgeids = append(edgeids, inValue)
+				}
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, wq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "treasurers": %w`, err)
+		}
+		query.Where(user.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "treasurers" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Treasurers = append(nodes[i].Edges.Treasurers, n)
 			}
 		}
 	}

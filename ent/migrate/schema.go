@@ -116,6 +116,31 @@ var (
 			},
 		},
 	}
+	// UserTreasuresColumns holds the columns for the "user_treasures" table.
+	UserTreasuresColumns = []*schema.Column{
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "work_id", Type: field.TypeInt},
+	}
+	// UserTreasuresTable holds the schema information for the "user_treasures" table.
+	UserTreasuresTable = &schema.Table{
+		Name:       "user_treasures",
+		Columns:    UserTreasuresColumns,
+		PrimaryKey: []*schema.Column{UserTreasuresColumns[0], UserTreasuresColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_treasures_user_id",
+				Columns:    []*schema.Column{UserTreasuresColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_treasures_work_id",
+				Columns:    []*schema.Column{UserTreasuresColumns[1]},
+				RefColumns: []*schema.Column{WorksColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
@@ -123,6 +148,7 @@ var (
 		UsersTable,
 		WorksTable,
 		UserLikesTable,
+		UserTreasuresTable,
 	}
 )
 
@@ -133,4 +159,6 @@ func init() {
 	WorksTable.ForeignKeys[1].RefTable = UsersTable
 	UserLikesTable.ForeignKeys[0].RefTable = UsersTable
 	UserLikesTable.ForeignKeys[1].RefTable = WorksTable
+	UserTreasuresTable.ForeignKeys[0].RefTable = UsersTable
+	UserTreasuresTable.ForeignKeys[1].RefTable = WorksTable
 }
