@@ -105,6 +105,20 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []int) ([]ent.Noder, erro
 	return r.client.Noders(ctx, ids)
 }
 
+func (r *userResolver) WorkConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
+	return obj.QueryWorks().
+		Paginate(ctx, after, first, before, last,
+			ent.WithWorkOrder(orderBy),
+		)
+}
+
+func (r *userResolver) LikeConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
+	return obj.QueryLikes().
+		Paginate(ctx, after, first, before, last,
+			ent.WithWorkOrder(orderBy),
+		)
+}
+
 func (r *workResolver) LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
 	return obj.QueryLikers().
 		Paginate(ctx, after, first, before, last,
@@ -125,9 +139,13 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// User returns UserResolver implementation.
+func (r *Resolver) User() UserResolver { return &userResolver{r} }
+
 // Work returns WorkResolver implementation.
 func (r *Resolver) Work() WorkResolver { return &workResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type userResolver struct{ *Resolver }
 type workResolver struct{ *Resolver }

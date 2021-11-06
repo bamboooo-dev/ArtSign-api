@@ -48,6 +48,20 @@ type User implements Node {
   id: ID!
   name: String!
   profile: String
+  workConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+  ): WorkConnection
+  likeConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+  ): WorkConnection
 }
 
 type Comment implements Node {
