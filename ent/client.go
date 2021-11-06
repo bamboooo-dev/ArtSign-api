@@ -345,6 +345,22 @@ func (c *UserClient) QueryWorks(u *User) *WorkQuery {
 	return query
 }
 
+// QueryLikes queries the likes edge of a User.
+func (c *UserClient) QueryLikes(u *User) *WorkQuery {
+	query := &WorkQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(work.Table, work.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.LikesTable, user.LikesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -460,6 +476,22 @@ func (c *WorkClient) QueryOwner(w *Work) *UserQuery {
 			sqlgraph.From(work.Table, work.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, work.OwnerTable, work.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLikers queries the likers edge of a Work.
+func (c *WorkClient) QueryLikers(w *Work) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, work.LikersTable, work.LikersPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
 		return fromV, nil

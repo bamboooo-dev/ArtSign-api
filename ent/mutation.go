@@ -426,6 +426,9 @@ type UserMutation struct {
 	works         map[int]struct{}
 	removedworks  map[int]struct{}
 	clearedworks  bool
+	likes         map[int]struct{}
+	removedlikes  map[int]struct{}
+	clearedlikes  bool
 	done          bool
 	oldValue      func(context.Context) (*User, error)
 	predicates    []predicate.User
@@ -636,6 +639,60 @@ func (m *UserMutation) ResetWorks() {
 	m.removedworks = nil
 }
 
+// AddLikeIDs adds the "likes" edge to the Work entity by ids.
+func (m *UserMutation) AddLikeIDs(ids ...int) {
+	if m.likes == nil {
+		m.likes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.likes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLikes clears the "likes" edge to the Work entity.
+func (m *UserMutation) ClearLikes() {
+	m.clearedlikes = true
+}
+
+// LikesCleared reports if the "likes" edge to the Work entity was cleared.
+func (m *UserMutation) LikesCleared() bool {
+	return m.clearedlikes
+}
+
+// RemoveLikeIDs removes the "likes" edge to the Work entity by IDs.
+func (m *UserMutation) RemoveLikeIDs(ids ...int) {
+	if m.removedlikes == nil {
+		m.removedlikes = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.likes, ids[i])
+		m.removedlikes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLikes returns the removed IDs of the "likes" edge to the Work entity.
+func (m *UserMutation) RemovedLikesIDs() (ids []int) {
+	for id := range m.removedlikes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LikesIDs returns the "likes" edge IDs in the mutation.
+func (m *UserMutation) LikesIDs() (ids []int) {
+	for id := range m.likes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLikes resets all changes to the "likes" edge.
+func (m *UserMutation) ResetLikes() {
+	m.likes = nil
+	m.clearedlikes = false
+	m.removedlikes = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -771,9 +828,12 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.works != nil {
 		edges = append(edges, user.EdgeWorks)
+	}
+	if m.likes != nil {
+		edges = append(edges, user.EdgeLikes)
 	}
 	return edges
 }
@@ -788,15 +848,24 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeLikes:
+		ids := make([]ent.Value, 0, len(m.likes))
+		for id := range m.likes {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedworks != nil {
 		edges = append(edges, user.EdgeWorks)
+	}
+	if m.removedlikes != nil {
+		edges = append(edges, user.EdgeLikes)
 	}
 	return edges
 }
@@ -811,15 +880,24 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeLikes:
+		ids := make([]ent.Value, 0, len(m.removedlikes))
+		for id := range m.removedlikes {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedworks {
 		edges = append(edges, user.EdgeWorks)
+	}
+	if m.clearedlikes {
+		edges = append(edges, user.EdgeLikes)
 	}
 	return edges
 }
@@ -830,6 +908,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgeWorks:
 		return m.clearedworks
+	case user.EdgeLikes:
+		return m.clearedlikes
 	}
 	return false
 }
@@ -848,6 +928,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
 	case user.EdgeWorks:
 		m.ResetWorks()
+		return nil
+	case user.EdgeLikes:
+		m.ResetLikes()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)
@@ -869,6 +952,9 @@ type WorkMutation struct {
 	clearedcategory bool
 	owner           *int
 	clearedowner    bool
+	likers          map[int]struct{}
+	removedlikers   map[int]struct{}
+	clearedlikers   bool
 	done            bool
 	oldValue        func(context.Context) (*Work, error)
 	predicates      []predicate.Work
@@ -1211,6 +1297,60 @@ func (m *WorkMutation) ResetOwner() {
 	m.clearedowner = false
 }
 
+// AddLikerIDs adds the "likers" edge to the User entity by ids.
+func (m *WorkMutation) AddLikerIDs(ids ...int) {
+	if m.likers == nil {
+		m.likers = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.likers[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLikers clears the "likers" edge to the User entity.
+func (m *WorkMutation) ClearLikers() {
+	m.clearedlikers = true
+}
+
+// LikersCleared reports if the "likers" edge to the User entity was cleared.
+func (m *WorkMutation) LikersCleared() bool {
+	return m.clearedlikers
+}
+
+// RemoveLikerIDs removes the "likers" edge to the User entity by IDs.
+func (m *WorkMutation) RemoveLikerIDs(ids ...int) {
+	if m.removedlikers == nil {
+		m.removedlikers = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.likers, ids[i])
+		m.removedlikers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLikers returns the removed IDs of the "likers" edge to the User entity.
+func (m *WorkMutation) RemovedLikersIDs() (ids []int) {
+	for id := range m.removedlikers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LikersIDs returns the "likers" edge IDs in the mutation.
+func (m *WorkMutation) LikersIDs() (ids []int) {
+	for id := range m.likers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLikers resets all changes to the "likers" edge.
+func (m *WorkMutation) ResetLikers() {
+	m.likers = nil
+	m.clearedlikers = false
+	m.removedlikers = nil
+}
+
 // Where appends a list predicates to the WorkMutation builder.
 func (m *WorkMutation) Where(ps ...predicate.Work) {
 	m.predicates = append(m.predicates, ps...)
@@ -1397,12 +1537,15 @@ func (m *WorkMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.category != nil {
 		edges = append(edges, work.EdgeCategory)
 	}
 	if m.owner != nil {
 		edges = append(edges, work.EdgeOwner)
+	}
+	if m.likers != nil {
+		edges = append(edges, work.EdgeLikers)
 	}
 	return edges
 }
@@ -1419,13 +1562,22 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 		if id := m.owner; id != nil {
 			return []ent.Value{*id}
 		}
+	case work.EdgeLikers:
+		ids := make([]ent.Value, 0, len(m.likers))
+		for id := range m.likers {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.removedlikers != nil {
+		edges = append(edges, work.EdgeLikers)
+	}
 	return edges
 }
 
@@ -1433,18 +1585,27 @@ func (m *WorkMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case work.EdgeLikers:
+		ids := make([]ent.Value, 0, len(m.removedlikers))
+		for id := range m.removedlikers {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedcategory {
 		edges = append(edges, work.EdgeCategory)
 	}
 	if m.clearedowner {
 		edges = append(edges, work.EdgeOwner)
+	}
+	if m.clearedlikers {
+		edges = append(edges, work.EdgeLikers)
 	}
 	return edges
 }
@@ -1457,6 +1618,8 @@ func (m *WorkMutation) EdgeCleared(name string) bool {
 		return m.clearedcategory
 	case work.EdgeOwner:
 		return m.clearedowner
+	case work.EdgeLikers:
+		return m.clearedlikers
 	}
 	return false
 }
@@ -1484,6 +1647,9 @@ func (m *WorkMutation) ResetEdge(name string) error {
 		return nil
 	case work.EdgeOwner:
 		m.ResetOwner()
+		return nil
+	case work.EdgeLikers:
+		m.ResetLikers()
 		return nil
 	}
 	return fmt.Errorf("unknown Work edge %s", name)

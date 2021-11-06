@@ -106,6 +106,21 @@ func (wc *WorkCreate) SetOwner(u *User) *WorkCreate {
 	return wc.SetOwnerID(u.ID)
 }
 
+// AddLikerIDs adds the "likers" edge to the User entity by IDs.
+func (wc *WorkCreate) AddLikerIDs(ids ...int) *WorkCreate {
+	wc.mutation.AddLikerIDs(ids...)
+	return wc
+}
+
+// AddLikers adds the "likers" edges to the User entity.
+func (wc *WorkCreate) AddLikers(u ...*User) *WorkCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return wc.AddLikerIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wc *WorkCreate) Mutation() *WorkMutation {
 	return wc.mutation
@@ -319,6 +334,25 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_works = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.LikersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.LikersTable,
+			Columns: work.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

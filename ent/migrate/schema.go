@@ -62,15 +62,43 @@ var (
 			},
 		},
 	}
+	// UserLikesColumns holds the columns for the "user_likes" table.
+	UserLikesColumns = []*schema.Column{
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "work_id", Type: field.TypeInt},
+	}
+	// UserLikesTable holds the schema information for the "user_likes" table.
+	UserLikesTable = &schema.Table{
+		Name:       "user_likes",
+		Columns:    UserLikesColumns,
+		PrimaryKey: []*schema.Column{UserLikesColumns[0], UserLikesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_likes_user_id",
+				Columns:    []*schema.Column{UserLikesColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_likes_work_id",
+				Columns:    []*schema.Column{UserLikesColumns[1]},
+				RefColumns: []*schema.Column{WorksColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
 		UsersTable,
 		WorksTable,
+		UserLikesTable,
 	}
 )
 
 func init() {
 	WorksTable.ForeignKeys[0].RefTable = CategoriesTable
 	WorksTable.ForeignKeys[1].RefTable = UsersTable
+	UserLikesTable.ForeignKeys[0].RefTable = UsersTable
+	UserLikesTable.ForeignKeys[1].RefTable = WorksTable
 }

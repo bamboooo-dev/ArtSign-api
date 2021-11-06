@@ -41,9 +41,11 @@ type WorkEdges struct {
 	Category *Category `json:"category,omitempty"`
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
+	// Likers holds the value of the likers edge.
+	Likers []*User `json:"likers,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // CategoryOrErr returns the Category value or an error if the edge
@@ -72,6 +74,15 @@ func (e WorkEdges) OwnerOrErr() (*User, error) {
 		return e.Owner, nil
 	}
 	return nil, &NotLoadedError{edge: "owner"}
+}
+
+// LikersOrErr returns the Likers value or an error if the edge
+// was not loaded in eager-loading.
+func (e WorkEdges) LikersOrErr() ([]*User, error) {
+	if e.loadedTypes[2] {
+		return e.Likers, nil
+	}
+	return nil, &NotLoadedError{edge: "likers"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -167,6 +178,11 @@ func (w *Work) QueryCategory() *CategoryQuery {
 // QueryOwner queries the "owner" edge of the Work entity.
 func (w *Work) QueryOwner() *UserQuery {
 	return (&WorkClient{config: w.config}).QueryOwner(w)
+}
+
+// QueryLikers queries the "likers" edge of the Work entity.
+func (w *Work) QueryLikers() *UserQuery {
+	return (&WorkClient{config: w.config}).QueryLikers(w)
 }
 
 // Update returns a builder for updating this Work.

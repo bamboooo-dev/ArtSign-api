@@ -82,7 +82,7 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     u.ID,
 		Type:   "User",
 		Fields: make([]*Field, 2),
-		Edges:  make([]*Edge, 1),
+		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(u.Name); err != nil {
@@ -111,6 +111,16 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[1] = &Edge{
+		Type: "Work",
+		Name: "likes",
+	}
+	err = u.QueryLikes().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -119,7 +129,7 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		ID:     w.ID,
 		Type:   "Work",
 		Fields: make([]*Field, 5),
-		Edges:  make([]*Edge, 2),
+		Edges:  make([]*Edge, 3),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(w.Title); err != nil {
@@ -179,6 +189,16 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 	err = w.QueryOwner().
 		Select(user.FieldID).
 		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[2] = &Edge{
+		Type: "User",
+		Name: "likers",
+	}
+	err = w.QueryLikers().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
 	if err != nil {
 		return nil, err
 	}

@@ -99,6 +99,21 @@ func (wu *WorkUpdate) SetOwner(u *User) *WorkUpdate {
 	return wu.SetOwnerID(u.ID)
 }
 
+// AddLikerIDs adds the "likers" edge to the User entity by IDs.
+func (wu *WorkUpdate) AddLikerIDs(ids ...int) *WorkUpdate {
+	wu.mutation.AddLikerIDs(ids...)
+	return wu
+}
+
+// AddLikers adds the "likers" edges to the User entity.
+func (wu *WorkUpdate) AddLikers(u ...*User) *WorkUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return wu.AddLikerIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wu *WorkUpdate) Mutation() *WorkMutation {
 	return wu.mutation
@@ -114,6 +129,27 @@ func (wu *WorkUpdate) ClearCategory() *WorkUpdate {
 func (wu *WorkUpdate) ClearOwner() *WorkUpdate {
 	wu.mutation.ClearOwner()
 	return wu
+}
+
+// ClearLikers clears all "likers" edges to the User entity.
+func (wu *WorkUpdate) ClearLikers() *WorkUpdate {
+	wu.mutation.ClearLikers()
+	return wu
+}
+
+// RemoveLikerIDs removes the "likers" edge to User entities by IDs.
+func (wu *WorkUpdate) RemoveLikerIDs(ids ...int) *WorkUpdate {
+	wu.mutation.RemoveLikerIDs(ids...)
+	return wu
+}
+
+// RemoveLikers removes "likers" edges to User entities.
+func (wu *WorkUpdate) RemoveLikers(u ...*User) *WorkUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return wu.RemoveLikerIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -307,6 +343,60 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if wu.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.LikersTable,
+			Columns: work.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedLikersIDs(); len(nodes) > 0 && !wu.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.LikersTable,
+			Columns: work.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.LikersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.LikersTable,
+			Columns: work.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, wu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{work.Label}
@@ -396,6 +486,21 @@ func (wuo *WorkUpdateOne) SetOwner(u *User) *WorkUpdateOne {
 	return wuo.SetOwnerID(u.ID)
 }
 
+// AddLikerIDs adds the "likers" edge to the User entity by IDs.
+func (wuo *WorkUpdateOne) AddLikerIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.AddLikerIDs(ids...)
+	return wuo
+}
+
+// AddLikers adds the "likers" edges to the User entity.
+func (wuo *WorkUpdateOne) AddLikers(u ...*User) *WorkUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return wuo.AddLikerIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 	return wuo.mutation
@@ -411,6 +516,27 @@ func (wuo *WorkUpdateOne) ClearCategory() *WorkUpdateOne {
 func (wuo *WorkUpdateOne) ClearOwner() *WorkUpdateOne {
 	wuo.mutation.ClearOwner()
 	return wuo
+}
+
+// ClearLikers clears all "likers" edges to the User entity.
+func (wuo *WorkUpdateOne) ClearLikers() *WorkUpdateOne {
+	wuo.mutation.ClearLikers()
+	return wuo
+}
+
+// RemoveLikerIDs removes the "likers" edge to User entities by IDs.
+func (wuo *WorkUpdateOne) RemoveLikerIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.RemoveLikerIDs(ids...)
+	return wuo
+}
+
+// RemoveLikers removes "likers" edges to User entities.
+func (wuo *WorkUpdateOne) RemoveLikers(u ...*User) *WorkUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return wuo.RemoveLikerIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -615,6 +741,60 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 			Inverse: true,
 			Table:   work.OwnerTable,
 			Columns: []string{work.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.LikersTable,
+			Columns: work.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedLikersIDs(); len(nodes) > 0 && !wuo.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.LikersTable,
+			Columns: work.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.LikersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.LikersTable,
+			Columns: work.LikersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

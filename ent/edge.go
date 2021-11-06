@@ -20,6 +20,14 @@ func (u *User) Works(ctx context.Context) ([]*Work, error) {
 	return result, err
 }
 
+func (u *User) Likes(ctx context.Context) ([]*Work, error) {
+	result, err := u.Edges.LikesOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryLikes().All(ctx)
+	}
+	return result, err
+}
+
 func (w *Work) Category(ctx context.Context) (*Category, error) {
 	result, err := w.Edges.CategoryOrErr()
 	if IsNotLoaded(err) {
@@ -34,4 +42,12 @@ func (w *Work) Owner(ctx context.Context) (*User, error) {
 		result, err = w.QueryOwner().Only(ctx)
 	}
 	return result, MaskNotFound(err)
+}
+
+func (w *Work) Likers(ctx context.Context) ([]*User, error) {
+	result, err := w.Edges.LikersOrErr()
+	if IsNotLoaded(err) {
+		result, err = w.QueryLikers().All(ctx)
+	}
+	return result, err
 }

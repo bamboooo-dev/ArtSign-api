@@ -25,6 +25,8 @@ const (
 	EdgeCategory = "category"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
+	// EdgeLikers holds the string denoting the likers edge name in mutations.
+	EdgeLikers = "likers"
 	// Table holds the table name of the work in the database.
 	Table = "works"
 	// CategoryTable is the table that holds the category relation/edge.
@@ -41,6 +43,11 @@ const (
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "user_works"
+	// LikersTable is the table that holds the likers relation/edge. The primary key declared below.
+	LikersTable = "user_likes"
+	// LikersInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	LikersInverseTable = "users"
 )
 
 // Columns holds all SQL columns for work fields.
@@ -59,6 +66,12 @@ var ForeignKeys = []string{
 	"category_works",
 	"user_works",
 }
+
+var (
+	// LikersPrimaryKey and LikersColumn2 are the table columns denoting the
+	// primary key for the likers relation (M2M).
+	LikersPrimaryKey = []string{"user_id", "work_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

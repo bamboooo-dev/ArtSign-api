@@ -47,6 +47,21 @@ func (uc *UserCreate) AddWorks(w ...*Work) *UserCreate {
 	return uc.AddWorkIDs(ids...)
 }
 
+// AddLikeIDs adds the "likes" edge to the Work entity by IDs.
+func (uc *UserCreate) AddLikeIDs(ids ...int) *UserCreate {
+	uc.mutation.AddLikeIDs(ids...)
+	return uc
+}
+
+// AddLikes adds the "likes" edges to the Work entity.
+func (uc *UserCreate) AddLikes(w ...*Work) *UserCreate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uc.AddLikeIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -177,6 +192,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Inverse: false,
 			Table:   user.WorksTable,
 			Columns: []string{user.WorksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.LikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: user.LikesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

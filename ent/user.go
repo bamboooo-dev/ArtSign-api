@@ -28,9 +28,11 @@ type User struct {
 type UserEdges struct {
 	// Works holds the value of the works edge.
 	Works []*Work `json:"works,omitempty"`
+	// Likes holds the value of the likes edge.
+	Likes []*Work `json:"likes,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // WorksOrErr returns the Works value or an error if the edge
@@ -40,6 +42,15 @@ func (e UserEdges) WorksOrErr() ([]*Work, error) {
 		return e.Works, nil
 	}
 	return nil, &NotLoadedError{edge: "works"}
+}
+
+// LikesOrErr returns the Likes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) LikesOrErr() ([]*Work, error) {
+	if e.loadedTypes[1] {
+		return e.Likes, nil
+	}
+	return nil, &NotLoadedError{edge: "likes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -92,6 +103,11 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 // QueryWorks queries the "works" edge of the User entity.
 func (u *User) QueryWorks() *WorkQuery {
 	return (&UserClient{config: u.config}).QueryWorks(u)
+}
+
+// QueryLikes queries the "likes" edge of the User entity.
+func (u *User) QueryLikes() *WorkQuery {
+	return (&UserClient{config: u.config}).QueryLikes(u)
 }
 
 // Update returns a builder for updating this User.
