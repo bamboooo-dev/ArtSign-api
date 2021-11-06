@@ -91,6 +91,7 @@ type Query {
     before: Cursor
     last: Int
     orderBy: WorkOrder
+    where: WorkWhereInput
   ): WorkConnection
   node(id: ID!): Node
   nodes(ids: [ID!]!): [Node]!

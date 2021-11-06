@@ -89,10 +89,11 @@ func (r *mutationResolver) CreateComment(ctx context.Context, input ent.CreateCo
 	return ent.FromContext(ctx).Comment.Create().SetInput(input).Save(ctx)
 }
 
-func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
+func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,
 			ent.WithWorkOrder(orderBy),
+			ent.WithWorkFilter(where.Filter),
 		)
 }
 
