@@ -37,6 +37,7 @@ func NewClient(db *sql.DB) (*ent.Client, error) {
 		context.Background(),
 		migrate.WithDropIndex(true),
 		migrate.WithDropColumn(true),
+		migrate.WithGlobalUniqueID(true),
 	); err != nil {
 		return nil, err
 	}
