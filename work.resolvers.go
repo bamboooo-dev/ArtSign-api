@@ -97,6 +97,14 @@ func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int
 		)
 }
 
+func (r *queryResolver) Users(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) (*ent.UserConnection, error) {
+	return r.client.User.Query().
+		Paginate(ctx, after, first, before, last,
+			ent.WithUserOrder(orderBy),
+			ent.WithUserFilter(where.Filter),
+		)
+}
+
 func (r *queryResolver) Node(ctx context.Context, id int) (ent.Noder, error) {
 	return r.client.Noder(ctx, id)
 }

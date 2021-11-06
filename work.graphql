@@ -107,6 +107,14 @@ type Query {
     orderBy: WorkOrder
     where: WorkWhereInput
   ): WorkConnection
+  users(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+    where: UserWhereInput
+  ): UserConnection
   node(id: ID!): Node
   nodes(ids: [ID!]!): [Node]!
 }
