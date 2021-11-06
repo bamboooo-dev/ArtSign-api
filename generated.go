@@ -50,12 +50,17 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	CreateUserLikePayload struct {
+		ClientMutationID func(childComplexity int) int
+	}
+
 	Mutation struct {
-		CreateUser  func(childComplexity int, input ent.CreateUserInput) int
-		CreateWork  func(childComplexity int, input ent.CreateWorkInput, image *string, fileExtension *string) int
-		UpdateUser  func(childComplexity int, id int, input ent.UpdateUserInput) int
-		UpdateWork  func(childComplexity int, id int, input ent.UpdateWorkInput) int
-		UpdateWorks func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
+		CreateUser     func(childComplexity int, input ent.CreateUserInput) int
+		CreateUserLike func(childComplexity int, input CreateUserLikeInput) int
+		CreateWork     func(childComplexity int, input ent.CreateWorkInput, image *string, fileExtension *string) int
+		UpdateUser     func(childComplexity int, id int, input ent.UpdateUserInput) int
+		UpdateWork     func(childComplexity int, id int, input ent.UpdateWorkInput) int
+		UpdateWorks    func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
 	}
 
 	PageInfo struct {
@@ -75,6 +80,12 @@ type ComplexityRoot struct {
 		ID      func(childComplexity int) int
 		Name    func(childComplexity int) int
 		Profile func(childComplexity int) int
+	}
+
+	UserLike struct {
+		ID     func(childComplexity int) int
+		UserID func(childComplexity int) int
+		WorkID func(childComplexity int) int
 	}
 
 	Work struct {
@@ -106,6 +117,7 @@ type MutationResolver interface {
 	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error)
 	CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error)
 	UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error)
+	CreateUserLike(ctx context.Context, input CreateUserLikeInput) (*CreateUserLikePayload, error)
 }
 type QueryResolver interface {
 	Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
@@ -142,6 +154,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Category.Name(childComplexity), true
 
+	case "CreateUserLikePayload.clientMutationId":
+		if e.complexity.CreateUserLikePayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.CreateUserLikePayload.ClientMutationID(childComplexity), true
+
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
 			break
@@ -153,6 +172,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(ent.CreateUserInput)), true
+
+	case "Mutation.createUserLike":
+		if e.complexity.Mutation.CreateUserLike == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUserLike_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUserLike(childComplexity, args["input"].(CreateUserLikeInput)), true
 
 	case "Mutation.createWork":
 		if e.complexity.Mutation.CreateWork == nil {
@@ -286,6 +317,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Profile(childComplexity), true
+
+	case "UserLike.id":
+		if e.complexity.UserLike.ID == nil {
+			break
+		}
+
+		return e.complexity.UserLike.ID(childComplexity), true
+
+	case "UserLike.userID":
+		if e.complexity.UserLike.UserID == nil {
+			break
+		}
+
+		return e.complexity.UserLike.UserID(childComplexity), true
+
+	case "UserLike.workID":
+		if e.complexity.UserLike.WorkID == nil {
+			break
+		}
+
+		return e.complexity.UserLike.WorkID(childComplexity), true
 
 	case "Work.category":
 		if e.complexity.Work.Category == nil {
@@ -480,6 +532,16 @@ type User implements Node {
   profile: String
 }
 
+type UserLike {
+  id: ID!
+  userID: ID!
+  workID: ID!
+}
+
+type CreateUserLikePayload {
+  clientMutationId: String
+}
+
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
@@ -492,6 +554,7 @@ type Mutation {
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
+  createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
 }
 
 # Define a query for getting all works.
@@ -569,6 +632,12 @@ input UpdateUserInput {
   name: String
   profile: String
 }
+
+input CreateUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -576,6 +645,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_createUserLike_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreateUserLikeInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateUserLikeInput2artsignᚐCreateUserLikeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -901,6 +985,38 @@ func (ec *executionContext) _Category_name(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CreateUserLikePayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *CreateUserLikePayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CreateUserLikePayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientMutationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createWork(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1109,6 +1225,45 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	res := resTmp.(*ent.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createUserLike(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createUserLike_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateUserLike(rctx, args["input"].(CreateUserLikeInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*CreateUserLikePayload)
+	fc.Result = res
+	return ec.marshalOCreateUserLikePayload2ᚖartsignᚐCreateUserLikePayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *ent.PageInfo) (ret graphql.Marshaler) {
@@ -1536,6 +1691,111 @@ func (ec *executionContext) _User_profile(ctx context.Context, field graphql.Col
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserLike_id(ctx context.Context, field graphql.CollectedField, obj *UserLike) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserLike",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserLike_userID(ctx context.Context, field graphql.CollectedField, obj *UserLike) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserLike",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserLike_workID(ctx context.Context, field graphql.CollectedField, obj *UserLike) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserLike",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Work_id(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
@@ -3134,6 +3394,45 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateUserLikeInput(ctx context.Context, obj interface{}) (CreateUserLikeInput, error) {
+	var it CreateUserLikeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "clientMutationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			it.ClientMutationID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workID"))
+			it.WorkID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateWorkInput(ctx context.Context, obj interface{}) (ent.CreateWorkInput, error) {
 	var it ent.CreateWorkInput
 	asMap := map[string]interface{}{}
@@ -3346,6 +3645,30 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var createUserLikePayloadImplementors = []string{"CreateUserLikePayload"}
+
+func (ec *executionContext) _CreateUserLikePayload(ctx context.Context, sel ast.SelectionSet, obj *CreateUserLikePayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createUserLikePayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CreateUserLikePayload")
+		case "clientMutationId":
+			out.Values[i] = ec._CreateUserLikePayload_clientMutationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3386,6 +3709,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createUserLike":
+			out.Values[i] = ec._Mutation_createUserLike(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3522,6 +3847,43 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "profile":
 			out.Values[i] = ec._User_profile(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userLikeImplementors = []string{"UserLike"}
+
+func (ec *executionContext) _UserLike(ctx context.Context, sel ast.SelectionSet, obj *UserLike) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userLikeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserLike")
+		case "id":
+			out.Values[i] = ec._UserLike_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "userID":
+			out.Values[i] = ec._UserLike_userID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "workID":
+			out.Values[i] = ec._UserLike_workID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3947,6 +4309,11 @@ func (ec *executionContext) marshalNCategory2ᚖartsignᚋentᚐCategory(ctx con
 
 func (ec *executionContext) unmarshalNCreateUserInput2artsignᚋentᚐCreateUserInput(ctx context.Context, v interface{}) (ent.CreateUserInput, error) {
 	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateUserLikeInput2artsignᚐCreateUserLikeInput(ctx context.Context, v interface{}) (CreateUserLikeInput, error) {
+	res, err := ec.unmarshalInputCreateUserLikeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -4480,6 +4847,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) marshalOCreateUserLikePayload2ᚖartsignᚐCreateUserLikePayload(ctx context.Context, sel ast.SelectionSet, v *CreateUserLikePayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CreateUserLikePayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx context.Context, v interface{}) (*ent.Cursor, error) {

@@ -36,6 +36,16 @@ type User implements Node {
   profile: String
 }
 
+type UserLike {
+  id: ID!
+  userID: ID!
+  workID: ID!
+}
+
+type CreateUserLikePayload {
+  clientMutationId: String
+}
+
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
@@ -48,6 +58,7 @@ type Mutation {
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
+  createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
 }
 
 # Define a query for getting all works.
@@ -124,4 +135,10 @@ input CreateUserInput {
 input UpdateUserInput {
   name: String
   profile: String
+}
+
+input CreateUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
 }

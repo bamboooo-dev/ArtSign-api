@@ -8,6 +8,22 @@ import (
 	"strconv"
 )
 
+type CreateUserLikeInput struct {
+	ClientMutationID *string `json:"clientMutationId"`
+	UserID           int     `json:"userID"`
+	WorkID           int     `json:"workID"`
+}
+
+type CreateUserLikePayload struct {
+	ClientMutationID *string `json:"clientMutationId"`
+}
+
+type UserLike struct {
+	ID     int `json:"id"`
+	UserID int `json:"userID"`
+	WorkID int `json:"workID"`
+}
+
 type Status string
 
 const (

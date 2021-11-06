@@ -71,6 +71,20 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, input ent.Upd
 	return ent.FromContext(ctx).User.UpdateOneID(id).SetInput(input).Save(ctx)
 }
 
+func (r *mutationResolver) CreateUserLike(ctx context.Context, input CreateUserLikeInput) (*CreateUserLikePayload, error) {
+	user, err := ent.FromContext(ctx).User.Get(ctx, input.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = user.Update().AddLikeIDs(input.WorkID).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateUserLikePayload{}, nil
+}
+
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,
