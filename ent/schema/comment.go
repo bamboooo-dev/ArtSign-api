@@ -45,5 +45,8 @@ func (Comment) Edges() []ent.Edge {
 			Ref("comments").
 			Unique().
 			Required(),
+		edge.To("parent", Comment.Type).
+			Unique().
+			From("children"),
 	}
 }

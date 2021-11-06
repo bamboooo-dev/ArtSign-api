@@ -28,6 +28,22 @@ func (c *Comment) Work(ctx context.Context) (*Work, error) {
 	return result, err
 }
 
+func (c *Comment) Children(ctx context.Context) ([]*Comment, error) {
+	result, err := c.Edges.ChildrenOrErr()
+	if IsNotLoaded(err) {
+		result, err = c.QueryChildren().All(ctx)
+	}
+	return result, err
+}
+
+func (c *Comment) Parent(ctx context.Context) (*Comment, error) {
+	result, err := c.Edges.ParentOrErr()
+	if IsNotLoaded(err) {
+		result, err = c.QueryParent().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (u *User) Works(ctx context.Context) ([]*Work, error) {
 	result, err := u.Edges.WorksOrErr()
 	if IsNotLoaded(err) {

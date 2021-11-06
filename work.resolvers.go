@@ -16,6 +16,12 @@ import (
 	"github.com/google/uuid"
 )
 
+func (r *commentResolver) ChildrenConnection(ctx context.Context, obj *ent.Comment, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) (*ent.CommentConnection, error) {
+	return obj.QueryChildren().Paginate(ctx, after, first, before, last,
+		ent.WithCommentOrder(orderBy),
+	)
+}
+
 func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkInput, image *string, fileExtension *string) (*ent.Work, error) {
 	data, err := base64.StdEncoding.DecodeString(*image)
 	if err != nil {
@@ -155,12 +161,16 @@ func (r *workResolver) LikerConnection(ctx context.Context, obj *ent.Work, after
 		)
 }
 
-func (r *workResolver) CommentConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) (*ent.CommentConnection, error) {
+func (r *workResolver) CommentConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) (*ent.CommentConnection, error) {
 	return obj.QueryComments().
 		Paginate(ctx, after, first, before, last,
 			ent.WithCommentOrder(orderBy),
+			ent.WithCommentFilter(where.Filter),
 		)
 }
+
+// Comment returns CommentResolver implementation.
+func (r *Resolver) Comment() CommentResolver { return &commentResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
@@ -174,6 +184,7 @@ func (r *Resolver) User() UserResolver { return &userResolver{r} }
 // Work returns WorkResolver implementation.
 func (r *Resolver) Work() WorkResolver { return &workResolver{r} }
 
+type commentResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

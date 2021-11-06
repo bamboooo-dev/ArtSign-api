@@ -65,6 +65,8 @@ type CreateCommentInput struct {
 	Content    string
 	OwnerID    int
 	WorkID     int
+	ChildIDs   []int
+	ParentID   *int
 }
 
 // Mutate applies the CreateCommentInput on the CommentCreate builder.
@@ -78,6 +80,12 @@ func (i *CreateCommentInput) Mutate(m *CommentCreate) {
 	m.SetContent(i.Content)
 	m.SetOwnerID(i.OwnerID)
 	m.SetWorkID(i.WorkID)
+	if ids := i.ChildIDs; len(ids) > 0 {
+		m.AddChildIDs(ids...)
+	}
+	if v := i.ParentID; v != nil {
+		m.SetParentID(*v)
+	}
 }
 
 // SetInput applies the change-set in the CreateCommentInput on the create builder.
@@ -88,11 +96,15 @@ func (c *CommentCreate) SetInput(i CreateCommentInput) *CommentCreate {
 
 // UpdateCommentInput represents a mutation input for updating comments.
 type UpdateCommentInput struct {
-	Content    *string
-	OwnerID    *int
-	ClearOwner bool
-	WorkID     *int
-	ClearWork  bool
+	Content        *string
+	OwnerID        *int
+	ClearOwner     bool
+	WorkID         *int
+	ClearWork      bool
+	AddChildIDs    []int
+	RemoveChildIDs []int
+	ParentID       *int
+	ClearParent    bool
 }
 
 // Mutate applies the UpdateCommentInput on the CommentMutation.
@@ -111,6 +123,18 @@ func (i *UpdateCommentInput) Mutate(m *CommentMutation) {
 	}
 	if v := i.WorkID; v != nil {
 		m.SetWorkID(*v)
+	}
+	if ids := i.AddChildIDs; len(ids) > 0 {
+		m.AddChildIDs(ids...)
+	}
+	if ids := i.RemoveChildIDs; len(ids) > 0 {
+		m.RemoveChildIDs(ids...)
+	}
+	if i.ClearParent {
+		m.ClearParent()
+	}
+	if v := i.ParentID; v != nil {
+		m.SetParentID(*v)
 	}
 }
 

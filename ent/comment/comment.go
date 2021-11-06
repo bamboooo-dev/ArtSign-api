@@ -21,6 +21,10 @@ const (
 	EdgeOwner = "owner"
 	// EdgeWork holds the string denoting the work edge name in mutations.
 	EdgeWork = "work"
+	// EdgeChildren holds the string denoting the children edge name in mutations.
+	EdgeChildren = "children"
+	// EdgeParent holds the string denoting the parent edge name in mutations.
+	EdgeParent = "parent"
 	// Table holds the table name of the comment in the database.
 	Table = "comments"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -37,6 +41,14 @@ const (
 	WorkInverseTable = "works"
 	// WorkColumn is the table column denoting the work relation/edge.
 	WorkColumn = "work_comments"
+	// ChildrenTable is the table that holds the children relation/edge.
+	ChildrenTable = "comments"
+	// ChildrenColumn is the table column denoting the children relation/edge.
+	ChildrenColumn = "comment_parent"
+	// ParentTable is the table that holds the parent relation/edge.
+	ParentTable = "comments"
+	// ParentColumn is the table column denoting the parent relation/edge.
+	ParentColumn = "comment_parent"
 )
 
 // Columns holds all SQL columns for comment fields.
@@ -50,6 +62,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "comments"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"comment_parent",
 	"user_comments",
 	"work_comments",
 }

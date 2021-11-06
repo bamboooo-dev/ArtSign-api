@@ -257,6 +257,14 @@ type CommentWhereInput struct {
 	// "work" edge predicates.
 	HasWork     *bool             `json:"hasWork,omitempty"`
 	HasWorkWith []*WorkWhereInput `json:"hasWorkWith,omitempty"`
+
+	// "children" edge predicates.
+	HasChildren     *bool                `json:"hasChildren,omitempty"`
+	HasChildrenWith []*CommentWhereInput `json:"hasChildrenWith,omitempty"`
+
+	// "parent" edge predicates.
+	HasParent     *bool                `json:"hasParent,omitempty"`
+	HasParentWith []*CommentWhereInput `json:"hasParentWith,omitempty"`
 }
 
 // Filter applies the CommentWhereInput filter on the CommentQuery builder.
@@ -465,6 +473,42 @@ func (i *CommentWhereInput) P() (predicate.Comment, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, comment.HasWorkWith(with...))
+	}
+	if i.HasChildren != nil {
+		p := comment.HasChildren()
+		if !*i.HasChildren {
+			p = comment.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasChildrenWith) > 0 {
+		with := make([]predicate.Comment, 0, len(i.HasChildrenWith))
+		for _, w := range i.HasChildrenWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, comment.HasChildrenWith(with...))
+	}
+	if i.HasParent != nil {
+		p := comment.HasParent()
+		if !*i.HasParent {
+			p = comment.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasParentWith) > 0 {
+		with := make([]predicate.Comment, 0, len(i.HasParentWith))
+		for _, w := range i.HasParentWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, comment.HasParentWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
