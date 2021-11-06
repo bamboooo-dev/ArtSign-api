@@ -60,15 +60,15 @@ func (u *CategoryUpdateOne) SetInput(i UpdateCategoryInput) *CategoryUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	Title       string
-	Description string
-	WorkIDs     []int
+	Name    string
+	Profile string
+	WorkIDs []int
 }
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
 func (i *CreateUserInput) Mutate(m *UserCreate) {
-	m.SetTitle(i.Title)
-	m.SetDescription(i.Description)
+	m.SetName(i.Name)
+	m.SetProfile(i.Profile)
 	if ids := i.WorkIDs; len(ids) > 0 {
 		m.AddWorkIDs(ids...)
 	}
@@ -82,19 +82,19 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	Title         *string
-	Description   *string
+	Name          *string
+	Profile       *string
 	AddWorkIDs    []int
 	RemoveWorkIDs []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation.
 func (i *UpdateUserInput) Mutate(m *UserMutation) {
-	if v := i.Title; v != nil {
-		m.SetTitle(*v)
+	if v := i.Name; v != nil {
+		m.SetName(*v)
 	}
-	if v := i.Description; v != nil {
-		m.SetDescription(*v)
+	if v := i.Profile; v != nil {
+		m.SetProfile(*v)
 	}
 	if ids := i.AddWorkIDs; len(ids) > 0 {
 		m.AddWorkIDs(ids...)

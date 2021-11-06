@@ -27,15 +27,15 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
-// SetTitle sets the "title" field.
-func (uu *UserUpdate) SetTitle(s string) *UserUpdate {
-	uu.mutation.SetTitle(s)
+// SetName sets the "name" field.
+func (uu *UserUpdate) SetName(s string) *UserUpdate {
+	uu.mutation.SetName(s)
 	return uu
 }
 
-// SetDescription sets the "description" field.
-func (uu *UserUpdate) SetDescription(s string) *UserUpdate {
-	uu.mutation.SetDescription(s)
+// SetProfile sets the "profile" field.
+func (uu *UserUpdate) SetProfile(s string) *UserUpdate {
+	uu.mutation.SetProfile(s)
 	return uu
 }
 
@@ -142,9 +142,9 @@ func (uu *UserUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (uu *UserUpdate) check() error {
-	if v, ok := uu.mutation.Title(); ok {
-		if err := user.TitleValidator(v); err != nil {
-			return &ValidationError{Name: "title", err: fmt.Errorf("ent: validator failed for field \"title\": %w", err)}
+	if v, ok := uu.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
 		}
 	}
 	return nil
@@ -168,18 +168,18 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := uu.mutation.Title(); ok {
+	if value, ok := uu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldTitle,
+			Column: user.FieldName,
 		})
 	}
-	if value, ok := uu.mutation.Description(); ok {
+	if value, ok := uu.mutation.Profile(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldDescription,
+			Column: user.FieldProfile,
 		})
 	}
 	if uu.mutation.WorksCleared() {
@@ -255,15 +255,15 @@ type UserUpdateOne struct {
 	mutation *UserMutation
 }
 
-// SetTitle sets the "title" field.
-func (uuo *UserUpdateOne) SetTitle(s string) *UserUpdateOne {
-	uuo.mutation.SetTitle(s)
+// SetName sets the "name" field.
+func (uuo *UserUpdateOne) SetName(s string) *UserUpdateOne {
+	uuo.mutation.SetName(s)
 	return uuo
 }
 
-// SetDescription sets the "description" field.
-func (uuo *UserUpdateOne) SetDescription(s string) *UserUpdateOne {
-	uuo.mutation.SetDescription(s)
+// SetProfile sets the "profile" field.
+func (uuo *UserUpdateOne) SetProfile(s string) *UserUpdateOne {
+	uuo.mutation.SetProfile(s)
 	return uuo
 }
 
@@ -377,9 +377,9 @@ func (uuo *UserUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (uuo *UserUpdateOne) check() error {
-	if v, ok := uuo.mutation.Title(); ok {
-		if err := user.TitleValidator(v); err != nil {
-			return &ValidationError{Name: "title", err: fmt.Errorf("ent: validator failed for field \"title\": %w", err)}
+	if v, ok := uuo.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
 		}
 	}
 	return nil
@@ -420,18 +420,18 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			}
 		}
 	}
-	if value, ok := uuo.mutation.Title(); ok {
+	if value, ok := uuo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldTitle,
+			Column: user.FieldName,
 		})
 	}
-	if value, ok := uuo.mutation.Description(); ok {
+	if value, ok := uuo.mutation.Profile(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldDescription,
+			Column: user.FieldProfile,
 		})
 	}
 	if uuo.mutation.WorksCleared() {

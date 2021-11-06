@@ -22,11 +22,18 @@ type Work implements Node {
   description: String!
   image_url: String!
   category: Category!
+  owner: User!
 }
 
 type Category implements Node {
   id: ID!
   name: String!
+}
+
+type User implements Node {
+  id: ID!
+  name: String!
+  profile: String
 }
 
 # Define a mutation for creating works.
@@ -39,6 +46,7 @@ type Mutation {
   ): Work!
   updateWork(id: ID!, input: UpdateWorkInput!): Work!
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
+  createUser(input: CreateUserInput!): User!
 }
 
 # Define a query for getting all works.
@@ -104,4 +112,10 @@ input CreateWorkInput {
   title: String!
   description: String!
   categoryID: ID!
+  ownerID: ID!
+}
+
+input CreateUserInput {
+  name: String!
+  profile: String
 }

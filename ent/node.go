@@ -85,20 +85,20 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		Edges:  make([]*Edge, 1),
 	}
 	var buf []byte
-	if buf, err = json.Marshal(u.Title); err != nil {
+	if buf, err = json.Marshal(u.Name); err != nil {
 		return nil, err
 	}
 	node.Fields[0] = &Field{
 		Type:  "string",
-		Name:  "title",
+		Name:  "name",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(u.Description); err != nil {
+	if buf, err = json.Marshal(u.Profile); err != nil {
 		return nil, err
 	}
 	node.Fields[1] = &Field{
 		Type:  "string",
-		Name:  "description",
+		Name:  "profile",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{

@@ -20,15 +20,15 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
-// SetTitle sets the "title" field.
-func (uc *UserCreate) SetTitle(s string) *UserCreate {
-	uc.mutation.SetTitle(s)
+// SetName sets the "name" field.
+func (uc *UserCreate) SetName(s string) *UserCreate {
+	uc.mutation.SetName(s)
 	return uc
 }
 
-// SetDescription sets the "description" field.
-func (uc *UserCreate) SetDescription(s string) *UserCreate {
-	uc.mutation.SetDescription(s)
+// SetProfile sets the "profile" field.
+func (uc *UserCreate) SetProfile(s string) *UserCreate {
+	uc.mutation.SetProfile(s)
 	return uc
 }
 
@@ -117,16 +117,16 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
-	if _, ok := uc.mutation.Title(); !ok {
-		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "title"`)}
+	if _, ok := uc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
 	}
-	if v, ok := uc.mutation.Title(); ok {
-		if err := user.TitleValidator(v); err != nil {
-			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "title": %w`, err)}
+	if v, ok := uc.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "name": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.Description(); !ok {
-		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "description"`)}
+	if _, ok := uc.mutation.Profile(); !ok {
+		return &ValidationError{Name: "profile", err: errors.New(`ent: missing required field "profile"`)}
 	}
 	return nil
 }
@@ -155,21 +155,21 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := uc.mutation.Title(); ok {
+	if value, ok := uc.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldTitle,
+			Column: user.FieldName,
 		})
-		_node.Title = value
+		_node.Name = value
 	}
-	if value, ok := uc.mutation.Description(); ok {
+	if value, ok := uc.mutation.Profile(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldDescription,
+			Column: user.FieldProfile,
 		})
-		_node.Description = value
+		_node.Profile = value
 	}
 	if nodes := uc.mutation.WorksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

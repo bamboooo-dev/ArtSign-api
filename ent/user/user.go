@@ -7,10 +7,10 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldTitle holds the string denoting the title field in the database.
-	FieldTitle = "title"
-	// FieldDescription holds the string denoting the description field in the database.
-	FieldDescription = "description"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
+	// FieldProfile holds the string denoting the profile field in the database.
+	FieldProfile = "profile"
 	// EdgeWorks holds the string denoting the works edge name in mutations.
 	EdgeWorks = "works"
 	// Table holds the table name of the user in the database.
@@ -27,8 +27,8 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
-	FieldTitle,
-	FieldDescription,
+	FieldName,
+	FieldProfile,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -42,6 +42,6 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
-	TitleValidator func(string) error
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 )

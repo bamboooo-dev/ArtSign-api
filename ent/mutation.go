@@ -420,8 +420,8 @@ type UserMutation struct {
 	op            Op
 	typ           string
 	id            *int
-	title         *string
-	description   *string
+	name          *string
+	profile       *string
 	clearedFields map[string]struct{}
 	works         map[int]struct{}
 	removedworks  map[int]struct{}
@@ -510,76 +510,76 @@ func (m *UserMutation) ID() (id int, exists bool) {
 	return *m.id, true
 }
 
-// SetTitle sets the "title" field.
-func (m *UserMutation) SetTitle(s string) {
-	m.title = &s
+// SetName sets the "name" field.
+func (m *UserMutation) SetName(s string) {
+	m.name = &s
 }
 
-// Title returns the value of the "title" field in the mutation.
-func (m *UserMutation) Title() (r string, exists bool) {
-	v := m.title
+// Name returns the value of the "name" field in the mutation.
+func (m *UserMutation) Name() (r string, exists bool) {
+	v := m.name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldTitle returns the old "title" field's value of the User entity.
+// OldName returns the old "name" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldTitle(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldTitle is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldTitle requires an ID field in the mutation")
+		return v, fmt.Errorf("OldName requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
 	}
-	return oldValue.Title, nil
+	return oldValue.Name, nil
 }
 
-// ResetTitle resets all changes to the "title" field.
-func (m *UserMutation) ResetTitle() {
-	m.title = nil
+// ResetName resets all changes to the "name" field.
+func (m *UserMutation) ResetName() {
+	m.name = nil
 }
 
-// SetDescription sets the "description" field.
-func (m *UserMutation) SetDescription(s string) {
-	m.description = &s
+// SetProfile sets the "profile" field.
+func (m *UserMutation) SetProfile(s string) {
+	m.profile = &s
 }
 
-// Description returns the value of the "description" field in the mutation.
-func (m *UserMutation) Description() (r string, exists bool) {
-	v := m.description
+// Profile returns the value of the "profile" field in the mutation.
+func (m *UserMutation) Profile() (r string, exists bool) {
+	v := m.profile
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldDescription returns the old "description" field's value of the User entity.
+// OldProfile returns the old "profile" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldDescription(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldProfile(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldDescription is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldProfile is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldDescription requires an ID field in the mutation")
+		return v, fmt.Errorf("OldProfile requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+		return v, fmt.Errorf("querying old value for OldProfile: %w", err)
 	}
-	return oldValue.Description, nil
+	return oldValue.Profile, nil
 }
 
-// ResetDescription resets all changes to the "description" field.
-func (m *UserMutation) ResetDescription() {
-	m.description = nil
+// ResetProfile resets all changes to the "profile" field.
+func (m *UserMutation) ResetProfile() {
+	m.profile = nil
 }
 
 // AddWorkIDs adds the "works" edge to the Work entity by ids.
@@ -656,11 +656,11 @@ func (m *UserMutation) Type() string {
 // AddedFields().
 func (m *UserMutation) Fields() []string {
 	fields := make([]string, 0, 2)
-	if m.title != nil {
-		fields = append(fields, user.FieldTitle)
+	if m.name != nil {
+		fields = append(fields, user.FieldName)
 	}
-	if m.description != nil {
-		fields = append(fields, user.FieldDescription)
+	if m.profile != nil {
+		fields = append(fields, user.FieldProfile)
 	}
 	return fields
 }
@@ -670,10 +670,10 @@ func (m *UserMutation) Fields() []string {
 // schema.
 func (m *UserMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case user.FieldTitle:
-		return m.Title()
-	case user.FieldDescription:
-		return m.Description()
+	case user.FieldName:
+		return m.Name()
+	case user.FieldProfile:
+		return m.Profile()
 	}
 	return nil, false
 }
@@ -683,10 +683,10 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case user.FieldTitle:
-		return m.OldTitle(ctx)
-	case user.FieldDescription:
-		return m.OldDescription(ctx)
+	case user.FieldName:
+		return m.OldName(ctx)
+	case user.FieldProfile:
+		return m.OldProfile(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -696,19 +696,19 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 // type.
 func (m *UserMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case user.FieldTitle:
+	case user.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetTitle(v)
+		m.SetName(v)
 		return nil
-	case user.FieldDescription:
+	case user.FieldProfile:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetDescription(v)
+		m.SetProfile(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -759,11 +759,11 @@ func (m *UserMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *UserMutation) ResetField(name string) error {
 	switch name {
-	case user.FieldTitle:
-		m.ResetTitle()
+	case user.FieldName:
+		m.ResetName()
 		return nil
-	case user.FieldDescription:
-		m.ResetDescription()
+	case user.FieldProfile:
+		m.ResetProfile()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

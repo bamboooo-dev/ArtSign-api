@@ -22,10 +22,10 @@ func init() {
 	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
-	// userDescTitle is the schema descriptor for title field.
-	userDescTitle := userFields[0].Descriptor()
-	// user.TitleValidator is a validator for the "title" field. It is called by the builders before save.
-	user.TitleValidator = userDescTitle.Validators[0].(func(string) error)
+	// userDescName is the schema descriptor for name field.
+	userDescName := userFields[0].Descriptor()
+	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	user.NameValidator = userDescName.Validators[0].(func(string) error)
 	workFields := schema.Work{}.Fields()
 	_ = workFields
 	// workDescTitle is the schema descriptor for title field.

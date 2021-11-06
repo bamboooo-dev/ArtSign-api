@@ -60,6 +60,13 @@ func (r *mutationResolver) UpdateWorks(ctx context.Context, ids []int, input ent
 	return client.Work.Query().Where(work.IDIn(ids...)).All(ctx)
 }
 
+func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
+	return ent.FromContext(ctx).User.
+		Create().
+		SetInput(input).
+		Save(ctx)
+}
+
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,

@@ -15,10 +15,10 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Title holds the value of the "title" field.
-	Title string `json:"title,omitempty"`
-	// Description holds the value of the "description" field.
-	Description string `json:"description,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// Profile holds the value of the "profile" field.
+	Profile string `json:"profile,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges UserEdges `json:"edges"`
@@ -49,7 +49,7 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldTitle, user.FieldDescription:
+		case user.FieldName, user.FieldProfile:
 			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type User", columns[i])
@@ -72,17 +72,17 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			u.ID = int(value.Int64)
-		case user.FieldTitle:
+		case user.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field title", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				u.Title = value.String
+				u.Name = value.String
 			}
-		case user.FieldDescription:
+		case user.FieldProfile:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field description", values[i])
+				return fmt.Errorf("unexpected type %T for field profile", values[i])
 			} else if value.Valid {
-				u.Description = value.String
+				u.Profile = value.String
 			}
 		}
 	}
@@ -117,10 +117,10 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v", u.ID))
-	builder.WriteString(", title=")
-	builder.WriteString(u.Title)
-	builder.WriteString(", description=")
-	builder.WriteString(u.Description)
+	builder.WriteString(", name=")
+	builder.WriteString(u.Name)
+	builder.WriteString(", profile=")
+	builder.WriteString(u.Profile)
 	builder.WriteByte(')')
 	return builder.String()
 }
