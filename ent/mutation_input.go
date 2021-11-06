@@ -58,6 +58,54 @@ func (u *CategoryUpdateOne) SetInput(i UpdateCategoryInput) *CategoryUpdateOne {
 	return u
 }
 
+// CreateCommentInput represents a mutation input for creating comments.
+type CreateCommentInput struct {
+	CreateTime *time.Time
+	UpdateTime *time.Time
+	Content    string
+}
+
+// Mutate applies the CreateCommentInput on the CommentCreate builder.
+func (i *CreateCommentInput) Mutate(m *CommentCreate) {
+	if v := i.CreateTime; v != nil {
+		m.SetCreateTime(*v)
+	}
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	m.SetContent(i.Content)
+}
+
+// SetInput applies the change-set in the CreateCommentInput on the create builder.
+func (c *CommentCreate) SetInput(i CreateCommentInput) *CommentCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateCommentInput represents a mutation input for updating comments.
+type UpdateCommentInput struct {
+	Content *string
+}
+
+// Mutate applies the UpdateCommentInput on the CommentMutation.
+func (i *UpdateCommentInput) Mutate(m *CommentMutation) {
+	if v := i.Content; v != nil {
+		m.SetContent(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdateCommentInput on the update builder.
+func (u *CommentUpdate) SetInput(i UpdateCommentInput) *CommentUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateCommentInput on the update-one builder.
+func (u *CommentUpdateOne) SetInput(i UpdateCommentInput) *CommentUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
 	Name    string
