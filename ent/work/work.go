@@ -27,6 +27,8 @@ const (
 	EdgeOwner = "owner"
 	// EdgeLikers holds the string denoting the likers edge name in mutations.
 	EdgeLikers = "likers"
+	// EdgeComments holds the string denoting the comments edge name in mutations.
+	EdgeComments = "comments"
 	// Table holds the table name of the work in the database.
 	Table = "works"
 	// CategoryTable is the table that holds the category relation/edge.
@@ -48,6 +50,13 @@ const (
 	// LikersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	LikersInverseTable = "users"
+	// CommentsTable is the table that holds the comments relation/edge.
+	CommentsTable = "comments"
+	// CommentsInverseTable is the table name for the Comment entity.
+	// It exists in this package in order to avoid circular dependency with the "comment" package.
+	CommentsInverseTable = "comments"
+	// CommentsColumn is the table column denoting the comments relation/edge.
+	CommentsColumn = "work_comments"
 )
 
 // Columns holds all SQL columns for work fields.

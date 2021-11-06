@@ -63,6 +63,8 @@ type CreateCommentInput struct {
 	CreateTime *time.Time
 	UpdateTime *time.Time
 	Content    string
+	OwnerID    *int
+	WorkID     *int
 }
 
 // Mutate applies the CreateCommentInput on the CommentCreate builder.
@@ -74,6 +76,12 @@ func (i *CreateCommentInput) Mutate(m *CommentCreate) {
 		m.SetUpdateTime(*v)
 	}
 	m.SetContent(i.Content)
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
+	}
+	if v := i.WorkID; v != nil {
+		m.SetWorkID(*v)
+	}
 }
 
 // SetInput applies the change-set in the CreateCommentInput on the create builder.
@@ -84,13 +92,29 @@ func (c *CommentCreate) SetInput(i CreateCommentInput) *CommentCreate {
 
 // UpdateCommentInput represents a mutation input for updating comments.
 type UpdateCommentInput struct {
-	Content *string
+	Content    *string
+	OwnerID    *int
+	ClearOwner bool
+	WorkID     *int
+	ClearWork  bool
 }
 
 // Mutate applies the UpdateCommentInput on the CommentMutation.
 func (i *UpdateCommentInput) Mutate(m *CommentMutation) {
 	if v := i.Content; v != nil {
 		m.SetContent(*v)
+	}
+	if i.ClearOwner {
+		m.ClearOwner()
+	}
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
+	}
+	if i.ClearWork {
+		m.ClearWork()
+	}
+	if v := i.WorkID; v != nil {
+		m.SetWorkID(*v)
 	}
 }
 
@@ -108,10 +132,11 @@ func (u *CommentUpdateOne) SetInput(i UpdateCommentInput) *CommentUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	Name    string
-	Profile string
-	WorkIDs []int
-	LikeIDs []int
+	Name       string
+	Profile    string
+	WorkIDs    []int
+	LikeIDs    []int
+	CommentIDs []int
 }
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
@@ -124,6 +149,9 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	if ids := i.LikeIDs; len(ids) > 0 {
 		m.AddLikeIDs(ids...)
 	}
+	if ids := i.CommentIDs; len(ids) > 0 {
+		m.AddCommentIDs(ids...)
+	}
 }
 
 // SetInput applies the change-set in the CreateUserInput on the create builder.
@@ -134,12 +162,14 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	Name          *string
-	Profile       *string
-	AddWorkIDs    []int
-	RemoveWorkIDs []int
-	AddLikeIDs    []int
-	RemoveLikeIDs []int
+	Name             *string
+	Profile          *string
+	AddWorkIDs       []int
+	RemoveWorkIDs    []int
+	AddLikeIDs       []int
+	RemoveLikeIDs    []int
+	AddCommentIDs    []int
+	RemoveCommentIDs []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation.
@@ -161,6 +191,12 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if ids := i.RemoveLikeIDs; len(ids) > 0 {
 		m.RemoveLikeIDs(ids...)
+	}
+	if ids := i.AddCommentIDs; len(ids) > 0 {
+		m.AddCommentIDs(ids...)
+	}
+	if ids := i.RemoveCommentIDs; len(ids) > 0 {
+		m.RemoveCommentIDs(ids...)
 	}
 }
 
@@ -186,6 +222,7 @@ type CreateWorkInput struct {
 	CategoryID  *int
 	OwnerID     *int
 	LikerIDs    []int
+	CommentIDs  []int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
@@ -208,6 +245,9 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	if ids := i.LikerIDs; len(ids) > 0 {
 		m.AddLikerIDs(ids...)
 	}
+	if ids := i.CommentIDs; len(ids) > 0 {
+		m.AddCommentIDs(ids...)
+	}
 }
 
 // SetInput applies the change-set in the CreateWorkInput on the create builder.
@@ -218,16 +258,18 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 
 // UpdateWorkInput represents a mutation input for updating works.
 type UpdateWorkInput struct {
-	Title          *string
-	Description    *string
-	ImageURL       *string
-	UpdatedAt      *time.Time
-	CategoryID     *int
-	ClearCategory  bool
-	OwnerID        *int
-	ClearOwner     bool
-	AddLikerIDs    []int
-	RemoveLikerIDs []int
+	Title            *string
+	Description      *string
+	ImageURL         *string
+	UpdatedAt        *time.Time
+	CategoryID       *int
+	ClearCategory    bool
+	OwnerID          *int
+	ClearOwner       bool
+	AddLikerIDs      []int
+	RemoveLikerIDs   []int
+	AddCommentIDs    []int
+	RemoveCommentIDs []int
 }
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
@@ -261,6 +303,12 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	}
 	if ids := i.RemoveLikerIDs; len(ids) > 0 {
 		m.RemoveLikerIDs(ids...)
+	}
+	if ids := i.AddCommentIDs; len(ids) > 0 {
+		m.AddCommentIDs(ids...)
+	}
+	if ids := i.RemoveCommentIDs; len(ids) > 0 {
+		m.RemoveCommentIDs(ids...)
 	}
 }
 

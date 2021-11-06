@@ -5,6 +5,8 @@ package ent
 import (
 	"artsign/ent/comment"
 	"artsign/ent/predicate"
+	"artsign/ent/user"
+	"artsign/ent/work"
 	"context"
 	"errors"
 	"fmt"
@@ -24,6 +26,10 @@ type CommentQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Comment
+	// eager-loading edges.
+	withOwner *UserQuery
+	withWork  *WorkQuery
+	withFKs   bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,6 +64,50 @@ func (cq *CommentQuery) Unique(unique bool) *CommentQuery {
 func (cq *CommentQuery) Order(o ...OrderFunc) *CommentQuery {
 	cq.order = append(cq.order, o...)
 	return cq
+}
+
+// QueryOwner chains the current query on the "owner" edge.
+func (cq *CommentQuery) QueryOwner() *UserQuery {
+	query := &UserQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(comment.Table, comment.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, comment.OwnerTable, comment.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWork chains the current query on the "work" edge.
+func (cq *CommentQuery) QueryWork() *WorkQuery {
+	query := &WorkQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(comment.Table, comment.FieldID, selector),
+			sqlgraph.To(work.Table, work.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, comment.WorkTable, comment.WorkColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Comment entity from the query.
@@ -241,10 +291,34 @@ func (cq *CommentQuery) Clone() *CommentQuery {
 		offset:     cq.offset,
 		order:      append([]OrderFunc{}, cq.order...),
 		predicates: append([]predicate.Comment{}, cq.predicates...),
+		withOwner:  cq.withOwner.Clone(),
+		withWork:   cq.withWork.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
 	}
+}
+
+// WithOwner tells the query-builder to eager-load the nodes that are connected to
+// the "owner" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CommentQuery) WithOwner(opts ...func(*UserQuery)) *CommentQuery {
+	query := &UserQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withOwner = query
+	return cq
+}
+
+// WithWork tells the query-builder to eager-load the nodes that are connected to
+// the "work" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CommentQuery) WithWork(opts ...func(*WorkQuery)) *CommentQuery {
+	query := &WorkQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withWork = query
+	return cq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -310,9 +384,20 @@ func (cq *CommentQuery) prepareQuery(ctx context.Context) error {
 
 func (cq *CommentQuery) sqlAll(ctx context.Context) ([]*Comment, error) {
 	var (
-		nodes = []*Comment{}
-		_spec = cq.querySpec()
+		nodes       = []*Comment{}
+		withFKs     = cq.withFKs
+		_spec       = cq.querySpec()
+		loadedTypes = [2]bool{
+			cq.withOwner != nil,
+			cq.withWork != nil,
+		}
 	)
+	if cq.withOwner != nil || cq.withWork != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, comment.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Comment{config: cq.config}
 		nodes = append(nodes, node)
@@ -323,6 +408,7 @@ func (cq *CommentQuery) sqlAll(ctx context.Context) ([]*Comment, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, cq.driver, _spec); err != nil {
@@ -331,6 +417,65 @@ func (cq *CommentQuery) sqlAll(ctx context.Context) ([]*Comment, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := cq.withOwner; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Comment)
+		for i := range nodes {
+			if nodes[i].user_comments == nil {
+				continue
+			}
+			fk := *nodes[i].user_comments
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(user.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "user_comments" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Owner = n
+			}
+		}
+	}
+
+	if query := cq.withWork; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Comment)
+		for i := range nodes {
+			if nodes[i].work_comments == nil {
+				continue
+			}
+			fk := *nodes[i].work_comments
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(work.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "work_comments" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Work = n
+			}
+		}
+	}
+
 	return nodes, nil
 }
 

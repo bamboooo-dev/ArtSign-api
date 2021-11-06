@@ -12,6 +12,22 @@ func (c *Category) Works(ctx context.Context) ([]*Work, error) {
 	return result, err
 }
 
+func (c *Comment) Owner(ctx context.Context) (*User, error) {
+	result, err := c.Edges.OwnerOrErr()
+	if IsNotLoaded(err) {
+		result, err = c.QueryOwner().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (c *Comment) Work(ctx context.Context) (*Work, error) {
+	result, err := c.Edges.WorkOrErr()
+	if IsNotLoaded(err) {
+		result, err = c.QueryWork().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (u *User) Works(ctx context.Context) ([]*Work, error) {
 	result, err := u.Edges.WorksOrErr()
 	if IsNotLoaded(err) {
@@ -24,6 +40,14 @@ func (u *User) Likes(ctx context.Context) ([]*Work, error) {
 	result, err := u.Edges.LikesOrErr()
 	if IsNotLoaded(err) {
 		result, err = u.QueryLikes().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) Comments(ctx context.Context) ([]*Comment, error) {
+	result, err := u.Edges.CommentsOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryComments().All(ctx)
 	}
 	return result, err
 }
@@ -48,6 +72,14 @@ func (w *Work) Likers(ctx context.Context) ([]*User, error) {
 	result, err := w.Edges.LikersOrErr()
 	if IsNotLoaded(err) {
 		result, err = w.QueryLikers().All(ctx)
+	}
+	return result, err
+}
+
+func (w *Work) Comments(ctx context.Context) ([]*Comment, error) {
+	result, err := w.Edges.CommentsOrErr()
+	if IsNotLoaded(err) {
+		result, err = w.QueryComments().All(ctx)
 	}
 	return result, err
 }

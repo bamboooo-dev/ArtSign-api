@@ -51,5 +51,6 @@ func (Work) Edges() []ent.Edge {
 			Unique(),
 		edge.From("likers", User.Type).
 			Ref("likes"),
+		edge.To("comments", Comment.Type),
 	}
 }

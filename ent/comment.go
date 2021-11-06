@@ -4,6 +4,8 @@ package ent
 
 import (
 	"artsign/ent/comment"
+	"artsign/ent/user"
+	"artsign/ent/work"
 	"fmt"
 	"strings"
 	"time"
@@ -22,6 +24,50 @@ type Comment struct {
 	UpdateTime time.Time `json:"update_time,omitempty"`
 	// Content holds the value of the "content" field.
 	Content string `json:"content,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CommentQuery when eager-loading is set.
+	Edges         CommentEdges `json:"edges"`
+	user_comments *int
+	work_comments *int
+}
+
+// CommentEdges holds the relations/edges for other nodes in the graph.
+type CommentEdges struct {
+	// Owner holds the value of the owner edge.
+	Owner *User `json:"owner,omitempty"`
+	// Work holds the value of the work edge.
+	Work *Work `json:"work,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// OwnerOrErr returns the Owner value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CommentEdges) OwnerOrErr() (*User, error) {
+	if e.loadedTypes[0] {
+		if e.Owner == nil {
+			// The edge owner was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.Owner, nil
+	}
+	return nil, &NotLoadedError{edge: "owner"}
+}
+
+// WorkOrErr returns the Work value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CommentEdges) WorkOrErr() (*Work, error) {
+	if e.loadedTypes[1] {
+		if e.Work == nil {
+			// The edge work was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: work.Label}
+		}
+		return e.Work, nil
+	}
+	return nil, &NotLoadedError{edge: "work"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -35,6 +81,10 @@ func (*Comment) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case comment.FieldCreateTime, comment.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
+		case comment.ForeignKeys[0]: // user_comments
+			values[i] = new(sql.NullInt64)
+		case comment.ForeignKeys[1]: // work_comments
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Comment", columns[i])
 		}
@@ -74,9 +124,33 @@ func (c *Comment) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				c.Content = value.String
 			}
+		case comment.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_comments", value)
+			} else if value.Valid {
+				c.user_comments = new(int)
+				*c.user_comments = int(value.Int64)
+			}
+		case comment.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field work_comments", value)
+			} else if value.Valid {
+				c.work_comments = new(int)
+				*c.work_comments = int(value.Int64)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryOwner queries the "owner" edge of the Comment entity.
+func (c *Comment) QueryOwner() *UserQuery {
+	return (&CommentClient{config: c.config}).QueryOwner(c)
+}
+
+// QueryWork queries the "work" edge of the Comment entity.
+func (c *Comment) QueryWork() *WorkQuery {
+	return (&CommentClient{config: c.config}).QueryWork(c)
 }
 
 // Update returns a builder for updating this Comment.

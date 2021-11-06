@@ -17,8 +17,26 @@ const (
 	FieldUpdateTime = "update_time"
 	// FieldContent holds the string denoting the content field in the database.
 	FieldContent = "content"
+	// EdgeOwner holds the string denoting the owner edge name in mutations.
+	EdgeOwner = "owner"
+	// EdgeWork holds the string denoting the work edge name in mutations.
+	EdgeWork = "work"
 	// Table holds the table name of the comment in the database.
 	Table = "comments"
+	// OwnerTable is the table that holds the owner relation/edge.
+	OwnerTable = "comments"
+	// OwnerInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	OwnerInverseTable = "users"
+	// OwnerColumn is the table column denoting the owner relation/edge.
+	OwnerColumn = "user_comments"
+	// WorkTable is the table that holds the work relation/edge.
+	WorkTable = "comments"
+	// WorkInverseTable is the table name for the Work entity.
+	// It exists in this package in order to avoid circular dependency with the "work" package.
+	WorkInverseTable = "works"
+	// WorkColumn is the table column denoting the work relation/edge.
+	WorkColumn = "work_comments"
 )
 
 // Columns holds all SQL columns for comment fields.
@@ -29,10 +47,22 @@ var Columns = []string{
 	FieldContent,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "comments"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"user_comments",
+	"work_comments",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}

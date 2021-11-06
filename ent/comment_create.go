@@ -4,6 +4,8 @@ package ent
 
 import (
 	"artsign/ent/comment"
+	"artsign/ent/user"
+	"artsign/ent/work"
 	"context"
 	"errors"
 	"fmt"
@@ -52,6 +54,44 @@ func (cc *CommentCreate) SetNillableUpdateTime(t *time.Time) *CommentCreate {
 func (cc *CommentCreate) SetContent(s string) *CommentCreate {
 	cc.mutation.SetContent(s)
 	return cc
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (cc *CommentCreate) SetOwnerID(id int) *CommentCreate {
+	cc.mutation.SetOwnerID(id)
+	return cc
+}
+
+// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
+func (cc *CommentCreate) SetNillableOwnerID(id *int) *CommentCreate {
+	if id != nil {
+		cc = cc.SetOwnerID(*id)
+	}
+	return cc
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (cc *CommentCreate) SetOwner(u *User) *CommentCreate {
+	return cc.SetOwnerID(u.ID)
+}
+
+// SetWorkID sets the "work" edge to the Work entity by ID.
+func (cc *CommentCreate) SetWorkID(id int) *CommentCreate {
+	cc.mutation.SetWorkID(id)
+	return cc
+}
+
+// SetNillableWorkID sets the "work" edge to the Work entity by ID if the given value is not nil.
+func (cc *CommentCreate) SetNillableWorkID(id *int) *CommentCreate {
+	if id != nil {
+		cc = cc.SetWorkID(*id)
+	}
+	return cc
+}
+
+// SetWork sets the "work" edge to the Work entity.
+func (cc *CommentCreate) SetWork(w *Work) *CommentCreate {
+	return cc.SetWorkID(w.ID)
 }
 
 // Mutation returns the CommentMutation object of the builder.
@@ -201,6 +241,46 @@ func (cc *CommentCreate) createSpec() (*Comment, *sqlgraph.CreateSpec) {
 			Column: comment.FieldContent,
 		})
 		_node.Content = value
+	}
+	if nodes := cc.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.OwnerTable,
+			Columns: []string{comment.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_comments = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.WorkIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.WorkTable,
+			Columns: []string{comment.WorkColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.work_comments = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

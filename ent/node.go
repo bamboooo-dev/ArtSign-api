@@ -83,7 +83,7 @@ func (c *Comment) Node(ctx context.Context) (node *Node, err error) {
 		ID:     c.ID,
 		Type:   "Comment",
 		Fields: make([]*Field, 3),
-		Edges:  make([]*Edge, 0),
+		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(c.CreateTime); err != nil {
@@ -110,6 +110,26 @@ func (c *Comment) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "content",
 		Value: string(buf),
 	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "owner",
+	}
+	err = c.QueryOwner().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "Work",
+		Name: "work",
+	}
+	err = c.QueryWork().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -118,7 +138,7 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     u.ID,
 		Type:   "User",
 		Fields: make([]*Field, 2),
-		Edges:  make([]*Edge, 2),
+		Edges:  make([]*Edge, 3),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(u.Name); err != nil {
@@ -157,6 +177,16 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[2] = &Edge{
+		Type: "Comment",
+		Name: "comments",
+	}
+	err = u.QueryComments().
+		Select(comment.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -165,7 +195,7 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		ID:     w.ID,
 		Type:   "Work",
 		Fields: make([]*Field, 5),
-		Edges:  make([]*Edge, 3),
+		Edges:  make([]*Edge, 4),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(w.Title); err != nil {
@@ -235,6 +265,16 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 	err = w.QueryLikers().
 		Select(user.FieldID).
 		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[3] = &Edge{
+		Type: "Comment",
+		Name: "comments",
+	}
+	err = w.QueryComments().
+		Select(comment.FieldID).
+		Scan(ctx, &node.Edges[3].IDs)
 	if err != nil {
 		return nil, err
 	}

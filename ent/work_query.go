@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/category"
+	"artsign/ent/comment"
 	"artsign/ent/predicate"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -31,6 +32,7 @@ type WorkQuery struct {
 	withCategory *CategoryQuery
 	withOwner    *UserQuery
 	withLikers   *UserQuery
+	withComments *CommentQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -127,6 +129,28 @@ func (wq *WorkQuery) QueryLikers() *UserQuery {
 			sqlgraph.From(work.Table, work.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, work.LikersTable, work.LikersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryComments chains the current query on the "comments" edge.
+func (wq *WorkQuery) QueryComments() *CommentQuery {
+	query := &CommentQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(comment.Table, comment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, work.CommentsTable, work.CommentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -318,6 +342,7 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 		withCategory: wq.withCategory.Clone(),
 		withOwner:    wq.withOwner.Clone(),
 		withLikers:   wq.withLikers.Clone(),
+		withComments: wq.withComments.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
 		path: wq.path,
@@ -354,6 +379,17 @@ func (wq *WorkQuery) WithLikers(opts ...func(*UserQuery)) *WorkQuery {
 		opt(query)
 	}
 	wq.withLikers = query
+	return wq
+}
+
+// WithComments tells the query-builder to eager-load the nodes that are connected to
+// the "comments" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithComments(opts ...func(*CommentQuery)) *WorkQuery {
+	query := &CommentQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withComments = query
 	return wq
 }
 
@@ -423,10 +459,11 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 		nodes       = []*Work{}
 		withFKs     = wq.withFKs
 		_spec       = wq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			wq.withCategory != nil,
 			wq.withOwner != nil,
 			wq.withLikers != nil,
+			wq.withComments != nil,
 		}
 	)
 	if wq.withCategory != nil || wq.withOwner != nil {
@@ -575,6 +612,35 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 			for i := range nodes {
 				nodes[i].Edges.Likers = append(nodes[i].Edges.Likers, n)
 			}
+		}
+	}
+
+	if query := wq.withComments; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Work)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Comments = []*Comment{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Comment(func(s *sql.Selector) {
+			s.Where(sql.InValues(work.CommentsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.work_comments
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "work_comments" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "work_comments" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Comments = append(node.Edges.Comments, n)
 		}
 	}
 

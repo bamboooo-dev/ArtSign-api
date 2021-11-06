@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/category"
+	"artsign/ent/comment"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -119,6 +120,21 @@ func (wc *WorkCreate) AddLikers(u ...*User) *WorkCreate {
 		ids[i] = u[i].ID
 	}
 	return wc.AddLikerIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (wc *WorkCreate) AddCommentIDs(ids ...int) *WorkCreate {
+	wc.mutation.AddCommentIDs(ids...)
+	return wc
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (wc *WorkCreate) AddComments(c ...*Comment) *WorkCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return wc.AddCommentIDs(ids...)
 }
 
 // Mutation returns the WorkMutation object of the builder.
@@ -347,6 +363,25 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.CommentsTable,
+			Columns: []string{work.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
 				},
 			},
 		}

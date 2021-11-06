@@ -5,6 +5,8 @@ package ent
 import (
 	"artsign/ent/comment"
 	"artsign/ent/predicate"
+	"artsign/ent/user"
+	"artsign/ent/work"
 	"context"
 	"fmt"
 
@@ -32,9 +34,59 @@ func (cu *CommentUpdate) SetContent(s string) *CommentUpdate {
 	return cu
 }
 
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (cu *CommentUpdate) SetOwnerID(id int) *CommentUpdate {
+	cu.mutation.SetOwnerID(id)
+	return cu
+}
+
+// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
+func (cu *CommentUpdate) SetNillableOwnerID(id *int) *CommentUpdate {
+	if id != nil {
+		cu = cu.SetOwnerID(*id)
+	}
+	return cu
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (cu *CommentUpdate) SetOwner(u *User) *CommentUpdate {
+	return cu.SetOwnerID(u.ID)
+}
+
+// SetWorkID sets the "work" edge to the Work entity by ID.
+func (cu *CommentUpdate) SetWorkID(id int) *CommentUpdate {
+	cu.mutation.SetWorkID(id)
+	return cu
+}
+
+// SetNillableWorkID sets the "work" edge to the Work entity by ID if the given value is not nil.
+func (cu *CommentUpdate) SetNillableWorkID(id *int) *CommentUpdate {
+	if id != nil {
+		cu = cu.SetWorkID(*id)
+	}
+	return cu
+}
+
+// SetWork sets the "work" edge to the Work entity.
+func (cu *CommentUpdate) SetWork(w *Work) *CommentUpdate {
+	return cu.SetWorkID(w.ID)
+}
+
 // Mutation returns the CommentMutation object of the builder.
 func (cu *CommentUpdate) Mutation() *CommentMutation {
 	return cu.mutation
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (cu *CommentUpdate) ClearOwner() *CommentUpdate {
+	cu.mutation.ClearOwner()
+	return cu
+}
+
+// ClearWork clears the "work" edge to the Work entity.
+func (cu *CommentUpdate) ClearWork() *CommentUpdate {
+	cu.mutation.ClearWork()
+	return cu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -148,6 +200,76 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: comment.FieldContent,
 		})
 	}
+	if cu.mutation.OwnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.OwnerTable,
+			Columns: []string{comment.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.OwnerTable,
+			Columns: []string{comment.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cu.mutation.WorkCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.WorkTable,
+			Columns: []string{comment.WorkColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.WorkIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.WorkTable,
+			Columns: []string{comment.WorkColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{comment.Label}
@@ -173,9 +295,59 @@ func (cuo *CommentUpdateOne) SetContent(s string) *CommentUpdateOne {
 	return cuo
 }
 
+// SetOwnerID sets the "owner" edge to the User entity by ID.
+func (cuo *CommentUpdateOne) SetOwnerID(id int) *CommentUpdateOne {
+	cuo.mutation.SetOwnerID(id)
+	return cuo
+}
+
+// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
+func (cuo *CommentUpdateOne) SetNillableOwnerID(id *int) *CommentUpdateOne {
+	if id != nil {
+		cuo = cuo.SetOwnerID(*id)
+	}
+	return cuo
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (cuo *CommentUpdateOne) SetOwner(u *User) *CommentUpdateOne {
+	return cuo.SetOwnerID(u.ID)
+}
+
+// SetWorkID sets the "work" edge to the Work entity by ID.
+func (cuo *CommentUpdateOne) SetWorkID(id int) *CommentUpdateOne {
+	cuo.mutation.SetWorkID(id)
+	return cuo
+}
+
+// SetNillableWorkID sets the "work" edge to the Work entity by ID if the given value is not nil.
+func (cuo *CommentUpdateOne) SetNillableWorkID(id *int) *CommentUpdateOne {
+	if id != nil {
+		cuo = cuo.SetWorkID(*id)
+	}
+	return cuo
+}
+
+// SetWork sets the "work" edge to the Work entity.
+func (cuo *CommentUpdateOne) SetWork(w *Work) *CommentUpdateOne {
+	return cuo.SetWorkID(w.ID)
+}
+
 // Mutation returns the CommentMutation object of the builder.
 func (cuo *CommentUpdateOne) Mutation() *CommentMutation {
 	return cuo.mutation
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (cuo *CommentUpdateOne) ClearOwner() *CommentUpdateOne {
+	cuo.mutation.ClearOwner()
+	return cuo
+}
+
+// ClearWork clears the "work" edge to the Work entity.
+func (cuo *CommentUpdateOne) ClearWork() *CommentUpdateOne {
+	cuo.mutation.ClearWork()
+	return cuo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -312,6 +484,76 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 			Value:  value,
 			Column: comment.FieldContent,
 		})
+	}
+	if cuo.mutation.OwnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.OwnerTable,
+			Columns: []string{comment.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.OwnerTable,
+			Columns: []string{comment.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.WorkCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.WorkTable,
+			Columns: []string{comment.WorkColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.WorkIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   comment.WorkTable,
+			Columns: []string{comment.WorkColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Comment{config: cuo.config}
 	_spec.Assign = _node.assignValues

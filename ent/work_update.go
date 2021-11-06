@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/category"
+	"artsign/ent/comment"
 	"artsign/ent/predicate"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -114,6 +115,21 @@ func (wu *WorkUpdate) AddLikers(u ...*User) *WorkUpdate {
 	return wu.AddLikerIDs(ids...)
 }
 
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (wu *WorkUpdate) AddCommentIDs(ids ...int) *WorkUpdate {
+	wu.mutation.AddCommentIDs(ids...)
+	return wu
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (wu *WorkUpdate) AddComments(c ...*Comment) *WorkUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return wu.AddCommentIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wu *WorkUpdate) Mutation() *WorkMutation {
 	return wu.mutation
@@ -150,6 +166,27 @@ func (wu *WorkUpdate) RemoveLikers(u ...*User) *WorkUpdate {
 		ids[i] = u[i].ID
 	}
 	return wu.RemoveLikerIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the Comment entity.
+func (wu *WorkUpdate) ClearComments() *WorkUpdate {
+	wu.mutation.ClearComments()
+	return wu
+}
+
+// RemoveCommentIDs removes the "comments" edge to Comment entities by IDs.
+func (wu *WorkUpdate) RemoveCommentIDs(ids ...int) *WorkUpdate {
+	wu.mutation.RemoveCommentIDs(ids...)
+	return wu
+}
+
+// RemoveComments removes "comments" edges to Comment entities.
+func (wu *WorkUpdate) RemoveComments(c ...*Comment) *WorkUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return wu.RemoveCommentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -397,6 +434,60 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if wu.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.CommentsTable,
+			Columns: []string{work.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !wu.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.CommentsTable,
+			Columns: []string{work.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.CommentsTable,
+			Columns: []string{work.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, wu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{work.Label}
@@ -501,6 +592,21 @@ func (wuo *WorkUpdateOne) AddLikers(u ...*User) *WorkUpdateOne {
 	return wuo.AddLikerIDs(ids...)
 }
 
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (wuo *WorkUpdateOne) AddCommentIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.AddCommentIDs(ids...)
+	return wuo
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (wuo *WorkUpdateOne) AddComments(c ...*Comment) *WorkUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return wuo.AddCommentIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 	return wuo.mutation
@@ -537,6 +643,27 @@ func (wuo *WorkUpdateOne) RemoveLikers(u ...*User) *WorkUpdateOne {
 		ids[i] = u[i].ID
 	}
 	return wuo.RemoveLikerIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the Comment entity.
+func (wuo *WorkUpdateOne) ClearComments() *WorkUpdateOne {
+	wuo.mutation.ClearComments()
+	return wuo
+}
+
+// RemoveCommentIDs removes the "comments" edge to Comment entities by IDs.
+func (wuo *WorkUpdateOne) RemoveCommentIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.RemoveCommentIDs(ids...)
+	return wuo
+}
+
+// RemoveComments removes "comments" edges to Comment entities.
+func (wuo *WorkUpdateOne) RemoveComments(c ...*Comment) *WorkUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return wuo.RemoveCommentIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -800,6 +927,60 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.CommentsTable,
+			Columns: []string{work.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !wuo.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.CommentsTable,
+			Columns: []string{work.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.CommentsTable,
+			Columns: []string{work.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
 				},
 			},
 		}

@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 )
@@ -27,5 +28,12 @@ func (Comment) Fields() []ent.Field {
 
 // Edges of the Comment.
 func (Comment) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("owner", User.Type).
+			Ref("comments").
+			Unique(),
+		edge.From("work", Work.Type).
+			Ref("comments").
+			Unique(),
+	}
 }

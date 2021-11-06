@@ -30,9 +30,11 @@ type UserEdges struct {
 	Works []*Work `json:"works,omitempty"`
 	// Likes holds the value of the likes edge.
 	Likes []*Work `json:"likes,omitempty"`
+	// Comments holds the value of the comments edge.
+	Comments []*Comment `json:"comments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // WorksOrErr returns the Works value or an error if the edge
@@ -51,6 +53,15 @@ func (e UserEdges) LikesOrErr() ([]*Work, error) {
 		return e.Likes, nil
 	}
 	return nil, &NotLoadedError{edge: "likes"}
+}
+
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CommentsOrErr() ([]*Comment, error) {
+	if e.loadedTypes[2] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -108,6 +119,11 @@ func (u *User) QueryWorks() *WorkQuery {
 // QueryLikes queries the "likes" edge of the User entity.
 func (u *User) QueryLikes() *WorkQuery {
 	return (&UserClient{config: u.config}).QueryLikes(u)
+}
+
+// QueryComments queries the "comments" edge of the User entity.
+func (u *User) QueryComments() *CommentQuery {
+	return (&UserClient{config: u.config}).QueryComments(u)
 }
 
 // Update returns a builder for updating this User.

@@ -59,6 +59,7 @@ type Mutation {
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
+  # createComment(input: )
 }
 
 # Define a query for getting all works.
