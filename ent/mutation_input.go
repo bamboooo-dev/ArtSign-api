@@ -63,8 +63,8 @@ type CreateCommentInput struct {
 	CreateTime *time.Time
 	UpdateTime *time.Time
 	Content    string
-	OwnerID    *int
-	WorkID     *int
+	OwnerID    int
+	WorkID     int
 }
 
 // Mutate applies the CreateCommentInput on the CommentCreate builder.
@@ -76,12 +76,8 @@ func (i *CreateCommentInput) Mutate(m *CommentCreate) {
 		m.SetUpdateTime(*v)
 	}
 	m.SetContent(i.Content)
-	if v := i.OwnerID; v != nil {
-		m.SetOwnerID(*v)
-	}
-	if v := i.WorkID; v != nil {
-		m.SetWorkID(*v)
-	}
+	m.SetOwnerID(i.OwnerID)
+	m.SetWorkID(i.WorkID)
 }
 
 // SetInput applies the change-set in the CreateCommentInput on the create builder.

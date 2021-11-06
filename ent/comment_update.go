@@ -8,6 +8,7 @@ import (
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
+	"errors"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
@@ -40,14 +41,6 @@ func (cu *CommentUpdate) SetOwnerID(id int) *CommentUpdate {
 	return cu
 }
 
-// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
-func (cu *CommentUpdate) SetNillableOwnerID(id *int) *CommentUpdate {
-	if id != nil {
-		cu = cu.SetOwnerID(*id)
-	}
-	return cu
-}
-
 // SetOwner sets the "owner" edge to the User entity.
 func (cu *CommentUpdate) SetOwner(u *User) *CommentUpdate {
 	return cu.SetOwnerID(u.ID)
@@ -56,14 +49,6 @@ func (cu *CommentUpdate) SetOwner(u *User) *CommentUpdate {
 // SetWorkID sets the "work" edge to the Work entity by ID.
 func (cu *CommentUpdate) SetWorkID(id int) *CommentUpdate {
 	cu.mutation.SetWorkID(id)
-	return cu
-}
-
-// SetNillableWorkID sets the "work" edge to the Work entity by ID if the given value is not nil.
-func (cu *CommentUpdate) SetNillableWorkID(id *int) *CommentUpdate {
-	if id != nil {
-		cu = cu.SetWorkID(*id)
-	}
 	return cu
 }
 
@@ -164,6 +149,12 @@ func (cu *CommentUpdate) check() error {
 		if err := comment.ContentValidator(v); err != nil {
 			return &ValidationError{Name: "content", err: fmt.Errorf("ent: validator failed for field \"content\": %w", err)}
 		}
+	}
+	if _, ok := cu.mutation.OwnerID(); cu.mutation.OwnerCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"owner\"")
+	}
+	if _, ok := cu.mutation.WorkID(); cu.mutation.WorkCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"work\"")
 	}
 	return nil
 }
@@ -301,14 +292,6 @@ func (cuo *CommentUpdateOne) SetOwnerID(id int) *CommentUpdateOne {
 	return cuo
 }
 
-// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
-func (cuo *CommentUpdateOne) SetNillableOwnerID(id *int) *CommentUpdateOne {
-	if id != nil {
-		cuo = cuo.SetOwnerID(*id)
-	}
-	return cuo
-}
-
 // SetOwner sets the "owner" edge to the User entity.
 func (cuo *CommentUpdateOne) SetOwner(u *User) *CommentUpdateOne {
 	return cuo.SetOwnerID(u.ID)
@@ -317,14 +300,6 @@ func (cuo *CommentUpdateOne) SetOwner(u *User) *CommentUpdateOne {
 // SetWorkID sets the "work" edge to the Work entity by ID.
 func (cuo *CommentUpdateOne) SetWorkID(id int) *CommentUpdateOne {
 	cuo.mutation.SetWorkID(id)
-	return cuo
-}
-
-// SetNillableWorkID sets the "work" edge to the Work entity by ID if the given value is not nil.
-func (cuo *CommentUpdateOne) SetNillableWorkID(id *int) *CommentUpdateOne {
-	if id != nil {
-		cuo = cuo.SetWorkID(*id)
-	}
 	return cuo
 }
 
@@ -432,6 +407,12 @@ func (cuo *CommentUpdateOne) check() error {
 		if err := comment.ContentValidator(v); err != nil {
 			return &ValidationError{Name: "content", err: fmt.Errorf("ent: validator failed for field \"content\": %w", err)}
 		}
+	}
+	if _, ok := cuo.mutation.OwnerID(); cuo.mutation.OwnerCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"owner\"")
+	}
+	if _, ok := cuo.mutation.WorkID(); cuo.mutation.WorkCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"work\"")
 	}
 	return nil
 }

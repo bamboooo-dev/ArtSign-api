@@ -31,9 +31,11 @@ func (Comment) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", User.Type).
 			Ref("comments").
-			Unique(),
+			Unique().
+			Required(),
 		edge.From("work", Work.Type).
 			Ref("comments").
-			Unique(),
+			Unique().
+			Required(),
 	}
 }

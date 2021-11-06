@@ -17,7 +17,7 @@ func (c *Comment) Owner(ctx context.Context) (*User, error) {
 	if IsNotLoaded(err) {
 		result, err = c.QueryOwner().Only(ctx)
 	}
-	return result, MaskNotFound(err)
+	return result, err
 }
 
 func (c *Comment) Work(ctx context.Context) (*Work, error) {
@@ -25,7 +25,7 @@ func (c *Comment) Work(ctx context.Context) (*Work, error) {
 	if IsNotLoaded(err) {
 		result, err = c.QueryWork().Only(ctx)
 	}
-	return result, MaskNotFound(err)
+	return result, err
 }
 
 func (u *User) Works(ctx context.Context) ([]*Work, error) {

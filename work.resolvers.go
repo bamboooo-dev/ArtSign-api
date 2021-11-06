@@ -85,6 +85,10 @@ func (r *mutationResolver) CreateUserLike(ctx context.Context, input CreateUserL
 	return &CreateUserLikePayload{}, nil
 }
 
+func (r *mutationResolver) CreateComment(ctx context.Context, input ent.CreateCommentInput) (*ent.Comment, error) {
+	return ent.FromContext(ctx).Comment.Create().SetInput(input).Save(ctx)
+}
+
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,

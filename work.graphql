@@ -36,6 +36,13 @@ type User implements Node {
   profile: String
 }
 
+type Comment implements Node {
+  id: ID!
+  content: String!
+  createTime: Time!
+  updateTime: Time!
+}
+
 type UserLike {
   id: ID!
   userID: ID!
@@ -59,7 +66,7 @@ type Mutation {
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
-  # createComment(input: )
+  createComment(input: CreateCommentInput!): Comment!
 }
 
 # Define a query for getting all works.
@@ -141,5 +148,11 @@ input UpdateUserInput {
 input CreateUserLikeInput {
   clientMutationId: String
   userID: ID!
+  workID: ID!
+}
+
+input CreateCommentInput {
+  content: String!
+  ownerID: ID!
   workID: ID!
 }
