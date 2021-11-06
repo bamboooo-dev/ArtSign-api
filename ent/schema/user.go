@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -15,7 +16,10 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").
-			NotEmpty(),
+			NotEmpty().
+			Annotations(
+				entgql.OrderField("NAME"),
+			),
 		field.Text("profile"),
 	}
 }

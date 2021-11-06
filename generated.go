@@ -102,6 +102,17 @@ type ComplexityRoot struct {
 		Profile func(childComplexity int) int
 	}
 
+	UserConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	UserEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	UserLike struct {
 		ID     func(childComplexity int) int
 		UserID func(childComplexity int) int
@@ -115,6 +126,7 @@ type ComplexityRoot struct {
 		Description       func(childComplexity int) int
 		ID                func(childComplexity int) int
 		ImageURL          func(childComplexity int) int
+		LikerConnection   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
 		Owner             func(childComplexity int) int
 		Title             func(childComplexity int) int
 		UpdatedAt         func(childComplexity int) int
@@ -147,6 +159,7 @@ type QueryResolver interface {
 	Nodes(ctx context.Context, ids []int) ([]ent.Noder, error)
 }
 type WorkResolver interface {
+	LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error)
 	CommentConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) (*ent.CommentConnection, error)
 }
 
@@ -418,6 +431,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Profile(childComplexity), true
 
+	case "UserConnection.edges":
+		if e.complexity.UserConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.UserConnection.Edges(childComplexity), true
+
+	case "UserConnection.pageInfo":
+		if e.complexity.UserConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.UserConnection.PageInfo(childComplexity), true
+
+	case "UserConnection.totalCount":
+		if e.complexity.UserConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.UserConnection.TotalCount(childComplexity), true
+
+	case "UserEdge.cursor":
+		if e.complexity.UserEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.UserEdge.Cursor(childComplexity), true
+
+	case "UserEdge.node":
+		if e.complexity.UserEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.UserEdge.Node(childComplexity), true
+
 	case "UserLike.id":
 		if e.complexity.UserLike.ID == nil {
 			break
@@ -485,6 +533,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Work.ImageURL(childComplexity), true
+
+	case "Work.likerConnection":
+		if e.complexity.Work.LikerConnection == nil {
+			break
+		}
+
+		args, err := ec.field_Work_likerConnection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Work.LikerConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder)), true
 
 	case "Work.owner":
 		if e.complexity.Work.Owner == nil {
@@ -631,6 +691,13 @@ type Work implements Node {
   image_url: String!
   category: Category!
   owner: User!
+  likerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
   commentConnection(
     after: Cursor
     first: Int
@@ -718,6 +785,12 @@ type CommentConnection {
   edges: [CommentEdge]
 }
 
+type UserConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [UserEdge]
+}
+
 type WorkEdge {
   node: Work
   cursor: Cursor!
@@ -725,6 +798,11 @@ type WorkEdge {
 
 type CommentEdge {
   node: Comment
+  cursor: Cursor!
+}
+
+type UserEdge {
+  node: User
   cursor: Cursor!
 }
 
@@ -743,6 +821,10 @@ enum CommentOrderField {
   UPDATE_TIME
 }
 
+enum UserOrderField {
+  NAME
+}
+
 enum OrderDirection {
   ASC
   DESC
@@ -756,6 +838,11 @@ input WorkOrder {
 input CommentOrder {
   direction: OrderDirection!
   field: CommentOrderField
+}
+
+input UserOrder {
+  direction: OrderDirection!
+  field: UserOrderField
 }
 
 input UpdateWorkInput {
@@ -1089,6 +1176,57 @@ func (ec *executionContext) field_Work_commentConnection_args(ctx context.Contex
 	if tmp, ok := rawArgs["orderBy"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
 		arg4, err = ec.unmarshalOCommentOrder2ᚖartsignᚋentᚐCommentOrder(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Work_likerConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *ent.Cursor
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg0, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *ent.Cursor
+	if tmp, ok := rawArgs["before"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+		arg2, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["before"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["last"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["last"] = arg3
+	var arg4 *ent.UserOrder
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+		arg4, err = ec.unmarshalOUserOrder2ᚖartsignᚋentᚐUserOrder(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2264,6 +2402,175 @@ func (ec *executionContext) _User_profile(ctx context.Context, field graphql.Col
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _UserConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.UserConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.UserConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(ent.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2artsignᚋentᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.UserConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.UserEdge)
+	fc.Result = res
+	return ec.marshalOUserEdge2ᚕᚖartsignᚋentᚐUserEdge(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.UserEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.UserEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UserEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(ent.Cursor)
+	fc.Result = res
+	return ec.marshalNCursor2artsignᚋentᚐCursor(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _UserLike_id(ctx context.Context, field graphql.CollectedField, obj *UserLike) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2641,6 +2948,45 @@ func (ec *executionContext) _Work_owner(ctx context.Context, field graphql.Colle
 	res := resTmp.(*ent.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Work_likerConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Work_likerConnection_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Work().LikerConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.UserConnection)
+	fc.Result = res
+	return ec.marshalOUserConnection2ᚖartsignᚋentᚐUserConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Work_commentConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
@@ -4230,6 +4576,37 @@ func (ec *executionContext) unmarshalInputUpdateWorkInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUserOrder(ctx context.Context, obj interface{}) (ent.UserOrder, error) {
+	var it ent.UserOrder
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "direction":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			it.Direction, err = ec.unmarshalNOrderDirection2artsignᚋentᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			it.Field, err = ec.unmarshalOUserOrderField2ᚖartsignᚋentᚐUserOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputWorkOrder(ctx context.Context, obj interface{}) (ent.WorkOrder, error) {
 	var it ent.WorkOrder
 	asMap := map[string]interface{}{}
@@ -4653,6 +5030,69 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var userConnectionImplementors = []string{"UserConnection"}
+
+func (ec *executionContext) _UserConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.UserConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserConnection")
+		case "totalCount":
+			out.Values[i] = ec._UserConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._UserConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "edges":
+			out.Values[i] = ec._UserConnection_edges(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userEdgeImplementors = []string{"UserEdge"}
+
+func (ec *executionContext) _UserEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.UserEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserEdge")
+		case "node":
+			out.Values[i] = ec._UserEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._UserEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var userLikeImplementors = []string{"UserLike"}
 
 func (ec *executionContext) _UserLike(ctx context.Context, sel ast.SelectionSet, obj *UserLike) graphql.Marshaler {
@@ -4751,6 +5191,17 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			})
+		case "likerConnection":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Work_likerConnection(ctx, field, obj)
 				return res
 			})
 		case "commentConnection":
@@ -5866,6 +6317,92 @@ func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v in
 
 func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	return graphql.MarshalTime(v)
+}
+
+func (ec *executionContext) marshalOUser2ᚖartsignᚋentᚐUser(ctx context.Context, sel ast.SelectionSet, v *ent.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserConnection2ᚖartsignᚋentᚐUserConnection(ctx context.Context, sel ast.SelectionSet, v *ent.UserConnection) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserEdge2ᚕᚖartsignᚋentᚐUserEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.UserEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOUserEdge2ᚖartsignᚋentᚐUserEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOUserEdge2ᚖartsignᚋentᚐUserEdge(ctx context.Context, sel ast.SelectionSet, v *ent.UserEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOUserOrder2ᚖartsignᚋentᚐUserOrder(ctx context.Context, v interface{}) (*ent.UserOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputUserOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOUserOrderField2ᚖartsignᚋentᚐUserOrderField(ctx context.Context, v interface{}) (*ent.UserOrderField, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(ent.UserOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUserOrderField2ᚖartsignᚋentᚐUserOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.UserOrderField) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOWork2ᚖartsignᚋentᚐWork(ctx context.Context, sel ast.SelectionSet, v *ent.Work) graphql.Marshaler {

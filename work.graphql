@@ -23,6 +23,13 @@ type Work implements Node {
   image_url: String!
   category: Category!
   owner: User!
+  likerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
   commentConnection(
     after: Cursor
     first: Int
@@ -110,6 +117,12 @@ type CommentConnection {
   edges: [CommentEdge]
 }
 
+type UserConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [UserEdge]
+}
+
 type WorkEdge {
   node: Work
   cursor: Cursor!
@@ -117,6 +130,11 @@ type WorkEdge {
 
 type CommentEdge {
   node: Comment
+  cursor: Cursor!
+}
+
+type UserEdge {
+  node: User
   cursor: Cursor!
 }
 
@@ -135,6 +153,10 @@ enum CommentOrderField {
   UPDATE_TIME
 }
 
+enum UserOrderField {
+  NAME
+}
+
 enum OrderDirection {
   ASC
   DESC
@@ -148,6 +170,11 @@ input WorkOrder {
 input CommentOrder {
   direction: OrderDirection!
   field: CommentOrderField
+}
+
+input UserOrder {
+  direction: OrderDirection!
+  field: UserOrderField
 }
 
 input UpdateWorkInput {

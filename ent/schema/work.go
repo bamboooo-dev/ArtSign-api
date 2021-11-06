@@ -40,7 +40,7 @@ func (Work) Fields() []ent.Field {
 }
 
 // Edges of the Work.
-// TODO: Annotations(entgql.Bind()) を加える
+// TODO: Annotations(entgql.Bind()) を加えて N+1 を解消する
 func (Work) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("category", Category.Type).
