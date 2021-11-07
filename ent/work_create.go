@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
+	"artsign/ent/image"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -32,12 +33,6 @@ func (wc *WorkCreate) SetTitle(s string) *WorkCreate {
 // SetDescription sets the "description" field.
 func (wc *WorkCreate) SetDescription(s string) *WorkCreate {
 	wc.mutation.SetDescription(s)
-	return wc
-}
-
-// SetImageURL sets the "image_url" field.
-func (wc *WorkCreate) SetImageURL(s string) *WorkCreate {
-	wc.mutation.SetImageURL(s)
 	return wc
 }
 
@@ -152,6 +147,21 @@ func (wc *WorkCreate) AddComments(c ...*Comment) *WorkCreate {
 	return wc.AddCommentIDs(ids...)
 }
 
+// AddImageIDs adds the "images" edge to the Image entity by IDs.
+func (wc *WorkCreate) AddImageIDs(ids ...int) *WorkCreate {
+	wc.mutation.AddImageIDs(ids...)
+	return wc
+}
+
+// AddImages adds the "images" edges to the Image entity.
+func (wc *WorkCreate) AddImages(i ...*Image) *WorkCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return wc.AddImageIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wc *WorkCreate) Mutation() *WorkMutation {
 	return wc.mutation
@@ -251,9 +261,6 @@ func (wc *WorkCreate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "description": %w`, err)}
 		}
 	}
-	if _, ok := wc.mutation.ImageURL(); !ok {
-		return &ValidationError{Name: "image_url", err: errors.New(`ent: missing required field "image_url"`)}
-	}
 	if _, ok := wc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
@@ -302,14 +309,6 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 			Column: work.FieldDescription,
 		})
 		_node.Description = value
-	}
-	if value, ok := wc.mutation.ImageURL(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: work.FieldImageURL,
-		})
-		_node.ImageURL = value
 	}
 	if value, ok := wc.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -416,6 +415,25 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.ImagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.ImagesTable,
+			Columns: []string{work.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: image.FieldID,
 				},
 			},
 		}

@@ -24,7 +24,6 @@ func (Work) Fields() []ent.Field {
 			),
 		field.Text("description").
 			NotEmpty(),
-		field.String("image_url"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
@@ -54,5 +53,6 @@ func (Work) Edges() []ent.Edge {
 		edge.From("treasurers", User.Type).
 			Ref("treasures"),
 		edge.To("comments", Comment.Type),
+		edge.To("images", Image.Type),
 	}
 }

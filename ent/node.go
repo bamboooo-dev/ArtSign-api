@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
+	"artsign/ent/image"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -153,6 +154,51 @@ func (c *Comment) Node(ctx context.Context) (node *Node, err error) {
 	return node, nil
 }
 
+func (i *Image) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     i.ID,
+		Type:   "Image",
+		Fields: make([]*Field, 3),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(i.CreateTime); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "create_time",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(i.UpdateTime); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "update_time",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(i.URL); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "url",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Work",
+		Name: "work",
+	}
+	err = i.QueryWork().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
 func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     u.ID,
@@ -224,8 +270,8 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     w.ID,
 		Type:   "Work",
-		Fields: make([]*Field, 5),
-		Edges:  make([]*Edge, 5),
+		Fields: make([]*Field, 4),
+		Edges:  make([]*Edge, 6),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(w.Title); err != nil {
@@ -244,18 +290,10 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "description",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(w.ImageURL); err != nil {
-		return nil, err
-	}
-	node.Fields[2] = &Field{
-		Type:  "string",
-		Name:  "image_url",
-		Value: string(buf),
-	}
 	if buf, err = json.Marshal(w.CreatedAt); err != nil {
 		return nil, err
 	}
-	node.Fields[3] = &Field{
+	node.Fields[2] = &Field{
 		Type:  "time.Time",
 		Name:  "created_at",
 		Value: string(buf),
@@ -263,7 +301,7 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(w.UpdatedAt); err != nil {
 		return nil, err
 	}
-	node.Fields[4] = &Field{
+	node.Fields[3] = &Field{
 		Type:  "time.Time",
 		Name:  "updated_at",
 		Value: string(buf),
@@ -315,6 +353,16 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 	err = w.QueryComments().
 		Select(comment.FieldID).
 		Scan(ctx, &node.Edges[4].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[5] = &Edge{
+		Type: "Image",
+		Name: "images",
+	}
+	err = w.QueryImages().
+		Select(image.FieldID).
+		Scan(ctx, &node.Edges[5].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -401,6 +449,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 		n, err := c.Comment.Query().
 			Where(comment.ID(id)).
 			CollectFields(ctx, "Comment").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case image.Table:
+		n, err := c.Image.Query().
+			Where(image.ID(id)).
+			CollectFields(ctx, "Image").
 			Only(ctx)
 		if err != nil {
 			return nil, err
@@ -514,6 +571,19 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		nodes, err := c.Comment.Query().
 			Where(comment.IDIn(ids...)).
 			CollectFields(ctx, "Comment").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case image.Table:
+		nodes, err := c.Image.Query().
+			Where(image.IDIn(ids...)).
+			CollectFields(ctx, "Image").
 			All(ctx)
 		if err != nil {
 			return nil, err

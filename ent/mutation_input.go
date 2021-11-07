@@ -150,6 +150,64 @@ func (u *CommentUpdateOne) SetInput(i UpdateCommentInput) *CommentUpdateOne {
 	return u
 }
 
+// CreateImageInput represents a mutation input for creating images.
+type CreateImageInput struct {
+	CreateTime *time.Time
+	UpdateTime *time.Time
+	URL        string
+	WorkID     int
+}
+
+// Mutate applies the CreateImageInput on the ImageCreate builder.
+func (i *CreateImageInput) Mutate(m *ImageCreate) {
+	if v := i.CreateTime; v != nil {
+		m.SetCreateTime(*v)
+	}
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	m.SetURL(i.URL)
+	m.SetWorkID(i.WorkID)
+}
+
+// SetInput applies the change-set in the CreateImageInput on the create builder.
+func (c *ImageCreate) SetInput(i CreateImageInput) *ImageCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateImageInput represents a mutation input for updating images.
+type UpdateImageInput struct {
+	URL       *string
+	WorkID    *int
+	ClearWork bool
+}
+
+// Mutate applies the UpdateImageInput on the ImageMutation.
+func (i *UpdateImageInput) Mutate(m *ImageMutation) {
+	if v := i.URL; v != nil {
+		m.SetURL(*v)
+	}
+	if i.ClearWork {
+		m.ClearWork()
+	}
+	if v := i.WorkID; v != nil {
+		m.SetWorkID(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdateImageInput on the update builder.
+func (u *ImageUpdate) SetInput(i UpdateImageInput) *ImageUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateImageInput on the update-one builder.
+func (u *ImageUpdateOne) SetInput(i UpdateImageInput) *ImageUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
 	Name        string
@@ -248,7 +306,6 @@ func (u *UserUpdateOne) SetInput(i UpdateUserInput) *UserUpdateOne {
 type CreateWorkInput struct {
 	Title        string
 	Description  string
-	ImageURL     string
 	CreatedAt    *time.Time
 	UpdatedAt    *time.Time
 	CategoryID   *int
@@ -256,13 +313,13 @@ type CreateWorkInput struct {
 	LikerIDs     []int
 	TreasurerIDs []int
 	CommentIDs   []int
+	ImageIDs     []int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
 func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	m.SetTitle(i.Title)
 	m.SetDescription(i.Description)
-	m.SetImageURL(i.ImageURL)
 	if v := i.CreatedAt; v != nil {
 		m.SetCreatedAt(*v)
 	}
@@ -284,6 +341,9 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
 	}
+	if ids := i.ImageIDs; len(ids) > 0 {
+		m.AddImageIDs(ids...)
+	}
 }
 
 // SetInput applies the change-set in the CreateWorkInput on the create builder.
@@ -296,7 +356,6 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 type UpdateWorkInput struct {
 	Title              *string
 	Description        *string
-	ImageURL           *string
 	UpdatedAt          *time.Time
 	CategoryID         *int
 	ClearCategory      bool
@@ -308,6 +367,8 @@ type UpdateWorkInput struct {
 	RemoveTreasurerIDs []int
 	AddCommentIDs      []int
 	RemoveCommentIDs   []int
+	AddImageIDs        []int
+	RemoveImageIDs     []int
 }
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
@@ -317,9 +378,6 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	}
 	if v := i.Description; v != nil {
 		m.SetDescription(*v)
-	}
-	if v := i.ImageURL; v != nil {
-		m.SetImageURL(*v)
 	}
 	if v := i.UpdatedAt; v != nil {
 		m.SetUpdatedAt(*v)
@@ -353,6 +411,12 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	}
 	if ids := i.RemoveCommentIDs; len(ids) > 0 {
 		m.RemoveCommentIDs(ids...)
+	}
+	if ids := i.AddImageIDs; len(ids) > 0 {
+		m.AddImageIDs(ids...)
+	}
+	if ids := i.RemoveImageIDs; len(ids) > 0 {
+		m.RemoveImageIDs(ids...)
 	}
 }
 

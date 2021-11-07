@@ -6,11 +6,10 @@ package artsign
 import (
 	"artsign/ent"
 	"artsign/ent/work"
-	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
@@ -22,36 +21,40 @@ func (r *commentResolver) ChildrenConnection(ctx context.Context, obj *ent.Comme
 	)
 }
 
-func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkInput, image *string, fileExtension *string) (*ent.Work, error) {
-	data, err := base64.StdEncoding.DecodeString(*image)
-	if err != nil {
-		return nil, err
-	}
-	wb := new(bytes.Buffer)
-	_, err = wb.Write(data)
-	if err != nil {
-		return nil, err
-	}
-
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		return nil, err
-	}
-	output, err := r.uploader.Upload(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(r.config.S3.BucketName),
-		Key:         aws.String(fmt.Sprintf("%s.%s", uuid.String(), *fileExtension)),
-		Body:        wb,
-		ContentType: aws.String(fmt.Sprintf("image/%s)", *fileExtension)),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return ent.FromContext(ctx).Work.
+func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkInput, images []*graphql.Upload) (*ent.Work, error) {
+	work, err := ent.FromContext(ctx).Work.
 		Create().
 		SetInput(input).
-		SetImageURL(output.Location).
 		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	bulk := make([]*ent.ImageCreate, len(images))
+	for i, image := range images {
+		uuid, err := uuid.NewRandom()
+		if err != nil {
+			return nil, err
+		}
+		output, err := r.uploader.Upload(ctx, &s3.PutObjectInput{
+			Bucket:      aws.String(r.config.S3.BucketName),
+			Key:         aws.String(uuid.String()),
+			Body:        image.File,
+			ContentType: aws.String(image.ContentType),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		bulk[i] = ent.FromContext(ctx).Image.Create().SetURL(output.Location).SetWork(work)
+	}
+
+	_, err = ent.FromContext(ctx).Image.CreateBulk(bulk...).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return work, nil
 }
 
 func (r *mutationResolver) UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error) {
@@ -151,6 +154,17 @@ func (r *userResolver) TreasureConnection(ctx context.Context, obj *ent.User, af
 	return obj.QueryTreasures().
 		Paginate(ctx, after, first, before, last,
 			ent.WithWorkOrder(orderBy),
+		)
+}
+
+func (r *workResolver) ImageURL(ctx context.Context, obj *ent.Work) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *workResolver) ImageConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) (*ent.ImageConnection, error) {
+	return obj.QueryImages().
+		Paginate(ctx, after, first, before, last,
+			ent.WithImageOrder(orderBy),
 		)
 }
 

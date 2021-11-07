@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
+	"artsign/ent/image"
 	"artsign/ent/predicate"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -39,12 +40,6 @@ func (wu *WorkUpdate) SetTitle(s string) *WorkUpdate {
 // SetDescription sets the "description" field.
 func (wu *WorkUpdate) SetDescription(s string) *WorkUpdate {
 	wu.mutation.SetDescription(s)
-	return wu
-}
-
-// SetImageURL sets the "image_url" field.
-func (wu *WorkUpdate) SetImageURL(s string) *WorkUpdate {
-	wu.mutation.SetImageURL(s)
 	return wu
 }
 
@@ -145,6 +140,21 @@ func (wu *WorkUpdate) AddComments(c ...*Comment) *WorkUpdate {
 	return wu.AddCommentIDs(ids...)
 }
 
+// AddImageIDs adds the "images" edge to the Image entity by IDs.
+func (wu *WorkUpdate) AddImageIDs(ids ...int) *WorkUpdate {
+	wu.mutation.AddImageIDs(ids...)
+	return wu
+}
+
+// AddImages adds the "images" edges to the Image entity.
+func (wu *WorkUpdate) AddImages(i ...*Image) *WorkUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return wu.AddImageIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wu *WorkUpdate) Mutation() *WorkMutation {
 	return wu.mutation
@@ -223,6 +233,27 @@ func (wu *WorkUpdate) RemoveComments(c ...*Comment) *WorkUpdate {
 		ids[i] = c[i].ID
 	}
 	return wu.RemoveCommentIDs(ids...)
+}
+
+// ClearImages clears all "images" edges to the Image entity.
+func (wu *WorkUpdate) ClearImages() *WorkUpdate {
+	wu.mutation.ClearImages()
+	return wu
+}
+
+// RemoveImageIDs removes the "images" edge to Image entities by IDs.
+func (wu *WorkUpdate) RemoveImageIDs(ids ...int) *WorkUpdate {
+	wu.mutation.RemoveImageIDs(ids...)
+	return wu
+}
+
+// RemoveImages removes "images" edges to Image entities.
+func (wu *WorkUpdate) RemoveImages(i ...*Image) *WorkUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return wu.RemoveImageIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -330,13 +361,6 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: work.FieldDescription,
-		})
-	}
-	if value, ok := wu.mutation.ImageURL(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: work.FieldImageURL,
 		})
 	}
 	if value, ok := wu.mutation.UpdatedAt(); ok {
@@ -578,6 +602,60 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if wu.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.ImagesTable,
+			Columns: []string{work.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: image.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedImagesIDs(); len(nodes) > 0 && !wu.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.ImagesTable,
+			Columns: []string{work.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: image.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.ImagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.ImagesTable,
+			Columns: []string{work.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: image.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, wu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{work.Label}
@@ -606,12 +684,6 @@ func (wuo *WorkUpdateOne) SetTitle(s string) *WorkUpdateOne {
 // SetDescription sets the "description" field.
 func (wuo *WorkUpdateOne) SetDescription(s string) *WorkUpdateOne {
 	wuo.mutation.SetDescription(s)
-	return wuo
-}
-
-// SetImageURL sets the "image_url" field.
-func (wuo *WorkUpdateOne) SetImageURL(s string) *WorkUpdateOne {
-	wuo.mutation.SetImageURL(s)
 	return wuo
 }
 
@@ -712,6 +784,21 @@ func (wuo *WorkUpdateOne) AddComments(c ...*Comment) *WorkUpdateOne {
 	return wuo.AddCommentIDs(ids...)
 }
 
+// AddImageIDs adds the "images" edge to the Image entity by IDs.
+func (wuo *WorkUpdateOne) AddImageIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.AddImageIDs(ids...)
+	return wuo
+}
+
+// AddImages adds the "images" edges to the Image entity.
+func (wuo *WorkUpdateOne) AddImages(i ...*Image) *WorkUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return wuo.AddImageIDs(ids...)
+}
+
 // Mutation returns the WorkMutation object of the builder.
 func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 	return wuo.mutation
@@ -790,6 +877,27 @@ func (wuo *WorkUpdateOne) RemoveComments(c ...*Comment) *WorkUpdateOne {
 		ids[i] = c[i].ID
 	}
 	return wuo.RemoveCommentIDs(ids...)
+}
+
+// ClearImages clears all "images" edges to the Image entity.
+func (wuo *WorkUpdateOne) ClearImages() *WorkUpdateOne {
+	wuo.mutation.ClearImages()
+	return wuo
+}
+
+// RemoveImageIDs removes the "images" edge to Image entities by IDs.
+func (wuo *WorkUpdateOne) RemoveImageIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.RemoveImageIDs(ids...)
+	return wuo
+}
+
+// RemoveImages removes "images" edges to Image entities.
+func (wuo *WorkUpdateOne) RemoveImages(i ...*Image) *WorkUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return wuo.RemoveImageIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -921,13 +1029,6 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 			Type:   field.TypeString,
 			Value:  value,
 			Column: work.FieldDescription,
-		})
-	}
-	if value, ok := wuo.mutation.ImageURL(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: work.FieldImageURL,
 		})
 	}
 	if value, ok := wuo.mutation.UpdatedAt(); ok {
@@ -1161,6 +1262,60 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.ImagesTable,
+			Columns: []string{work.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: image.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedImagesIDs(); len(nodes) > 0 && !wuo.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.ImagesTable,
+			Columns: []string{work.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: image.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.ImagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.ImagesTable,
+			Columns: []string{work.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: image.FieldID,
 				},
 			},
 		}

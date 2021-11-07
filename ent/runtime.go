@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
+	"artsign/ent/image"
 	"artsign/ent/schema"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -42,6 +43,27 @@ func init() {
 	commentDescContent := commentFields[0].Descriptor()
 	// comment.ContentValidator is a validator for the "content" field. It is called by the builders before save.
 	comment.ContentValidator = commentDescContent.Validators[0].(func(string) error)
+	imageMixin := schema.Image{}.Mixin()
+	imageMixinFields0 := imageMixin[0].Fields()
+	_ = imageMixinFields0
+	imageMixinFields1 := imageMixin[1].Fields()
+	_ = imageMixinFields1
+	imageFields := schema.Image{}.Fields()
+	_ = imageFields
+	// imageDescCreateTime is the schema descriptor for create_time field.
+	imageDescCreateTime := imageMixinFields0[0].Descriptor()
+	// image.DefaultCreateTime holds the default value on creation for the create_time field.
+	image.DefaultCreateTime = imageDescCreateTime.Default.(func() time.Time)
+	// imageDescUpdateTime is the schema descriptor for update_time field.
+	imageDescUpdateTime := imageMixinFields1[0].Descriptor()
+	// image.DefaultUpdateTime holds the default value on creation for the update_time field.
+	image.DefaultUpdateTime = imageDescUpdateTime.Default.(func() time.Time)
+	// image.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	image.UpdateDefaultUpdateTime = imageDescUpdateTime.UpdateDefault.(func() time.Time)
+	// imageDescURL is the schema descriptor for url field.
+	imageDescURL := imageFields[0].Descriptor()
+	// image.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	image.URLValidator = imageDescURL.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescName is the schema descriptor for name field.
@@ -59,11 +81,11 @@ func init() {
 	// work.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	work.DescriptionValidator = workDescDescription.Validators[0].(func(string) error)
 	// workDescCreatedAt is the schema descriptor for created_at field.
-	workDescCreatedAt := workFields[3].Descriptor()
+	workDescCreatedAt := workFields[2].Descriptor()
 	// work.DefaultCreatedAt holds the default value on creation for the created_at field.
 	work.DefaultCreatedAt = workDescCreatedAt.Default.(func() time.Time)
 	// workDescUpdatedAt is the schema descriptor for updated_at field.
-	workDescUpdatedAt := workFields[4].Descriptor()
+	workDescUpdatedAt := workFields[3].Descriptor()
 	// work.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	work.DefaultUpdatedAt = workDescUpdatedAt.Default.(func() time.Time)
 }

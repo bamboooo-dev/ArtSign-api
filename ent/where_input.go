@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
+	"artsign/ent/image"
 	"artsign/ent/predicate"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -520,6 +521,261 @@ func (i *CommentWhereInput) P() (predicate.Comment, error) {
 	}
 }
 
+// ImageWhereInput represents a where input for filtering Image queries.
+type ImageWhereInput struct {
+	Not *ImageWhereInput   `json:"not,omitempty"`
+	Or  []*ImageWhereInput `json:"or,omitempty"`
+	And []*ImageWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "create_time" field predicates.
+	CreateTime      *time.Time  `json:"createTime,omitempty"`
+	CreateTimeNEQ   *time.Time  `json:"createTimeNEQ,omitempty"`
+	CreateTimeIn    []time.Time `json:"createTimeIn,omitempty"`
+	CreateTimeNotIn []time.Time `json:"createTimeNotIn,omitempty"`
+	CreateTimeGT    *time.Time  `json:"createTimeGT,omitempty"`
+	CreateTimeGTE   *time.Time  `json:"createTimeGTE,omitempty"`
+	CreateTimeLT    *time.Time  `json:"createTimeLT,omitempty"`
+	CreateTimeLTE   *time.Time  `json:"createTimeLTE,omitempty"`
+
+	// "update_time" field predicates.
+	UpdateTime      *time.Time  `json:"updateTime,omitempty"`
+	UpdateTimeNEQ   *time.Time  `json:"updateTimeNEQ,omitempty"`
+	UpdateTimeIn    []time.Time `json:"updateTimeIn,omitempty"`
+	UpdateTimeNotIn []time.Time `json:"updateTimeNotIn,omitempty"`
+	UpdateTimeGT    *time.Time  `json:"updateTimeGT,omitempty"`
+	UpdateTimeGTE   *time.Time  `json:"updateTimeGTE,omitempty"`
+	UpdateTimeLT    *time.Time  `json:"updateTimeLT,omitempty"`
+	UpdateTimeLTE   *time.Time  `json:"updateTimeLTE,omitempty"`
+
+	// "url" field predicates.
+	URL             *string  `json:"url,omitempty"`
+	URLNEQ          *string  `json:"urlNEQ,omitempty"`
+	URLIn           []string `json:"urlIn,omitempty"`
+	URLNotIn        []string `json:"urlNotIn,omitempty"`
+	URLGT           *string  `json:"urlGT,omitempty"`
+	URLGTE          *string  `json:"urlGTE,omitempty"`
+	URLLT           *string  `json:"urlLT,omitempty"`
+	URLLTE          *string  `json:"urlLTE,omitempty"`
+	URLContains     *string  `json:"urlContains,omitempty"`
+	URLHasPrefix    *string  `json:"urlHasPrefix,omitempty"`
+	URLHasSuffix    *string  `json:"urlHasSuffix,omitempty"`
+	URLEqualFold    *string  `json:"urlEqualFold,omitempty"`
+	URLContainsFold *string  `json:"urlContainsFold,omitempty"`
+
+	// "work" edge predicates.
+	HasWork     *bool             `json:"hasWork,omitempty"`
+	HasWorkWith []*WorkWhereInput `json:"hasWorkWith,omitempty"`
+}
+
+// Filter applies the ImageWhereInput filter on the ImageQuery builder.
+func (i *ImageWhereInput) Filter(q *ImageQuery) (*ImageQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// P returns a predicate for filtering images.
+// An error is returned if the input is empty or invalid.
+func (i *ImageWhereInput) P() (predicate.Image, error) {
+	var predicates []predicate.Image
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, image.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.Image, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, image.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.Image, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, image.And(and...))
+	}
+	if i.ID != nil {
+		predicates = append(predicates, image.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, image.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, image.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, image.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, image.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, image.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, image.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, image.IDLTE(*i.IDLTE))
+	}
+	if i.CreateTime != nil {
+		predicates = append(predicates, image.CreateTimeEQ(*i.CreateTime))
+	}
+	if i.CreateTimeNEQ != nil {
+		predicates = append(predicates, image.CreateTimeNEQ(*i.CreateTimeNEQ))
+	}
+	if len(i.CreateTimeIn) > 0 {
+		predicates = append(predicates, image.CreateTimeIn(i.CreateTimeIn...))
+	}
+	if len(i.CreateTimeNotIn) > 0 {
+		predicates = append(predicates, image.CreateTimeNotIn(i.CreateTimeNotIn...))
+	}
+	if i.CreateTimeGT != nil {
+		predicates = append(predicates, image.CreateTimeGT(*i.CreateTimeGT))
+	}
+	if i.CreateTimeGTE != nil {
+		predicates = append(predicates, image.CreateTimeGTE(*i.CreateTimeGTE))
+	}
+	if i.CreateTimeLT != nil {
+		predicates = append(predicates, image.CreateTimeLT(*i.CreateTimeLT))
+	}
+	if i.CreateTimeLTE != nil {
+		predicates = append(predicates, image.CreateTimeLTE(*i.CreateTimeLTE))
+	}
+	if i.UpdateTime != nil {
+		predicates = append(predicates, image.UpdateTimeEQ(*i.UpdateTime))
+	}
+	if i.UpdateTimeNEQ != nil {
+		predicates = append(predicates, image.UpdateTimeNEQ(*i.UpdateTimeNEQ))
+	}
+	if len(i.UpdateTimeIn) > 0 {
+		predicates = append(predicates, image.UpdateTimeIn(i.UpdateTimeIn...))
+	}
+	if len(i.UpdateTimeNotIn) > 0 {
+		predicates = append(predicates, image.UpdateTimeNotIn(i.UpdateTimeNotIn...))
+	}
+	if i.UpdateTimeGT != nil {
+		predicates = append(predicates, image.UpdateTimeGT(*i.UpdateTimeGT))
+	}
+	if i.UpdateTimeGTE != nil {
+		predicates = append(predicates, image.UpdateTimeGTE(*i.UpdateTimeGTE))
+	}
+	if i.UpdateTimeLT != nil {
+		predicates = append(predicates, image.UpdateTimeLT(*i.UpdateTimeLT))
+	}
+	if i.UpdateTimeLTE != nil {
+		predicates = append(predicates, image.UpdateTimeLTE(*i.UpdateTimeLTE))
+	}
+	if i.URL != nil {
+		predicates = append(predicates, image.URLEQ(*i.URL))
+	}
+	if i.URLNEQ != nil {
+		predicates = append(predicates, image.URLNEQ(*i.URLNEQ))
+	}
+	if len(i.URLIn) > 0 {
+		predicates = append(predicates, image.URLIn(i.URLIn...))
+	}
+	if len(i.URLNotIn) > 0 {
+		predicates = append(predicates, image.URLNotIn(i.URLNotIn...))
+	}
+	if i.URLGT != nil {
+		predicates = append(predicates, image.URLGT(*i.URLGT))
+	}
+	if i.URLGTE != nil {
+		predicates = append(predicates, image.URLGTE(*i.URLGTE))
+	}
+	if i.URLLT != nil {
+		predicates = append(predicates, image.URLLT(*i.URLLT))
+	}
+	if i.URLLTE != nil {
+		predicates = append(predicates, image.URLLTE(*i.URLLTE))
+	}
+	if i.URLContains != nil {
+		predicates = append(predicates, image.URLContains(*i.URLContains))
+	}
+	if i.URLHasPrefix != nil {
+		predicates = append(predicates, image.URLHasPrefix(*i.URLHasPrefix))
+	}
+	if i.URLHasSuffix != nil {
+		predicates = append(predicates, image.URLHasSuffix(*i.URLHasSuffix))
+	}
+	if i.URLEqualFold != nil {
+		predicates = append(predicates, image.URLEqualFold(*i.URLEqualFold))
+	}
+	if i.URLContainsFold != nil {
+		predicates = append(predicates, image.URLContainsFold(*i.URLContainsFold))
+	}
+
+	if i.HasWork != nil {
+		p := image.HasWork()
+		if !*i.HasWork {
+			p = image.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasWorkWith) > 0 {
+		with := make([]predicate.Work, 0, len(i.HasWorkWith))
+		for _, w := range i.HasWorkWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, image.HasWorkWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, fmt.Errorf("artsign/ent: empty predicate ImageWhereInput")
+	case 1:
+		return predicates[0], nil
+	default:
+		return image.And(predicates...), nil
+	}
+}
+
 // UserWhereInput represents a where input for filtering User queries.
 type UserWhereInput struct {
 	Not *UserWhereInput   `json:"not,omitempty"`
@@ -873,21 +1129,6 @@ type WorkWhereInput struct {
 	DescriptionEqualFold    *string  `json:"descriptionEqualFold,omitempty"`
 	DescriptionContainsFold *string  `json:"descriptionContainsFold,omitempty"`
 
-	// "image_url" field predicates.
-	ImageURL             *string  `json:"imageURL,omitempty"`
-	ImageURLNEQ          *string  `json:"imageURLNEQ,omitempty"`
-	ImageURLIn           []string `json:"imageURLIn,omitempty"`
-	ImageURLNotIn        []string `json:"imageURLNotIn,omitempty"`
-	ImageURLGT           *string  `json:"imageURLGT,omitempty"`
-	ImageURLGTE          *string  `json:"imageURLGTE,omitempty"`
-	ImageURLLT           *string  `json:"imageURLLT,omitempty"`
-	ImageURLLTE          *string  `json:"imageURLLTE,omitempty"`
-	ImageURLContains     *string  `json:"imageURLContains,omitempty"`
-	ImageURLHasPrefix    *string  `json:"imageURLHasPrefix,omitempty"`
-	ImageURLHasSuffix    *string  `json:"imageURLHasSuffix,omitempty"`
-	ImageURLEqualFold    *string  `json:"imageURLEqualFold,omitempty"`
-	ImageURLContainsFold *string  `json:"imageURLContainsFold,omitempty"`
-
 	// "created_at" field predicates.
 	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
 	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
@@ -927,6 +1168,10 @@ type WorkWhereInput struct {
 	// "comments" edge predicates.
 	HasComments     *bool                `json:"hasComments,omitempty"`
 	HasCommentsWith []*CommentWhereInput `json:"hasCommentsWith,omitempty"`
+
+	// "images" edge predicates.
+	HasImages     *bool              `json:"hasImages,omitempty"`
+	HasImagesWith []*ImageWhereInput `json:"hasImagesWith,omitempty"`
 }
 
 // Filter applies the WorkWhereInput filter on the WorkQuery builder.
@@ -1090,45 +1335,6 @@ func (i *WorkWhereInput) P() (predicate.Work, error) {
 	if i.DescriptionContainsFold != nil {
 		predicates = append(predicates, work.DescriptionContainsFold(*i.DescriptionContainsFold))
 	}
-	if i.ImageURL != nil {
-		predicates = append(predicates, work.ImageURLEQ(*i.ImageURL))
-	}
-	if i.ImageURLNEQ != nil {
-		predicates = append(predicates, work.ImageURLNEQ(*i.ImageURLNEQ))
-	}
-	if len(i.ImageURLIn) > 0 {
-		predicates = append(predicates, work.ImageURLIn(i.ImageURLIn...))
-	}
-	if len(i.ImageURLNotIn) > 0 {
-		predicates = append(predicates, work.ImageURLNotIn(i.ImageURLNotIn...))
-	}
-	if i.ImageURLGT != nil {
-		predicates = append(predicates, work.ImageURLGT(*i.ImageURLGT))
-	}
-	if i.ImageURLGTE != nil {
-		predicates = append(predicates, work.ImageURLGTE(*i.ImageURLGTE))
-	}
-	if i.ImageURLLT != nil {
-		predicates = append(predicates, work.ImageURLLT(*i.ImageURLLT))
-	}
-	if i.ImageURLLTE != nil {
-		predicates = append(predicates, work.ImageURLLTE(*i.ImageURLLTE))
-	}
-	if i.ImageURLContains != nil {
-		predicates = append(predicates, work.ImageURLContains(*i.ImageURLContains))
-	}
-	if i.ImageURLHasPrefix != nil {
-		predicates = append(predicates, work.ImageURLHasPrefix(*i.ImageURLHasPrefix))
-	}
-	if i.ImageURLHasSuffix != nil {
-		predicates = append(predicates, work.ImageURLHasSuffix(*i.ImageURLHasSuffix))
-	}
-	if i.ImageURLEqualFold != nil {
-		predicates = append(predicates, work.ImageURLEqualFold(*i.ImageURLEqualFold))
-	}
-	if i.ImageURLContainsFold != nil {
-		predicates = append(predicates, work.ImageURLContainsFold(*i.ImageURLContainsFold))
-	}
 	if i.CreatedAt != nil {
 		predicates = append(predicates, work.CreatedAtEQ(*i.CreatedAt))
 	}
@@ -1267,6 +1473,24 @@ func (i *WorkWhereInput) P() (predicate.Work, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, work.HasCommentsWith(with...))
+	}
+	if i.HasImages != nil {
+		p := work.HasImages()
+		if !*i.HasImages {
+			p = work.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasImagesWith) > 0 {
+		with := make([]predicate.Image, 0, len(i.HasImagesWith))
+		for _, w := range i.HasImagesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, work.HasImagesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:

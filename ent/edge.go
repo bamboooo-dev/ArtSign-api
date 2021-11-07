@@ -44,6 +44,14 @@ func (c *Comment) Parent(ctx context.Context) (*Comment, error) {
 	return result, MaskNotFound(err)
 }
 
+func (i *Image) Work(ctx context.Context) (*Work, error) {
+	result, err := i.Edges.WorkOrErr()
+	if IsNotLoaded(err) {
+		result, err = i.QueryWork().Only(ctx)
+	}
+	return result, err
+}
+
 func (u *User) Works(ctx context.Context) ([]*Work, error) {
 	result, err := u.Edges.WorksOrErr()
 	if IsNotLoaded(err) {
@@ -112,6 +120,14 @@ func (w *Work) Comments(ctx context.Context) ([]*Comment, error) {
 	result, err := w.Edges.CommentsOrErr()
 	if IsNotLoaded(err) {
 		result, err = w.QueryComments().All(ctx)
+	}
+	return result, err
+}
+
+func (w *Work) Images(ctx context.Context) ([]*Image, error) {
+	result, err := w.Edges.ImagesOrErr()
+	if IsNotLoaded(err) {
+		result, err = w.QueryImages().All(ctx)
 	}
 	return result, err
 }

@@ -107,13 +107,6 @@ func Description(v string) predicate.Work {
 	})
 }
 
-// ImageURL applies equality check predicate on the "image_url" field. It's identical to ImageURLEQ.
-func ImageURL(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldImageURL), v))
-	})
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Work {
 	return predicate.Work(func(s *sql.Selector) {
@@ -347,117 +340,6 @@ func DescriptionEqualFold(v string) predicate.Work {
 func DescriptionContainsFold(v string) predicate.Work {
 	return predicate.Work(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldDescription), v))
-	})
-}
-
-// ImageURLEQ applies the EQ predicate on the "image_url" field.
-func ImageURLEQ(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLNEQ applies the NEQ predicate on the "image_url" field.
-func ImageURLNEQ(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLIn applies the In predicate on the "image_url" field.
-func ImageURLIn(vs ...string) predicate.Work {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Work(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldImageURL), v...))
-	})
-}
-
-// ImageURLNotIn applies the NotIn predicate on the "image_url" field.
-func ImageURLNotIn(vs ...string) predicate.Work {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Work(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldImageURL), v...))
-	})
-}
-
-// ImageURLGT applies the GT predicate on the "image_url" field.
-func ImageURLGT(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLGTE applies the GTE predicate on the "image_url" field.
-func ImageURLGTE(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLLT applies the LT predicate on the "image_url" field.
-func ImageURLLT(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLLTE applies the LTE predicate on the "image_url" field.
-func ImageURLLTE(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLContains applies the Contains predicate on the "image_url" field.
-func ImageURLContains(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLHasPrefix applies the HasPrefix predicate on the "image_url" field.
-func ImageURLHasPrefix(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLHasSuffix applies the HasSuffix predicate on the "image_url" field.
-func ImageURLHasSuffix(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLEqualFold applies the EqualFold predicate on the "image_url" field.
-func ImageURLEqualFold(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldImageURL), v))
-	})
-}
-
-// ImageURLContainsFold applies the ContainsFold predicate on the "image_url" field.
-func ImageURLContainsFold(v string) predicate.Work {
-	return predicate.Work(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldImageURL), v))
 	})
 }
 
@@ -744,6 +626,34 @@ func HasCommentsWith(preds ...predicate.Comment) predicate.Work {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(CommentsInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasImages applies the HasEdge predicate on the "images" edge.
+func HasImages() predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ImagesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ImagesTable, ImagesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasImagesWith applies the HasEdge predicate on the "images" edge with a given conditions (other predicates).
+func HasImagesWith(preds ...predicate.Image) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ImagesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ImagesTable, ImagesColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
