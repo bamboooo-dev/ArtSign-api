@@ -44,6 +44,14 @@ func (c *Comment) Parent(ctx context.Context) (*Comment, error) {
 	return result, MaskNotFound(err)
 }
 
+func (c *Comment) Likers(ctx context.Context) ([]*User, error) {
+	result, err := c.Edges.LikersOrErr()
+	if IsNotLoaded(err) {
+		result, err = c.QueryLikers().All(ctx)
+	}
+	return result, err
+}
+
 func (i *Image) Work(ctx context.Context) (*Work, error) {
 	result, err := i.Edges.WorkOrErr()
 	if IsNotLoaded(err) {
@@ -80,6 +88,14 @@ func (u *User) Comments(ctx context.Context) ([]*Comment, error) {
 	result, err := u.Edges.CommentsOrErr()
 	if IsNotLoaded(err) {
 		result, err = u.QueryComments().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) LikeComments(ctx context.Context) ([]*Comment, error) {
+	result, err := u.Edges.LikeCommentsOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryLikeComments().All(ctx)
 	}
 	return result, err
 }

@@ -91,6 +91,21 @@ func (cu *CommentUpdate) SetParent(c *Comment) *CommentUpdate {
 	return cu.SetParentID(c.ID)
 }
 
+// AddLikerIDs adds the "likers" edge to the User entity by IDs.
+func (cu *CommentUpdate) AddLikerIDs(ids ...int) *CommentUpdate {
+	cu.mutation.AddLikerIDs(ids...)
+	return cu
+}
+
+// AddLikers adds the "likers" edges to the User entity.
+func (cu *CommentUpdate) AddLikers(u ...*User) *CommentUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return cu.AddLikerIDs(ids...)
+}
+
 // Mutation returns the CommentMutation object of the builder.
 func (cu *CommentUpdate) Mutation() *CommentMutation {
 	return cu.mutation
@@ -133,6 +148,27 @@ func (cu *CommentUpdate) RemoveChildren(c ...*Comment) *CommentUpdate {
 func (cu *CommentUpdate) ClearParent() *CommentUpdate {
 	cu.mutation.ClearParent()
 	return cu
+}
+
+// ClearLikers clears all "likers" edges to the User entity.
+func (cu *CommentUpdate) ClearLikers() *CommentUpdate {
+	cu.mutation.ClearLikers()
+	return cu
+}
+
+// RemoveLikerIDs removes the "likers" edge to User entities by IDs.
+func (cu *CommentUpdate) RemoveLikerIDs(ids ...int) *CommentUpdate {
+	cu.mutation.RemoveLikerIDs(ids...)
+	return cu
+}
+
+// RemoveLikers removes "likers" edges to User entities.
+func (cu *CommentUpdate) RemoveLikers(u ...*User) *CommentUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return cu.RemoveLikerIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -411,6 +447,60 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if cu.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.LikersTable,
+			Columns: comment.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedLikersIDs(); len(nodes) > 0 && !cu.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.LikersTable,
+			Columns: comment.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.LikersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.LikersTable,
+			Columns: comment.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{comment.Label}
@@ -492,6 +582,21 @@ func (cuo *CommentUpdateOne) SetParent(c *Comment) *CommentUpdateOne {
 	return cuo.SetParentID(c.ID)
 }
 
+// AddLikerIDs adds the "likers" edge to the User entity by IDs.
+func (cuo *CommentUpdateOne) AddLikerIDs(ids ...int) *CommentUpdateOne {
+	cuo.mutation.AddLikerIDs(ids...)
+	return cuo
+}
+
+// AddLikers adds the "likers" edges to the User entity.
+func (cuo *CommentUpdateOne) AddLikers(u ...*User) *CommentUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return cuo.AddLikerIDs(ids...)
+}
+
 // Mutation returns the CommentMutation object of the builder.
 func (cuo *CommentUpdateOne) Mutation() *CommentMutation {
 	return cuo.mutation
@@ -534,6 +639,27 @@ func (cuo *CommentUpdateOne) RemoveChildren(c ...*Comment) *CommentUpdateOne {
 func (cuo *CommentUpdateOne) ClearParent() *CommentUpdateOne {
 	cuo.mutation.ClearParent()
 	return cuo
+}
+
+// ClearLikers clears all "likers" edges to the User entity.
+func (cuo *CommentUpdateOne) ClearLikers() *CommentUpdateOne {
+	cuo.mutation.ClearLikers()
+	return cuo
+}
+
+// RemoveLikerIDs removes the "likers" edge to User entities by IDs.
+func (cuo *CommentUpdateOne) RemoveLikerIDs(ids ...int) *CommentUpdateOne {
+	cuo.mutation.RemoveLikerIDs(ids...)
+	return cuo
+}
+
+// RemoveLikers removes "likers" edges to User entities.
+func (cuo *CommentUpdateOne) RemoveLikers(u ...*User) *CommentUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return cuo.RemoveLikerIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -828,6 +954,60 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.LikersTable,
+			Columns: comment.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedLikersIDs(); len(nodes) > 0 && !cuo.mutation.LikersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.LikersTable,
+			Columns: comment.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.LikersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.LikersTable,
+			Columns: comment.LikersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
 				},
 			},
 		}

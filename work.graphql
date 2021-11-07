@@ -100,6 +100,13 @@ type Comment implements Node {
     last: Int
     orderBy: CommentOrder
   ): CommentConnection
+  likerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
 }
 
 type CreateUserLikePayload {
@@ -107,6 +114,10 @@ type CreateUserLikePayload {
 }
 
 type CreateUserTreasurePayload {
+  clientMutationId: String
+}
+
+type CreateUserLikeCommentPayload {
   clientMutationId: String
 }
 
@@ -121,6 +132,9 @@ type Mutation {
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
   createComment(input: CreateCommentInput!): Comment!
   createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
+  createUserLikeComment(
+    input: CreateUserLikeCommentInput!
+  ): CreateUserLikeCommentPayload
 }
 
 # Define a query for getting all works.
@@ -274,6 +288,12 @@ input CreateUserLikeInput {
   clientMutationId: String
   userID: ID!
   workID: ID!
+}
+
+input CreateUserLikeCommentInput {
+  clientMutationId: String
+  userID: ID!
+  commentID: ID!
 }
 
 input CreateUserTreasureInput {

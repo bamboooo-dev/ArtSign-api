@@ -48,5 +48,7 @@ func (Comment) Edges() []ent.Edge {
 		edge.To("parent", Comment.Type).
 			Unique().
 			From("children"),
+		edge.From("likers", User.Type).
+			Ref("like_comments"),
 	}
 }

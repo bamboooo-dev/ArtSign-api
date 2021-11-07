@@ -67,6 +67,7 @@ type CreateCommentInput struct {
 	WorkID     int
 	ChildIDs   []int
 	ParentID   *int
+	LikerIDs   []int
 }
 
 // Mutate applies the CreateCommentInput on the CommentCreate builder.
@@ -85,6 +86,9 @@ func (i *CreateCommentInput) Mutate(m *CommentCreate) {
 	}
 	if v := i.ParentID; v != nil {
 		m.SetParentID(*v)
+	}
+	if ids := i.LikerIDs; len(ids) > 0 {
+		m.AddLikerIDs(ids...)
 	}
 }
 
@@ -105,6 +109,8 @@ type UpdateCommentInput struct {
 	RemoveChildIDs []int
 	ParentID       *int
 	ClearParent    bool
+	AddLikerIDs    []int
+	RemoveLikerIDs []int
 }
 
 // Mutate applies the UpdateCommentInput on the CommentMutation.
@@ -135,6 +141,12 @@ func (i *UpdateCommentInput) Mutate(m *CommentMutation) {
 	}
 	if v := i.ParentID; v != nil {
 		m.SetParentID(*v)
+	}
+	if ids := i.AddLikerIDs; len(ids) > 0 {
+		m.AddLikerIDs(ids...)
+	}
+	if ids := i.RemoveLikerIDs; len(ids) > 0 {
+		m.RemoveLikerIDs(ids...)
 	}
 }
 
@@ -210,12 +222,13 @@ func (u *ImageUpdateOne) SetInput(i UpdateImageInput) *ImageUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	Name        string
-	Profile     string
-	WorkIDs     []int
-	LikeIDs     []int
-	TreasureIDs []int
-	CommentIDs  []int
+	Name           string
+	Profile        string
+	WorkIDs        []int
+	LikeIDs        []int
+	TreasureIDs    []int
+	CommentIDs     []int
+	LikeCommentIDs []int
 }
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
@@ -234,6 +247,9 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
 	}
+	if ids := i.LikeCommentIDs; len(ids) > 0 {
+		m.AddLikeCommentIDs(ids...)
+	}
 }
 
 // SetInput applies the change-set in the CreateUserInput on the create builder.
@@ -244,16 +260,18 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	Name              *string
-	Profile           *string
-	AddWorkIDs        []int
-	RemoveWorkIDs     []int
-	AddLikeIDs        []int
-	RemoveLikeIDs     []int
-	AddTreasureIDs    []int
-	RemoveTreasureIDs []int
-	AddCommentIDs     []int
-	RemoveCommentIDs  []int
+	Name                 *string
+	Profile              *string
+	AddWorkIDs           []int
+	RemoveWorkIDs        []int
+	AddLikeIDs           []int
+	RemoveLikeIDs        []int
+	AddTreasureIDs       []int
+	RemoveTreasureIDs    []int
+	AddCommentIDs        []int
+	RemoveCommentIDs     []int
+	AddLikeCommentIDs    []int
+	RemoveLikeCommentIDs []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation.
@@ -287,6 +305,12 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if ids := i.RemoveCommentIDs; len(ids) > 0 {
 		m.RemoveCommentIDs(ids...)
+	}
+	if ids := i.AddLikeCommentIDs; len(ids) > 0 {
+		m.AddLikeCommentIDs(ids...)
+	}
+	if ids := i.RemoveLikeCommentIDs; len(ids) > 0 {
+		m.RemoveLikeCommentIDs(ids...)
 	}
 }
 

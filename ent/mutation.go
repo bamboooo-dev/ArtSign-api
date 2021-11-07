@@ -437,6 +437,9 @@ type CommentMutation struct {
 	clearedchildren bool
 	parent          *int
 	clearedparent   bool
+	likers          map[int]struct{}
+	removedlikers   map[int]struct{}
+	clearedlikers   bool
 	done            bool
 	oldValue        func(context.Context) (*Comment, error)
 	predicates      []predicate.Comment
@@ -800,6 +803,60 @@ func (m *CommentMutation) ResetParent() {
 	m.clearedparent = false
 }
 
+// AddLikerIDs adds the "likers" edge to the User entity by ids.
+func (m *CommentMutation) AddLikerIDs(ids ...int) {
+	if m.likers == nil {
+		m.likers = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.likers[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLikers clears the "likers" edge to the User entity.
+func (m *CommentMutation) ClearLikers() {
+	m.clearedlikers = true
+}
+
+// LikersCleared reports if the "likers" edge to the User entity was cleared.
+func (m *CommentMutation) LikersCleared() bool {
+	return m.clearedlikers
+}
+
+// RemoveLikerIDs removes the "likers" edge to the User entity by IDs.
+func (m *CommentMutation) RemoveLikerIDs(ids ...int) {
+	if m.removedlikers == nil {
+		m.removedlikers = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.likers, ids[i])
+		m.removedlikers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLikers returns the removed IDs of the "likers" edge to the User entity.
+func (m *CommentMutation) RemovedLikersIDs() (ids []int) {
+	for id := range m.removedlikers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LikersIDs returns the "likers" edge IDs in the mutation.
+func (m *CommentMutation) LikersIDs() (ids []int) {
+	for id := range m.likers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLikers resets all changes to the "likers" edge.
+func (m *CommentMutation) ResetLikers() {
+	m.likers = nil
+	m.clearedlikers = false
+	m.removedlikers = nil
+}
+
 // Where appends a list predicates to the CommentMutation builder.
 func (m *CommentMutation) Where(ps ...predicate.Comment) {
 	m.predicates = append(m.predicates, ps...)
@@ -952,7 +1009,7 @@ func (m *CommentMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CommentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.owner != nil {
 		edges = append(edges, comment.EdgeOwner)
 	}
@@ -964,6 +1021,9 @@ func (m *CommentMutation) AddedEdges() []string {
 	}
 	if m.parent != nil {
 		edges = append(edges, comment.EdgeParent)
+	}
+	if m.likers != nil {
+		edges = append(edges, comment.EdgeLikers)
 	}
 	return edges
 }
@@ -990,15 +1050,24 @@ func (m *CommentMutation) AddedIDs(name string) []ent.Value {
 		if id := m.parent; id != nil {
 			return []ent.Value{*id}
 		}
+	case comment.EdgeLikers:
+		ids := make([]ent.Value, 0, len(m.likers))
+		for id := range m.likers {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CommentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedchildren != nil {
 		edges = append(edges, comment.EdgeChildren)
+	}
+	if m.removedlikers != nil {
+		edges = append(edges, comment.EdgeLikers)
 	}
 	return edges
 }
@@ -1013,13 +1082,19 @@ func (m *CommentMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case comment.EdgeLikers:
+		ids := make([]ent.Value, 0, len(m.removedlikers))
+		for id := range m.removedlikers {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CommentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedowner {
 		edges = append(edges, comment.EdgeOwner)
 	}
@@ -1031,6 +1106,9 @@ func (m *CommentMutation) ClearedEdges() []string {
 	}
 	if m.clearedparent {
 		edges = append(edges, comment.EdgeParent)
+	}
+	if m.clearedlikers {
+		edges = append(edges, comment.EdgeLikers)
 	}
 	return edges
 }
@@ -1047,6 +1125,8 @@ func (m *CommentMutation) EdgeCleared(name string) bool {
 		return m.clearedchildren
 	case comment.EdgeParent:
 		return m.clearedparent
+	case comment.EdgeLikers:
+		return m.clearedlikers
 	}
 	return false
 }
@@ -1083,6 +1163,9 @@ func (m *CommentMutation) ResetEdge(name string) error {
 		return nil
 	case comment.EdgeParent:
 		m.ResetParent()
+		return nil
+	case comment.EdgeLikers:
+		m.ResetLikers()
 		return nil
 	}
 	return fmt.Errorf("unknown Comment edge %s", name)
@@ -1560,27 +1643,30 @@ func (m *ImageMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	name             *string
-	profile          *string
-	clearedFields    map[string]struct{}
-	works            map[int]struct{}
-	removedworks     map[int]struct{}
-	clearedworks     bool
-	likes            map[int]struct{}
-	removedlikes     map[int]struct{}
-	clearedlikes     bool
-	treasures        map[int]struct{}
-	removedtreasures map[int]struct{}
-	clearedtreasures bool
-	comments         map[int]struct{}
-	removedcomments  map[int]struct{}
-	clearedcomments  bool
-	done             bool
-	oldValue         func(context.Context) (*User, error)
-	predicates       []predicate.User
+	op                   Op
+	typ                  string
+	id                   *int
+	name                 *string
+	profile              *string
+	clearedFields        map[string]struct{}
+	works                map[int]struct{}
+	removedworks         map[int]struct{}
+	clearedworks         bool
+	likes                map[int]struct{}
+	removedlikes         map[int]struct{}
+	clearedlikes         bool
+	treasures            map[int]struct{}
+	removedtreasures     map[int]struct{}
+	clearedtreasures     bool
+	comments             map[int]struct{}
+	removedcomments      map[int]struct{}
+	clearedcomments      bool
+	like_comments        map[int]struct{}
+	removedlike_comments map[int]struct{}
+	clearedlike_comments bool
+	done                 bool
+	oldValue             func(context.Context) (*User, error)
+	predicates           []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -1950,6 +2036,60 @@ func (m *UserMutation) ResetComments() {
 	m.removedcomments = nil
 }
 
+// AddLikeCommentIDs adds the "like_comments" edge to the Comment entity by ids.
+func (m *UserMutation) AddLikeCommentIDs(ids ...int) {
+	if m.like_comments == nil {
+		m.like_comments = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.like_comments[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLikeComments clears the "like_comments" edge to the Comment entity.
+func (m *UserMutation) ClearLikeComments() {
+	m.clearedlike_comments = true
+}
+
+// LikeCommentsCleared reports if the "like_comments" edge to the Comment entity was cleared.
+func (m *UserMutation) LikeCommentsCleared() bool {
+	return m.clearedlike_comments
+}
+
+// RemoveLikeCommentIDs removes the "like_comments" edge to the Comment entity by IDs.
+func (m *UserMutation) RemoveLikeCommentIDs(ids ...int) {
+	if m.removedlike_comments == nil {
+		m.removedlike_comments = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.like_comments, ids[i])
+		m.removedlike_comments[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLikeComments returns the removed IDs of the "like_comments" edge to the Comment entity.
+func (m *UserMutation) RemovedLikeCommentsIDs() (ids []int) {
+	for id := range m.removedlike_comments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LikeCommentsIDs returns the "like_comments" edge IDs in the mutation.
+func (m *UserMutation) LikeCommentsIDs() (ids []int) {
+	for id := range m.like_comments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLikeComments resets all changes to the "like_comments" edge.
+func (m *UserMutation) ResetLikeComments() {
+	m.like_comments = nil
+	m.clearedlike_comments = false
+	m.removedlike_comments = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -2085,7 +2225,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.works != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -2097,6 +2237,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.comments != nil {
 		edges = append(edges, user.EdgeComments)
+	}
+	if m.like_comments != nil {
+		edges = append(edges, user.EdgeLikeComments)
 	}
 	return edges
 }
@@ -2129,13 +2272,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeLikeComments:
+		ids := make([]ent.Value, 0, len(m.like_comments))
+		for id := range m.like_comments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedworks != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -2147,6 +2296,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedcomments != nil {
 		edges = append(edges, user.EdgeComments)
+	}
+	if m.removedlike_comments != nil {
+		edges = append(edges, user.EdgeLikeComments)
 	}
 	return edges
 }
@@ -2179,13 +2331,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeLikeComments:
+		ids := make([]ent.Value, 0, len(m.removedlike_comments))
+		for id := range m.removedlike_comments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedworks {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -2197,6 +2355,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedcomments {
 		edges = append(edges, user.EdgeComments)
+	}
+	if m.clearedlike_comments {
+		edges = append(edges, user.EdgeLikeComments)
 	}
 	return edges
 }
@@ -2213,6 +2374,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedtreasures
 	case user.EdgeComments:
 		return m.clearedcomments
+	case user.EdgeLikeComments:
+		return m.clearedlike_comments
 	}
 	return false
 }
@@ -2240,6 +2403,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeComments:
 		m.ResetComments()
+		return nil
+	case user.EdgeLikeComments:
+		m.ResetLikeComments()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

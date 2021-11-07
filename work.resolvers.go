@@ -21,6 +21,12 @@ func (r *commentResolver) ChildrenConnection(ctx context.Context, obj *ent.Comme
 	)
 }
 
+func (r *commentResolver) LikerConnection(ctx context.Context, obj *ent.Comment, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
+	return obj.QueryLikers().Paginate(ctx, after, first, before, last,
+		ent.WithUserOrder(orderBy),
+	)
+}
+
 func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkInput, images []*graphql.Upload) (*ent.Work, error) {
 	work, err := ent.FromContext(ctx).Work.
 		Create().
@@ -110,6 +116,20 @@ func (r *mutationResolver) CreateUserTreasure(ctx context.Context, input CreateU
 	}
 
 	return &CreateUserTreasurePayload{}, nil
+}
+
+func (r *mutationResolver) CreateUserLikeComment(ctx context.Context, input CreateUserLikeCommentInput) (*CreateUserLikeCommentPayload, error) {
+	user, err := ent.FromContext(ctx).User.Get(ctx, input.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = user.Update().AddLikeCommentIDs(input.CommentID).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateUserLikeCommentPayload{}, nil
 }
 
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error) {

@@ -58,6 +58,7 @@ type ComplexityRoot struct {
 		Content            func(childComplexity int) int
 		CreateTime         func(childComplexity int) int
 		ID                 func(childComplexity int) int
+		LikerConnection    func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
 		Parent             func(childComplexity int) int
 		UpdateTime         func(childComplexity int) int
 	}
@@ -71,6 +72,10 @@ type ComplexityRoot struct {
 	CommentEdge struct {
 		Cursor func(childComplexity int) int
 		Node   func(childComplexity int) int
+	}
+
+	CreateUserLikeCommentPayload struct {
+		ClientMutationID func(childComplexity int) int
 	}
 
 	CreateUserLikePayload struct {
@@ -98,14 +103,15 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateComment      func(childComplexity int, input ent.CreateCommentInput) int
-		CreateUser         func(childComplexity int, input ent.CreateUserInput) int
-		CreateUserLike     func(childComplexity int, input CreateUserLikeInput) int
-		CreateUserTreasure func(childComplexity int, input CreateUserTreasureInput) int
-		CreateWork         func(childComplexity int, input ent.CreateWorkInput, images []*graphql.Upload) int
-		UpdateUser         func(childComplexity int, id int, input ent.UpdateUserInput) int
-		UpdateWork         func(childComplexity int, id int, input ent.UpdateWorkInput) int
-		UpdateWorks        func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
+		CreateComment         func(childComplexity int, input ent.CreateCommentInput) int
+		CreateUser            func(childComplexity int, input ent.CreateUserInput) int
+		CreateUserLike        func(childComplexity int, input CreateUserLikeInput) int
+		CreateUserLikeComment func(childComplexity int, input CreateUserLikeCommentInput) int
+		CreateUserTreasure    func(childComplexity int, input CreateUserTreasureInput) int
+		CreateWork            func(childComplexity int, input ent.CreateWorkInput, images []*graphql.Upload) int
+		UpdateUser            func(childComplexity int, id int, input ent.UpdateUserInput) int
+		UpdateWork            func(childComplexity int, id int, input ent.UpdateWorkInput) int
+		UpdateWorks           func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
 	}
 
 	PageInfo struct {
@@ -170,6 +176,7 @@ type ComplexityRoot struct {
 
 type CommentResolver interface {
 	ChildrenConnection(ctx context.Context, obj *ent.Comment, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) (*ent.CommentConnection, error)
+	LikerConnection(ctx context.Context, obj *ent.Comment, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error)
 }
 type MutationResolver interface {
 	CreateWork(ctx context.Context, input ent.CreateWorkInput, images []*graphql.Upload) (*ent.Work, error)
@@ -180,6 +187,7 @@ type MutationResolver interface {
 	CreateUserLike(ctx context.Context, input CreateUserLikeInput) (*CreateUserLikePayload, error)
 	CreateComment(ctx context.Context, input ent.CreateCommentInput) (*ent.Comment, error)
 	CreateUserTreasure(ctx context.Context, input CreateUserTreasureInput) (*CreateUserTreasurePayload, error)
+	CreateUserLikeComment(ctx context.Context, input CreateUserLikeCommentInput) (*CreateUserLikeCommentPayload, error)
 }
 type QueryResolver interface {
 	Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error)
@@ -262,6 +270,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Comment.ID(childComplexity), true
 
+	case "Comment.likerConnection":
+		if e.complexity.Comment.LikerConnection == nil {
+			break
+		}
+
+		args, err := ec.field_Comment_likerConnection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Comment.LikerConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder)), true
+
 	case "Comment.parent":
 		if e.complexity.Comment.Parent == nil {
 			break
@@ -310,6 +330,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CommentEdge.Node(childComplexity), true
+
+	case "CreateUserLikeCommentPayload.clientMutationId":
+		if e.complexity.CreateUserLikeCommentPayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.CreateUserLikeCommentPayload.ClientMutationID(childComplexity), true
 
 	case "CreateUserLikePayload.clientMutationId":
 		if e.complexity.CreateUserLikePayload.ClientMutationID == nil {
@@ -409,6 +436,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUserLike(childComplexity, args["input"].(CreateUserLikeInput)), true
+
+	case "Mutation.createUserLikeComment":
+		if e.complexity.Mutation.CreateUserLikeComment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUserLikeComment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUserLikeComment(childComplexity, args["input"].(CreateUserLikeCommentInput)), true
 
 	case "Mutation.createUserTreasure":
 		if e.complexity.Mutation.CreateUserTreasure == nil {
@@ -931,6 +970,13 @@ type Comment implements Node {
     last: Int
     orderBy: CommentOrder
   ): CommentConnection
+  likerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
 }
 
 type CreateUserLikePayload {
@@ -938,6 +984,10 @@ type CreateUserLikePayload {
 }
 
 type CreateUserTreasurePayload {
+  clientMutationId: String
+}
+
+type CreateUserLikeCommentPayload {
   clientMutationId: String
 }
 
@@ -952,6 +1002,9 @@ type Mutation {
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
   createComment(input: CreateCommentInput!): Comment!
   createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
+  createUserLikeComment(
+    input: CreateUserLikeCommentInput!
+  ): CreateUserLikeCommentPayload
 }
 
 # Define a query for getting all works.
@@ -1105,6 +1158,12 @@ input CreateUserLikeInput {
   clientMutationId: String
   userID: ID!
   workID: ID!
+}
+
+input CreateUserLikeCommentInput {
+  clientMutationId: String
+  userID: ID!
+  commentID: ID!
 }
 
 input CreateUserTreasureInput {
@@ -1322,6 +1381,10 @@ input CommentWhereInput {
   """parent edge predicates"""
   hasParent: Boolean
   hasParentWith: [CommentWhereInput!]
+  
+  """likers edge predicates"""
+  hasLikers: Boolean
+  hasLikersWith: [UserWhereInput!]
 }
 
 """
@@ -1388,6 +1451,10 @@ input UserWhereInput {
   """comments edge predicates"""
   hasComments: Boolean
   hasCommentsWith: [CommentWhereInput!]
+  
+  """like_comments edge predicates"""
+  hasLikeComments: Boolean
+  hasLikeCommentsWith: [CommentWhereInput!]
 }
 
 """
@@ -1507,6 +1574,57 @@ func (ec *executionContext) field_Comment_childrenConnection_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Comment_likerConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *ent.Cursor
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg0, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *ent.Cursor
+	if tmp, ok := rawArgs["before"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+		arg2, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["before"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["last"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["last"] = arg3
+	var arg4 *ent.UserOrder
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+		arg4, err = ec.unmarshalOUserOrder2ᚖartsignᚋentᚐUserOrder(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createComment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1514,6 +1632,21 @@ func (ec *executionContext) field_Mutation_createComment_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNCreateCommentInput2artsignᚋentᚐCreateCommentInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createUserLikeComment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreateUserLikeCommentInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateUserLikeCommentInput2artsignᚐCreateUserLikeCommentInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2462,6 +2595,45 @@ func (ec *executionContext) _Comment_childrenConnection(ctx context.Context, fie
 	return ec.marshalOCommentConnection2ᚖartsignᚋentᚐCommentConnection(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Comment_likerConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Comment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Comment",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Comment_likerConnection_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Comment().LikerConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.UserConnection)
+	fc.Result = res
+	return ec.marshalOUserConnection2ᚖartsignᚋentᚐUserConnection(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _CommentConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.CommentConnection) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2629,6 +2801,38 @@ func (ec *executionContext) _CommentEdge_cursor(ctx context.Context, field graph
 	res := resTmp.(ent.Cursor)
 	fc.Result = res
 	return ec.marshalNCursor2artsignᚋentᚐCursor(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CreateUserLikeCommentPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *CreateUserLikeCommentPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CreateUserLikeCommentPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientMutationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CreateUserLikePayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *CreateUserLikePayload) (ret graphql.Marshaler) {
@@ -3262,6 +3466,45 @@ func (ec *executionContext) _Mutation_createUserTreasure(ctx context.Context, fi
 	res := resTmp.(*CreateUserTreasurePayload)
 	fc.Result = res
 	return ec.marshalOCreateUserTreasurePayload2ᚖartsignᚐCreateUserTreasurePayload(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createUserLikeComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createUserLikeComment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateUserLikeComment(rctx, args["input"].(CreateUserLikeCommentInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*CreateUserLikeCommentPayload)
+	fc.Result = res
+	return ec.marshalOCreateUserLikeCommentPayload2ᚖartsignᚐCreateUserLikeCommentPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *ent.PageInfo) (ret graphql.Marshaler) {
@@ -6345,6 +6588,22 @@ func (ec *executionContext) unmarshalInputCommentWhereInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "hasLikers":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLikers"))
+			it.HasLikers, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasLikersWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLikersWith"))
+			it.HasLikersWith, err = ec.unmarshalOUserWhereInput2ᚕᚖartsignᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -6420,6 +6679,45 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profile"))
 			it.Profile, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateUserLikeCommentInput(ctx context.Context, obj interface{}) (CreateUserLikeCommentInput, error) {
+	var it CreateUserLikeCommentInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "clientMutationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			it.ClientMutationID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "commentID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commentID"))
+			it.CommentID, err = ec.unmarshalNID2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7406,6 +7704,22 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
+		case "hasLikeComments":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLikeComments"))
+			it.HasLikeComments, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasLikeCommentsWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLikeCommentsWith"))
+			it.HasLikeCommentsWith, err = ec.unmarshalOCommentWhereInput2ᚕᚖartsignᚋentᚐCommentWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -8105,6 +8419,17 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 				res = ec._Comment_childrenConnection(ctx, field, obj)
 				return res
 			})
+		case "likerConnection":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Comment_likerConnection(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8168,6 +8493,30 @@ func (ec *executionContext) _CommentEdge(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var createUserLikeCommentPayloadImplementors = []string{"CreateUserLikeCommentPayload"}
+
+func (ec *executionContext) _CreateUserLikeCommentPayload(ctx context.Context, sel ast.SelectionSet, obj *CreateUserLikeCommentPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createUserLikeCommentPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CreateUserLikeCommentPayload")
+		case "clientMutationId":
+			out.Values[i] = ec._CreateUserLikeCommentPayload_clientMutationId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8371,6 +8720,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createUserTreasure":
 			out.Values[i] = ec._Mutation_createUserTreasure(ctx, field)
+		case "createUserLikeComment":
+			out.Values[i] = ec._Mutation_createUserLikeComment(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9110,6 +9461,11 @@ func (ec *executionContext) unmarshalNCreateCommentInput2artsignᚋentᚐCreateC
 
 func (ec *executionContext) unmarshalNCreateUserInput2artsignᚋentᚐCreateUserInput(ctx context.Context, v interface{}) (ent.CreateUserInput, error) {
 	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateUserLikeCommentInput2artsignᚐCreateUserLikeCommentInput(ctx context.Context, v interface{}) (CreateUserLikeCommentInput, error) {
+	res, err := ec.unmarshalInputCreateUserLikeCommentInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -9854,6 +10210,13 @@ func (ec *executionContext) unmarshalOCommentWhereInput2ᚖartsignᚋentᚐComme
 	}
 	res, err := ec.unmarshalInputCommentWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCreateUserLikeCommentPayload2ᚖartsignᚐCreateUserLikeCommentPayload(ctx context.Context, sel ast.SelectionSet, v *CreateUserLikeCommentPayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CreateUserLikeCommentPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOCreateUserLikePayload2ᚖartsignᚐCreateUserLikePayload(ctx context.Context, sel ast.SelectionSet, v *CreateUserLikePayload) graphql.Marshaler {

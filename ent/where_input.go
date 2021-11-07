@@ -266,6 +266,10 @@ type CommentWhereInput struct {
 	// "parent" edge predicates.
 	HasParent     *bool                `json:"hasParent,omitempty"`
 	HasParentWith []*CommentWhereInput `json:"hasParentWith,omitempty"`
+
+	// "likers" edge predicates.
+	HasLikers     *bool             `json:"hasLikers,omitempty"`
+	HasLikersWith []*UserWhereInput `json:"hasLikersWith,omitempty"`
 }
 
 // Filter applies the CommentWhereInput filter on the CommentQuery builder.
@@ -510,6 +514,24 @@ func (i *CommentWhereInput) P() (predicate.Comment, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, comment.HasParentWith(with...))
+	}
+	if i.HasLikers != nil {
+		p := comment.HasLikers()
+		if !*i.HasLikers {
+			p = comment.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLikersWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasLikersWith))
+		for _, w := range i.HasLikersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, comment.HasLikersWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -837,6 +859,10 @@ type UserWhereInput struct {
 	// "comments" edge predicates.
 	HasComments     *bool                `json:"hasComments,omitempty"`
 	HasCommentsWith []*CommentWhereInput `json:"hasCommentsWith,omitempty"`
+
+	// "like_comments" edge predicates.
+	HasLikeComments     *bool                `json:"hasLikeComments,omitempty"`
+	HasLikeCommentsWith []*CommentWhereInput `json:"hasLikeCommentsWith,omitempty"`
 }
 
 // Filter applies the UserWhereInput filter on the UserQuery builder.
@@ -1072,6 +1098,24 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasCommentsWith(with...))
+	}
+	if i.HasLikeComments != nil {
+		p := user.HasLikeComments()
+		if !*i.HasLikeComments {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLikeCommentsWith) > 0 {
+		with := make([]predicate.Comment, 0, len(i.HasLikeCommentsWith))
+		for _, w := range i.HasLikeCommentsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasLikeCommentsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:

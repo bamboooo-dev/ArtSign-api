@@ -25,6 +25,8 @@ const (
 	EdgeChildren = "children"
 	// EdgeParent holds the string denoting the parent edge name in mutations.
 	EdgeParent = "parent"
+	// EdgeLikers holds the string denoting the likers edge name in mutations.
+	EdgeLikers = "likers"
 	// Table holds the table name of the comment in the database.
 	Table = "comments"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -49,6 +51,11 @@ const (
 	ParentTable = "comments"
 	// ParentColumn is the table column denoting the parent relation/edge.
 	ParentColumn = "comment_parent"
+	// LikersTable is the table that holds the likers relation/edge. The primary key declared below.
+	LikersTable = "user_like_comments"
+	// LikersInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	LikersInverseTable = "users"
 )
 
 // Columns holds all SQL columns for comment fields.
@@ -66,6 +73,12 @@ var ForeignKeys = []string{
 	"user_comments",
 	"work_comments",
 }
+
+var (
+	// LikersPrimaryKey and LikersColumn2 are the table columns denoting the
+	// primary key for the likers relation (M2M).
+	LikersPrimaryKey = []string{"user_id", "comment_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

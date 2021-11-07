@@ -84,7 +84,7 @@ func (c *Comment) Node(ctx context.Context) (node *Node, err error) {
 		ID:     c.ID,
 		Type:   "Comment",
 		Fields: make([]*Field, 3),
-		Edges:  make([]*Edge, 4),
+		Edges:  make([]*Edge, 5),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(c.CreateTime); err != nil {
@@ -151,6 +151,16 @@ func (c *Comment) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[4] = &Edge{
+		Type: "User",
+		Name: "likers",
+	}
+	err = c.QueryLikers().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -204,7 +214,7 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     u.ID,
 		Type:   "User",
 		Fields: make([]*Field, 2),
-		Edges:  make([]*Edge, 4),
+		Edges:  make([]*Edge, 5),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(u.Name); err != nil {
@@ -260,6 +270,16 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	err = u.QueryComments().
 		Select(comment.FieldID).
 		Scan(ctx, &node.Edges[3].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[4] = &Edge{
+		Type: "Comment",
+		Name: "like_comments",
+	}
+	err = u.QueryLikeComments().
+		Select(comment.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
 	if err != nil {
 		return nil, err
 	}

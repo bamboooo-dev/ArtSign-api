@@ -200,6 +200,10 @@ input CommentWhereInput {
   """parent edge predicates"""
   hasParent: Boolean
   hasParentWith: [CommentWhereInput!]
+  
+  """likers edge predicates"""
+  hasLikers: Boolean
+  hasLikersWith: [UserWhereInput!]
 }
 
 """
@@ -266,6 +270,10 @@ input UserWhereInput {
   """comments edge predicates"""
   hasComments: Boolean
   hasCommentsWith: [CommentWhereInput!]
+  
+  """like_comments edge predicates"""
+  hasLikeComments: Boolean
+  hasLikeCommentsWith: [CommentWhereInput!]
 }
 
 """
