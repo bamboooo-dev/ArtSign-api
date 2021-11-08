@@ -203,6 +203,14 @@ input CommentWhereInput {
   """work edge predicates"""
   hasWork: Boolean
   hasWorkWith: [WorkWhereInput!]
+  
+  """children edge predicates"""
+  hasChildren: Boolean
+  hasChildrenWith: [CommentWhereInput!]
+  
+  """parent edge predicates"""
+  hasParent: Boolean
+  hasParentWith: [CommentWhereInput!]
 }
 
 """

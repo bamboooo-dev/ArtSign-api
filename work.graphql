@@ -36,6 +36,7 @@ type Work implements Node {
     before: Cursor
     last: Int
     orderBy: CommentOrder
+    where: CommentWhereInput
   ): CommentConnection
 }
 
@@ -76,6 +77,14 @@ type Comment implements Node {
   content: String!
   createTime: Time!
   updateTime: Time!
+  parent: Comment
+  childrenConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: CommentOrder
+  ): CommentConnection
 }
 
 type CreateUserLikePayload {
@@ -245,4 +254,5 @@ input CreateCommentInput {
   content: String!
   ownerID: ID!
   workID: ID!
+  parentID: ID
 }

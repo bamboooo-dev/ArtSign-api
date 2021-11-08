@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Comment() CommentResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	User() UserResolver
@@ -53,10 +54,12 @@ type ComplexityRoot struct {
 	}
 
 	Comment struct {
-		Content    func(childComplexity int) int
-		CreateTime func(childComplexity int) int
-		ID         func(childComplexity int) int
-		UpdateTime func(childComplexity int) int
+		ChildrenConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) int
+		Content            func(childComplexity int) int
+		CreateTime         func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Parent             func(childComplexity int) int
+		UpdateTime         func(childComplexity int) int
 	}
 
 	CommentConnection struct {
@@ -125,7 +128,7 @@ type ComplexityRoot struct {
 
 	Work struct {
 		Category          func(childComplexity int) int
-		CommentConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) int
+		CommentConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) int
 		CreatedAt         func(childComplexity int) int
 		Description       func(childComplexity int) int
 		ID                func(childComplexity int) int
@@ -148,6 +151,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type CommentResolver interface {
+	ChildrenConnection(ctx context.Context, obj *ent.Comment, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) (*ent.CommentConnection, error)
+}
 type MutationResolver interface {
 	CreateWork(ctx context.Context, input ent.CreateWorkInput, image *string, fileExtension *string) (*ent.Work, error)
 	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error)
@@ -171,7 +177,7 @@ type UserResolver interface {
 }
 type WorkResolver interface {
 	LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error)
-	CommentConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) (*ent.CommentConnection, error)
+	CommentConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) (*ent.CommentConnection, error)
 }
 
 type executableSchema struct {
@@ -203,6 +209,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Category.Name(childComplexity), true
 
+	case "Comment.childrenConnection":
+		if e.complexity.Comment.ChildrenConnection == nil {
+			break
+		}
+
+		args, err := ec.field_Comment_childrenConnection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Comment.ChildrenConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.CommentOrder)), true
+
 	case "Comment.content":
 		if e.complexity.Comment.Content == nil {
 			break
@@ -223,6 +241,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Comment.ID(childComplexity), true
+
+	case "Comment.parent":
+		if e.complexity.Comment.Parent == nil {
+			break
+		}
+
+		return e.complexity.Comment.Parent(childComplexity), true
 
 	case "Comment.updateTime":
 		if e.complexity.Comment.UpdateTime == nil {
@@ -561,7 +586,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Work.CommentConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.CommentOrder)), true
+		return e.complexity.Work.CommentConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.CommentOrder), args["where"].(*ent.CommentWhereInput)), true
 
 	case "Work.createdAt":
 		if e.complexity.Work.CreatedAt == nil {
@@ -761,6 +786,7 @@ type Work implements Node {
     before: Cursor
     last: Int
     orderBy: CommentOrder
+    where: CommentWhereInput
   ): CommentConnection
 }
 
@@ -801,6 +827,14 @@ type Comment implements Node {
   content: String!
   createTime: Time!
   updateTime: Time!
+  parent: Comment
+  childrenConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: CommentOrder
+  ): CommentConnection
 }
 
 type CreateUserLikePayload {
@@ -970,6 +1004,7 @@ input CreateCommentInput {
   content: String!
   ownerID: ID!
   workID: ID!
+  parentID: ID
 }
 `, BuiltIn: false},
 	{Name: "ent.graphql", Input: `"""
@@ -1177,6 +1212,14 @@ input CommentWhereInput {
   """work edge predicates"""
   hasWork: Boolean
   hasWorkWith: [WorkWhereInput!]
+  
+  """children edge predicates"""
+  hasChildren: Boolean
+  hasChildrenWith: [CommentWhereInput!]
+  
+  """parent edge predicates"""
+  hasParent: Boolean
+  hasParentWith: [CommentWhereInput!]
 }
 
 """
@@ -1251,6 +1294,57 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Comment_childrenConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *ent.Cursor
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg0, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *ent.Cursor
+	if tmp, ok := rawArgs["before"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+		arg2, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["before"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["last"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["last"] = arg3
+	var arg4 *ent.CommentOrder
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+		arg4, err = ec.unmarshalOCommentOrder2ᚖartsignᚋentᚐCommentOrder(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createComment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1783,6 +1877,15 @@ func (ec *executionContext) field_Work_commentConnection_args(ctx context.Contex
 		}
 	}
 	args["orderBy"] = arg4
+	var arg5 *ent.CommentWhereInput
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg5, err = ec.unmarshalOCommentWhereInput2ᚖartsignᚋentᚐCommentWhereInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg5
 	return args, nil
 }
 
@@ -2083,6 +2186,77 @@ func (ec *executionContext) _Comment_updateTime(ctx context.Context, field graph
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Comment_parent(ctx context.Context, field graphql.CollectedField, obj *ent.Comment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Comment",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Parent(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Comment)
+	fc.Result = res
+	return ec.marshalOComment2ᚖartsignᚋentᚐComment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Comment_childrenConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Comment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Comment",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Comment_childrenConnection_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Comment().ChildrenConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.CommentOrder))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.CommentConnection)
+	fc.Result = res
+	return ec.marshalOCommentConnection2ᚖartsignᚋentᚐCommentConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CommentConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.CommentConnection) (ret graphql.Marshaler) {
@@ -3738,7 +3912,7 @@ func (ec *executionContext) _Work_commentConnection(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Work().CommentConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.CommentOrder))
+		return ec.resolvers.Work().CommentConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.CommentOrder), args["where"].(*ent.CommentWhereInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5658,6 +5832,38 @@ func (ec *executionContext) unmarshalInputCommentWhereInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "hasChildren":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChildren"))
+			it.HasChildren, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasChildrenWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChildrenWith"))
+			it.HasChildrenWith, err = ec.unmarshalOCommentWhereInput2ᚕᚖartsignᚋentᚐCommentWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasParent":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasParent"))
+			it.HasParent, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasParentWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasParentWith"))
+			it.HasParentWith, err = ec.unmarshalOCommentWhereInput2ᚕᚖartsignᚋentᚐCommentWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -5694,6 +5900,14 @@ func (ec *executionContext) unmarshalInputCreateCommentInput(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workID"))
 			it.WorkID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "parentID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentID"))
+			it.ParentID, err = ec.unmarshalOID2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7072,23 +7286,45 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Comment_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "content":
 			out.Values[i] = ec._Comment_content(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createTime":
 			out.Values[i] = ec._Comment_createTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "updateTime":
 			out.Values[i] = ec._Comment_updateTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "parent":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Comment_parent(ctx, field, obj)
+				return res
+			})
+		case "childrenConnection":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Comment_childrenConnection(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
