@@ -70,6 +70,21 @@ func (uu *UserUpdate) AddLikes(w ...*Work) *UserUpdate {
 	return uu.AddLikeIDs(ids...)
 }
 
+// AddTreasureIDs adds the "treasures" edge to the Work entity by IDs.
+func (uu *UserUpdate) AddTreasureIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddTreasureIDs(ids...)
+	return uu
+}
+
+// AddTreasures adds the "treasures" edges to the Work entity.
+func (uu *UserUpdate) AddTreasures(w ...*Work) *UserUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uu.AddTreasureIDs(ids...)
+}
+
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
 func (uu *UserUpdate) AddCommentIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddCommentIDs(ids...)
@@ -130,6 +145,27 @@ func (uu *UserUpdate) RemoveLikes(w ...*Work) *UserUpdate {
 		ids[i] = w[i].ID
 	}
 	return uu.RemoveLikeIDs(ids...)
+}
+
+// ClearTreasures clears all "treasures" edges to the Work entity.
+func (uu *UserUpdate) ClearTreasures() *UserUpdate {
+	uu.mutation.ClearTreasures()
+	return uu
+}
+
+// RemoveTreasureIDs removes the "treasures" edge to Work entities by IDs.
+func (uu *UserUpdate) RemoveTreasureIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveTreasureIDs(ids...)
+	return uu
+}
+
+// RemoveTreasures removes "treasures" edges to Work entities.
+func (uu *UserUpdate) RemoveTreasures(w ...*Work) *UserUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uu.RemoveTreasureIDs(ids...)
 }
 
 // ClearComments clears all "comments" edges to the Comment entity.
@@ -363,6 +399,60 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.TreasuresCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.TreasuresTable,
+			Columns: user.TreasuresPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedTreasuresIDs(); len(nodes) > 0 && !uu.mutation.TreasuresCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.TreasuresTable,
+			Columns: user.TreasuresPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.TreasuresIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.TreasuresTable,
+			Columns: user.TreasuresPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if uu.mutation.CommentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -478,6 +568,21 @@ func (uuo *UserUpdateOne) AddLikes(w ...*Work) *UserUpdateOne {
 	return uuo.AddLikeIDs(ids...)
 }
 
+// AddTreasureIDs adds the "treasures" edge to the Work entity by IDs.
+func (uuo *UserUpdateOne) AddTreasureIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddTreasureIDs(ids...)
+	return uuo
+}
+
+// AddTreasures adds the "treasures" edges to the Work entity.
+func (uuo *UserUpdateOne) AddTreasures(w ...*Work) *UserUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uuo.AddTreasureIDs(ids...)
+}
+
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
 func (uuo *UserUpdateOne) AddCommentIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddCommentIDs(ids...)
@@ -538,6 +643,27 @@ func (uuo *UserUpdateOne) RemoveLikes(w ...*Work) *UserUpdateOne {
 		ids[i] = w[i].ID
 	}
 	return uuo.RemoveLikeIDs(ids...)
+}
+
+// ClearTreasures clears all "treasures" edges to the Work entity.
+func (uuo *UserUpdateOne) ClearTreasures() *UserUpdateOne {
+	uuo.mutation.ClearTreasures()
+	return uuo
+}
+
+// RemoveTreasureIDs removes the "treasures" edge to Work entities by IDs.
+func (uuo *UserUpdateOne) RemoveTreasureIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveTreasureIDs(ids...)
+	return uuo
+}
+
+// RemoveTreasures removes "treasures" edges to Work entities.
+func (uuo *UserUpdateOne) RemoveTreasures(w ...*Work) *UserUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uuo.RemoveTreasureIDs(ids...)
 }
 
 // ClearComments clears all "comments" edges to the Comment entity.
@@ -782,6 +908,60 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Inverse: false,
 			Table:   user.LikesTable,
 			Columns: user.LikesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.TreasuresCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.TreasuresTable,
+			Columns: user.TreasuresPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedTreasuresIDs(); len(nodes) > 0 && !uuo.mutation.TreasuresCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.TreasuresTable,
+			Columns: user.TreasuresPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: work.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.TreasuresIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.TreasuresTable,
+			Columns: user.TreasuresPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

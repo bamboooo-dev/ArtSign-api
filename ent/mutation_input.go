@@ -128,11 +128,12 @@ func (u *CommentUpdateOne) SetInput(i UpdateCommentInput) *CommentUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	Name       string
-	Profile    string
-	WorkIDs    []int
-	LikeIDs    []int
-	CommentIDs []int
+	Name        string
+	Profile     string
+	WorkIDs     []int
+	LikeIDs     []int
+	TreasureIDs []int
+	CommentIDs  []int
 }
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
@@ -144,6 +145,9 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	}
 	if ids := i.LikeIDs; len(ids) > 0 {
 		m.AddLikeIDs(ids...)
+	}
+	if ids := i.TreasureIDs; len(ids) > 0 {
+		m.AddTreasureIDs(ids...)
 	}
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
@@ -158,14 +162,16 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	Name             *string
-	Profile          *string
-	AddWorkIDs       []int
-	RemoveWorkIDs    []int
-	AddLikeIDs       []int
-	RemoveLikeIDs    []int
-	AddCommentIDs    []int
-	RemoveCommentIDs []int
+	Name              *string
+	Profile           *string
+	AddWorkIDs        []int
+	RemoveWorkIDs     []int
+	AddLikeIDs        []int
+	RemoveLikeIDs     []int
+	AddTreasureIDs    []int
+	RemoveTreasureIDs []int
+	AddCommentIDs     []int
+	RemoveCommentIDs  []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation.
@@ -187,6 +193,12 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if ids := i.RemoveLikeIDs; len(ids) > 0 {
 		m.RemoveLikeIDs(ids...)
+	}
+	if ids := i.AddTreasureIDs; len(ids) > 0 {
+		m.AddTreasureIDs(ids...)
+	}
+	if ids := i.RemoveTreasureIDs; len(ids) > 0 {
+		m.RemoveTreasureIDs(ids...)
 	}
 	if ids := i.AddCommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
@@ -210,15 +222,16 @@ func (u *UserUpdateOne) SetInput(i UpdateUserInput) *UserUpdateOne {
 
 // CreateWorkInput represents a mutation input for creating works.
 type CreateWorkInput struct {
-	Title       string
-	Description string
-	ImageURL    string
-	CreatedAt   *time.Time
-	UpdatedAt   *time.Time
-	CategoryID  *int
-	OwnerID     *int
-	LikerIDs    []int
-	CommentIDs  []int
+	Title        string
+	Description  string
+	ImageURL     string
+	CreatedAt    *time.Time
+	UpdatedAt    *time.Time
+	CategoryID   *int
+	OwnerID      *int
+	LikerIDs     []int
+	TreasurerIDs []int
+	CommentIDs   []int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
@@ -241,6 +254,9 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	if ids := i.LikerIDs; len(ids) > 0 {
 		m.AddLikerIDs(ids...)
 	}
+	if ids := i.TreasurerIDs; len(ids) > 0 {
+		m.AddTreasurerIDs(ids...)
+	}
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
 	}
@@ -254,18 +270,20 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 
 // UpdateWorkInput represents a mutation input for updating works.
 type UpdateWorkInput struct {
-	Title            *string
-	Description      *string
-	ImageURL         *string
-	UpdatedAt        *time.Time
-	CategoryID       *int
-	ClearCategory    bool
-	OwnerID          *int
-	ClearOwner       bool
-	AddLikerIDs      []int
-	RemoveLikerIDs   []int
-	AddCommentIDs    []int
-	RemoveCommentIDs []int
+	Title              *string
+	Description        *string
+	ImageURL           *string
+	UpdatedAt          *time.Time
+	CategoryID         *int
+	ClearCategory      bool
+	OwnerID            *int
+	ClearOwner         bool
+	AddLikerIDs        []int
+	RemoveLikerIDs     []int
+	AddTreasurerIDs    []int
+	RemoveTreasurerIDs []int
+	AddCommentIDs      []int
+	RemoveCommentIDs   []int
 }
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
@@ -299,6 +317,12 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	}
 	if ids := i.RemoveLikerIDs; len(ids) > 0 {
 		m.RemoveLikerIDs(ids...)
+	}
+	if ids := i.AddTreasurerIDs; len(ids) > 0 {
+		m.AddTreasurerIDs(ids...)
+	}
+	if ids := i.RemoveTreasurerIDs; len(ids) > 0 {
+		m.RemoveTreasurerIDs(ids...)
 	}
 	if ids := i.AddCommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)

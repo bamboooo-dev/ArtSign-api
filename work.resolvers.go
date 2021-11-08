@@ -89,6 +89,20 @@ func (r *mutationResolver) CreateComment(ctx context.Context, input ent.CreateCo
 	return ent.FromContext(ctx).Comment.Create().SetInput(input).Save(ctx)
 }
 
+func (r *mutationResolver) CreateUserTreasure(ctx context.Context, input CreateUserTreasureInput) (*CreateUserTreasurePayload, error) {
+	user, err := ent.FromContext(ctx).User.Get(ctx, input.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = user.Update().AddTreasureIDs(input.WorkID).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateUserTreasurePayload{}, nil
+}
+
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,
@@ -122,6 +136,13 @@ func (r *userResolver) WorkConnection(ctx context.Context, obj *ent.User, after 
 
 func (r *userResolver) LikeConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
 	return obj.QueryLikes().
+		Paginate(ctx, after, first, before, last,
+			ent.WithWorkOrder(orderBy),
+		)
+}
+
+func (r *userResolver) TreasureConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
+	return obj.QueryTreasures().
 		Paginate(ctx, after, first, before, last,
 			ent.WithWorkOrder(orderBy),
 		)

@@ -27,6 +27,8 @@ const (
 	EdgeOwner = "owner"
 	// EdgeLikers holds the string denoting the likers edge name in mutations.
 	EdgeLikers = "likers"
+	// EdgeTreasurers holds the string denoting the treasurers edge name in mutations.
+	EdgeTreasurers = "treasurers"
 	// EdgeComments holds the string denoting the comments edge name in mutations.
 	EdgeComments = "comments"
 	// Table holds the table name of the work in the database.
@@ -50,6 +52,11 @@ const (
 	// LikersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	LikersInverseTable = "users"
+	// TreasurersTable is the table that holds the treasurers relation/edge. The primary key declared below.
+	TreasurersTable = "user_treasures"
+	// TreasurersInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	TreasurersInverseTable = "users"
 	// CommentsTable is the table that holds the comments relation/edge.
 	CommentsTable = "comments"
 	// CommentsInverseTable is the table name for the Comment entity.
@@ -80,6 +87,9 @@ var (
 	// LikersPrimaryKey and LikersColumn2 are the table columns denoting the
 	// primary key for the likers relation (M2M).
 	LikersPrimaryKey = []string{"user_id", "work_id"}
+	// TreasurersPrimaryKey and TreasurersColumn2 are the table columns denoting the
+	// primary key for the treasurers relation (M2M).
+	TreasurersPrimaryKey = []string{"user_id", "work_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

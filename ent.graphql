@@ -94,6 +94,10 @@ input WorkWhereInput {
   hasLikers: Boolean
   hasLikersWith: [UserWhereInput!]
   
+  """treasurers edge predicates"""
+  hasTreasurers: Boolean
+  hasTreasurersWith: [UserWhereInput!]
+  
   """comments edge predicates"""
   hasComments: Boolean
   hasCommentsWith: [CommentWhereInput!]
@@ -257,6 +261,10 @@ input UserWhereInput {
   """likes edge predicates"""
   hasLikes: Boolean
   hasLikesWith: [WorkWhereInput!]
+  
+  """treasures edge predicates"""
+  hasTreasures: Boolean
+  hasTreasuresWith: [WorkWhereInput!]
   
   """comments edge predicates"""
   hasComments: Boolean
