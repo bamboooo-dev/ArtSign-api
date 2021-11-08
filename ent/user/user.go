@@ -19,6 +19,8 @@ const (
 	EdgeTreasures = "treasures"
 	// EdgeComments holds the string denoting the comments edge name in mutations.
 	EdgeComments = "comments"
+	// EdgeLikeComments holds the string denoting the like_comments edge name in mutations.
+	EdgeLikeComments = "like_comments"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// WorksTable is the table that holds the works relation/edge.
@@ -45,6 +47,11 @@ const (
 	CommentsInverseTable = "comments"
 	// CommentsColumn is the table column denoting the comments relation/edge.
 	CommentsColumn = "user_comments"
+	// LikeCommentsTable is the table that holds the like_comments relation/edge. The primary key declared below.
+	LikeCommentsTable = "user_like_comments"
+	// LikeCommentsInverseTable is the table name for the Comment entity.
+	// It exists in this package in order to avoid circular dependency with the "comment" package.
+	LikeCommentsInverseTable = "comments"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -61,6 +68,9 @@ var (
 	// TreasuresPrimaryKey and TreasuresColumn2 are the table columns denoting the
 	// primary key for the treasures relation (M2M).
 	TreasuresPrimaryKey = []string{"user_id", "work_id"}
+	// LikeCommentsPrimaryKey and LikeCommentsColumn2 are the table columns denoting the
+	// primary key for the like_comments relation (M2M).
+	LikeCommentsPrimaryKey = []string{"user_id", "comment_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

@@ -8,12 +8,12 @@ import (
 	"entgo.io/ent/schema/mixin"
 )
 
-// Comment holds the schema definition for the Comment entity.
-type Comment struct {
+// Image holds the schema definition for the Image entity.
+type Image struct {
 	ent.Schema
 }
 
-func (Comment) Mixin() []ent.Mixin {
+func (Image) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.AnnotateFields(
 			mixin.CreateTime{},
@@ -26,29 +26,20 @@ func (Comment) Mixin() []ent.Mixin {
 	}
 }
 
-// Fields of the Comment.
-func (Comment) Fields() []ent.Field {
+// Fields of the Image.
+func (Image) Fields() []ent.Field {
 	return []ent.Field{
-		field.Text("content").
+		field.String("url").
 			NotEmpty(),
 	}
 }
 
-// Edges of the Comment.
-func (Comment) Edges() []ent.Edge {
+// Edges of the Image.
+func (Image) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("owner", User.Type).
-			Ref("comments").
-			Unique().
-			Required(),
 		edge.From("work", Work.Type).
-			Ref("comments").
+			Ref("images").
 			Unique().
 			Required(),
-		edge.To("parent", Comment.Type).
-			Unique().
-			From("children"),
-		edge.From("likers", User.Type).
-			Ref("like_comments"),
 	}
 }

@@ -1,6 +1,9 @@
 # Maps a Time GraphQL scalar to a Go time.Time struct.
 scalar Time
 
+"The `Upload` scalar type represents a multipart file upload."
+scalar Upload
+
 interface Node {
   id: ID!
 }
@@ -23,6 +26,13 @@ type Work implements Node {
   image_url: String!
   category: Category!
   owner: User!
+  imageConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: ImageOrder
+  ): ImageConnection
   likerConnection(
     after: Cursor
     first: Int
@@ -43,6 +53,11 @@ type Work implements Node {
 type Category implements Node {
   id: ID!
   name: String!
+}
+
+type Image implements Node {
+  id: ID!
+  url: String!
 }
 
 type User implements Node {
@@ -85,6 +100,13 @@ type Comment implements Node {
     last: Int
     orderBy: CommentOrder
   ): CommentConnection
+  likerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
 }
 
 type CreateUserLikePayload {
@@ -95,14 +117,14 @@ type CreateUserTreasurePayload {
   clientMutationId: String
 }
 
+type CreateUserLikeCommentPayload {
+  clientMutationId: String
+}
+
 # Define a mutation for creating works.
 # https://graphql.org/learn/queries/#mutations
 type Mutation {
-  createWork(
-    input: CreateWorkInput!
-    image: String
-    fileExtension: String
-  ): Work!
+  createWork(input: CreateWorkInput!, images: [Upload!]): Work!
   updateWork(id: ID!, input: UpdateWorkInput!): Work!
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
   createUser(input: CreateUserInput!): User!
@@ -110,6 +132,9 @@ type Mutation {
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
   createComment(input: CreateCommentInput!): Comment!
   createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
+  createUserLikeComment(
+    input: CreateUserLikeCommentInput!
+  ): CreateUserLikeCommentPayload
 }
 
 # Define a query for getting all works.
@@ -161,6 +186,12 @@ type UserConnection {
   edges: [UserEdge]
 }
 
+type ImageConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [ImageEdge]
+}
+
 type WorkEdge {
   node: Work
   cursor: Cursor!
@@ -173,6 +204,11 @@ type CommentEdge {
 
 type UserEdge {
   node: User
+  cursor: Cursor!
+}
+
+type ImageEdge {
+  node: Image
   cursor: Cursor!
 }
 
@@ -200,6 +236,11 @@ enum OrderDirection {
   DESC
 }
 
+enum ImageOrderField {
+  CREATE_TIME
+  UPDATE_TIME
+}
+
 input WorkOrder {
   direction: OrderDirection!
   field: WorkOrderField
@@ -213,6 +254,11 @@ input CommentOrder {
 input UserOrder {
   direction: OrderDirection!
   field: UserOrderField
+}
+
+input ImageOrder {
+  direction: OrderDirection!
+  field: ImageOrderField
 }
 
 input UpdateWorkInput {
@@ -242,6 +288,12 @@ input CreateUserLikeInput {
   clientMutationId: String
   userID: ID!
   workID: ID!
+}
+
+input CreateUserLikeCommentInput {
+  clientMutationId: String
+  userID: ID!
+  commentID: ID!
 }
 
 input CreateUserTreasureInput {

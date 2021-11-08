@@ -32,6 +32,7 @@ type CommentQuery struct {
 	withWork     *WorkQuery
 	withChildren *CommentQuery
 	withParent   *CommentQuery
+	withLikers   *UserQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -150,6 +151,28 @@ func (cq *CommentQuery) QueryParent() *CommentQuery {
 			sqlgraph.From(comment.Table, comment.FieldID, selector),
 			sqlgraph.To(comment.Table, comment.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, comment.ParentTable, comment.ParentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryLikers chains the current query on the "likers" edge.
+func (cq *CommentQuery) QueryLikers() *UserQuery {
+	query := &UserQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(comment.Table, comment.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, comment.LikersTable, comment.LikersPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -342,6 +365,7 @@ func (cq *CommentQuery) Clone() *CommentQuery {
 		withWork:     cq.withWork.Clone(),
 		withChildren: cq.withChildren.Clone(),
 		withParent:   cq.withParent.Clone(),
+		withLikers:   cq.withLikers.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
@@ -389,6 +413,17 @@ func (cq *CommentQuery) WithParent(opts ...func(*CommentQuery)) *CommentQuery {
 		opt(query)
 	}
 	cq.withParent = query
+	return cq
+}
+
+// WithLikers tells the query-builder to eager-load the nodes that are connected to
+// the "likers" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CommentQuery) WithLikers(opts ...func(*UserQuery)) *CommentQuery {
+	query := &UserQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withLikers = query
 	return cq
 }
 
@@ -458,11 +493,12 @@ func (cq *CommentQuery) sqlAll(ctx context.Context) ([]*Comment, error) {
 		nodes       = []*Comment{}
 		withFKs     = cq.withFKs
 		_spec       = cq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			cq.withOwner != nil,
 			cq.withWork != nil,
 			cq.withChildren != nil,
 			cq.withParent != nil,
+			cq.withLikers != nil,
 		}
 	)
 	if cq.withOwner != nil || cq.withWork != nil || cq.withParent != nil {
@@ -603,6 +639,71 @@ func (cq *CommentQuery) sqlAll(ctx context.Context) ([]*Comment, error) {
 			}
 			for i := range nodes {
 				nodes[i].Edges.Parent = n
+			}
+		}
+	}
+
+	if query := cq.withLikers; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[int]*Comment, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Likers = []*User{}
+		}
+		var (
+			edgeids []int
+			edges   = make(map[int][]*Comment)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: true,
+				Table:   comment.LikersTable,
+				Columns: comment.LikersPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(comment.LikersPrimaryKey[1], fks...))
+			},
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*sql.NullInt64)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*sql.NullInt64)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := int(eout.Int64)
+				inValue := int(ein.Int64)
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				if _, ok := edges[inValue]; !ok {
+					edgeids = append(edgeids, inValue)
+				}
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, cq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "likers": %w`, err)
+		}
+		query.Where(user.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "likers" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Likers = append(nodes[i].Edges.Likers, n)
 			}
 		}
 	}

@@ -22,8 +22,6 @@ type Work struct {
 	Title string `json:"title,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// ImageURL holds the value of the "image_url" field.
-	ImageURL string `json:"image_url,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -47,9 +45,11 @@ type WorkEdges struct {
 	Treasurers []*User `json:"treasurers,omitempty"`
 	// Comments holds the value of the comments edge.
 	Comments []*Comment `json:"comments,omitempty"`
+	// Images holds the value of the images edge.
+	Images []*Image `json:"images,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // CategoryOrErr returns the Category value or an error if the edge
@@ -107,6 +107,15 @@ func (e WorkEdges) CommentsOrErr() ([]*Comment, error) {
 	return nil, &NotLoadedError{edge: "comments"}
 }
 
+// ImagesOrErr returns the Images value or an error if the edge
+// was not loaded in eager-loading.
+func (e WorkEdges) ImagesOrErr() ([]*Image, error) {
+	if e.loadedTypes[5] {
+		return e.Images, nil
+	}
+	return nil, &NotLoadedError{edge: "images"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Work) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
@@ -114,7 +123,7 @@ func (*Work) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case work.FieldID:
 			values[i] = new(sql.NullInt64)
-		case work.FieldTitle, work.FieldDescription, work.FieldImageURL:
+		case work.FieldTitle, work.FieldDescription:
 			values[i] = new(sql.NullString)
 		case work.FieldCreatedAt, work.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -154,12 +163,6 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				w.Description = value.String
-			}
-		case work.FieldImageURL:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field image_url", values[i])
-			} else if value.Valid {
-				w.ImageURL = value.String
 			}
 		case work.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -217,6 +220,11 @@ func (w *Work) QueryComments() *CommentQuery {
 	return (&WorkClient{config: w.config}).QueryComments(w)
 }
 
+// QueryImages queries the "images" edge of the Work entity.
+func (w *Work) QueryImages() *ImageQuery {
+	return (&WorkClient{config: w.config}).QueryImages(w)
+}
+
 // Update returns a builder for updating this Work.
 // Note that you need to call Work.Unwrap() before calling this method if this Work
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -244,8 +252,6 @@ func (w *Work) String() string {
 	builder.WriteString(w.Title)
 	builder.WriteString(", description=")
 	builder.WriteString(w.Description)
-	builder.WriteString(", image_url=")
-	builder.WriteString(w.ImageURL)
 	builder.WriteString(", created_at=")
 	builder.WriteString(w.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", updated_at=")

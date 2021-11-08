@@ -8,6 +8,16 @@ import (
 	"strconv"
 )
 
+type CreateUserLikeCommentInput struct {
+	ClientMutationID *string `json:"clientMutationId"`
+	UserID           int     `json:"userID"`
+	CommentID        int     `json:"commentID"`
+}
+
+type CreateUserLikeCommentPayload struct {
+	ClientMutationID *string `json:"clientMutationId"`
+}
+
 type CreateUserLikeInput struct {
 	ClientMutationID *string `json:"clientMutationId"`
 	UserID           int     `json:"userID"`

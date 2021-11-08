@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
+	"artsign/ent/image"
 	"artsign/ent/predicate"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -34,6 +35,7 @@ type WorkQuery struct {
 	withLikers     *UserQuery
 	withTreasurers *UserQuery
 	withComments   *CommentQuery
+	withImages     *ImageQuery
 	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -174,6 +176,28 @@ func (wq *WorkQuery) QueryComments() *CommentQuery {
 			sqlgraph.From(work.Table, work.FieldID, selector),
 			sqlgraph.To(comment.Table, comment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, work.CommentsTable, work.CommentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryImages chains the current query on the "images" edge.
+func (wq *WorkQuery) QueryImages() *ImageQuery {
+	query := &ImageQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(image.Table, image.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, work.ImagesTable, work.ImagesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -367,6 +391,7 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 		withLikers:     wq.withLikers.Clone(),
 		withTreasurers: wq.withTreasurers.Clone(),
 		withComments:   wq.withComments.Clone(),
+		withImages:     wq.withImages.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
 		path: wq.path,
@@ -425,6 +450,17 @@ func (wq *WorkQuery) WithComments(opts ...func(*CommentQuery)) *WorkQuery {
 		opt(query)
 	}
 	wq.withComments = query
+	return wq
+}
+
+// WithImages tells the query-builder to eager-load the nodes that are connected to
+// the "images" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithImages(opts ...func(*ImageQuery)) *WorkQuery {
+	query := &ImageQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withImages = query
 	return wq
 }
 
@@ -494,12 +530,13 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 		nodes       = []*Work{}
 		withFKs     = wq.withFKs
 		_spec       = wq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			wq.withCategory != nil,
 			wq.withOwner != nil,
 			wq.withLikers != nil,
 			wq.withTreasurers != nil,
 			wq.withComments != nil,
+			wq.withImages != nil,
 		}
 	)
 	if wq.withCategory != nil || wq.withOwner != nil {
@@ -742,6 +779,35 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "work_comments" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Comments = append(node.Edges.Comments, n)
+		}
+	}
+
+	if query := wq.withImages; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Work)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Images = []*Image{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Image(func(s *sql.Selector) {
+			s.Where(sql.InValues(work.ImagesColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.work_images
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "work_images" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "work_images" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Images = append(node.Edges.Images, n)
 		}
 	}
 

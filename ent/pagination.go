@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
+	"artsign/ent/image"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -786,6 +787,290 @@ func (c *Comment) ToEdge(order *CommentOrder) *CommentEdge {
 	return &CommentEdge{
 		Node:   c,
 		Cursor: order.Field.toCursor(c),
+	}
+}
+
+// ImageEdge is the edge representation of Image.
+type ImageEdge struct {
+	Node   *Image `json:"node"`
+	Cursor Cursor `json:"cursor"`
+}
+
+// ImageConnection is the connection containing edges to Image.
+type ImageConnection struct {
+	Edges      []*ImageEdge `json:"edges"`
+	PageInfo   PageInfo     `json:"pageInfo"`
+	TotalCount int          `json:"totalCount"`
+}
+
+// ImagePaginateOption enables pagination customization.
+type ImagePaginateOption func(*imagePager) error
+
+// WithImageOrder configures pagination ordering.
+func WithImageOrder(order *ImageOrder) ImagePaginateOption {
+	if order == nil {
+		order = DefaultImageOrder
+	}
+	o := *order
+	return func(pager *imagePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultImageOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithImageFilter configures pagination filter.
+func WithImageFilter(filter func(*ImageQuery) (*ImageQuery, error)) ImagePaginateOption {
+	return func(pager *imagePager) error {
+		if filter == nil {
+			return errors.New("ImageQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type imagePager struct {
+	order  *ImageOrder
+	filter func(*ImageQuery) (*ImageQuery, error)
+}
+
+func newImagePager(opts []ImagePaginateOption) (*imagePager, error) {
+	pager := &imagePager{}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultImageOrder
+	}
+	return pager, nil
+}
+
+func (p *imagePager) applyFilter(query *ImageQuery) (*ImageQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *imagePager) toCursor(i *Image) Cursor {
+	return p.order.Field.toCursor(i)
+}
+
+func (p *imagePager) applyCursors(query *ImageQuery, after, before *Cursor) *ImageQuery {
+	for _, predicate := range cursorsToPredicates(
+		p.order.Direction, after, before,
+		p.order.Field.field, DefaultImageOrder.Field.field,
+	) {
+		query = query.Where(predicate)
+	}
+	return query
+}
+
+func (p *imagePager) applyOrder(query *ImageQuery, reverse bool) *ImageQuery {
+	direction := p.order.Direction
+	if reverse {
+		direction = direction.reverse()
+	}
+	query = query.Order(direction.orderFunc(p.order.Field.field))
+	if p.order.Field != DefaultImageOrder.Field {
+		query = query.Order(direction.orderFunc(DefaultImageOrder.Field.field))
+	}
+	return query
+}
+
+// Paginate executes the query and returns a relay based cursor connection to Image.
+func (i *ImageQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...ImagePaginateOption,
+) (*ImageConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newImagePager(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if i, err = pager.applyFilter(i); err != nil {
+		return nil, err
+	}
+
+	conn := &ImageConnection{Edges: []*ImageEdge{}}
+	if !hasCollectedField(ctx, edgesField) || first != nil && *first == 0 || last != nil && *last == 0 {
+		if hasCollectedField(ctx, totalCountField) ||
+			hasCollectedField(ctx, pageInfoField) {
+			count, err := i.Count(ctx)
+			if err != nil {
+				return nil, err
+			}
+			conn.TotalCount = count
+			conn.PageInfo.HasNextPage = first != nil && count > 0
+			conn.PageInfo.HasPreviousPage = last != nil && count > 0
+		}
+		return conn, nil
+	}
+
+	if (after != nil || first != nil || before != nil || last != nil) && hasCollectedField(ctx, totalCountField) {
+		count, err := i.Clone().Count(ctx)
+		if err != nil {
+			return nil, err
+		}
+		conn.TotalCount = count
+	}
+
+	i = pager.applyCursors(i, after, before)
+	i = pager.applyOrder(i, last != nil)
+	var limit int
+	if first != nil {
+		limit = *first + 1
+	} else if last != nil {
+		limit = *last + 1
+	}
+	if limit > 0 {
+		i = i.Limit(limit)
+	}
+
+	if field := getCollectedField(ctx, edgesField, nodeField); field != nil {
+		i = i.collectField(graphql.GetOperationContext(ctx), *field)
+	}
+
+	nodes, err := i.All(ctx)
+	if err != nil || len(nodes) == 0 {
+		return conn, err
+	}
+
+	if len(nodes) == limit {
+		conn.PageInfo.HasNextPage = first != nil
+		conn.PageInfo.HasPreviousPage = last != nil
+		nodes = nodes[:len(nodes)-1]
+	}
+
+	var nodeAt func(int) *Image
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *Image {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *Image {
+			return nodes[i]
+		}
+	}
+
+	conn.Edges = make([]*ImageEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		conn.Edges[i] = &ImageEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+
+	conn.PageInfo.StartCursor = &conn.Edges[0].Cursor
+	conn.PageInfo.EndCursor = &conn.Edges[len(conn.Edges)-1].Cursor
+	if conn.TotalCount == 0 {
+		conn.TotalCount = len(nodes)
+	}
+
+	return conn, nil
+}
+
+var (
+	// ImageOrderFieldCreateTime orders Image by create_time.
+	ImageOrderFieldCreateTime = &ImageOrderField{
+		field: image.FieldCreateTime,
+		toCursor: func(i *Image) Cursor {
+			return Cursor{
+				ID:    i.ID,
+				Value: i.CreateTime,
+			}
+		},
+	}
+	// ImageOrderFieldUpdateTime orders Image by update_time.
+	ImageOrderFieldUpdateTime = &ImageOrderField{
+		field: image.FieldUpdateTime,
+		toCursor: func(i *Image) Cursor {
+			return Cursor{
+				ID:    i.ID,
+				Value: i.UpdateTime,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f ImageOrderField) String() string {
+	var str string
+	switch f.field {
+	case image.FieldCreateTime:
+		str = "CREATE_TIME"
+	case image.FieldUpdateTime:
+		str = "UPDATE_TIME"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f ImageOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *ImageOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("ImageOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATE_TIME":
+		*f = *ImageOrderFieldCreateTime
+	case "UPDATE_TIME":
+		*f = *ImageOrderFieldUpdateTime
+	default:
+		return fmt.Errorf("%s is not a valid ImageOrderField", str)
+	}
+	return nil
+}
+
+// ImageOrderField defines the ordering field of Image.
+type ImageOrderField struct {
+	field    string
+	toCursor func(*Image) Cursor
+}
+
+// ImageOrder defines the ordering of Image.
+type ImageOrder struct {
+	Direction OrderDirection   `json:"direction"`
+	Field     *ImageOrderField `json:"field"`
+}
+
+// DefaultImageOrder is the default ordering of Image.
+var DefaultImageOrder = &ImageOrder{
+	Direction: OrderDirectionAsc,
+	Field: &ImageOrderField{
+		field: image.FieldID,
+		toCursor: func(i *Image) Cursor {
+			return Cursor{ID: i.ID}
+		},
+	},
+}
+
+// ToEdge converts Image into ImageEdge.
+func (i *Image) ToEdge(order *ImageOrder) *ImageEdge {
+	if order == nil {
+		order = DefaultImageOrder
+	}
+	return &ImageEdge{
+		Node:   i,
+		Cursor: order.Field.toCursor(i),
 	}
 }
 

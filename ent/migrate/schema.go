@@ -55,6 +55,28 @@ var (
 			},
 		},
 	}
+	// ImagesColumns holds the columns for the "images" table.
+	ImagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "url", Type: field.TypeString},
+		{Name: "work_images", Type: field.TypeInt, Nullable: true},
+	}
+	// ImagesTable holds the schema information for the "images" table.
+	ImagesTable = &schema.Table{
+		Name:       "images",
+		Columns:    ImagesColumns,
+		PrimaryKey: []*schema.Column{ImagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "images_works_images",
+				Columns:    []*schema.Column{ImagesColumns[4]},
+				RefColumns: []*schema.Column{WorksColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -72,7 +94,6 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
-		{Name: "image_url", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "category_works", Type: field.TypeInt, Nullable: true},
@@ -86,13 +107,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "works_categories_works",
-				Columns:    []*schema.Column{WorksColumns[6]},
+				Columns:    []*schema.Column{WorksColumns[5]},
 				RefColumns: []*schema.Column{CategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "works_users_works",
-				Columns:    []*schema.Column{WorksColumns[7]},
+				Columns:    []*schema.Column{WorksColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -148,14 +169,41 @@ var (
 			},
 		},
 	}
+	// UserLikeCommentsColumns holds the columns for the "user_like_comments" table.
+	UserLikeCommentsColumns = []*schema.Column{
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "comment_id", Type: field.TypeInt},
+	}
+	// UserLikeCommentsTable holds the schema information for the "user_like_comments" table.
+	UserLikeCommentsTable = &schema.Table{
+		Name:       "user_like_comments",
+		Columns:    UserLikeCommentsColumns,
+		PrimaryKey: []*schema.Column{UserLikeCommentsColumns[0], UserLikeCommentsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_like_comments_user_id",
+				Columns:    []*schema.Column{UserLikeCommentsColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_like_comments_comment_id",
+				Columns:    []*schema.Column{UserLikeCommentsColumns[1]},
+				RefColumns: []*schema.Column{CommentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
 		CommentsTable,
+		ImagesTable,
 		UsersTable,
 		WorksTable,
 		UserLikesTable,
 		UserTreasuresTable,
+		UserLikeCommentsTable,
 	}
 )
 
@@ -163,10 +211,13 @@ func init() {
 	CommentsTable.ForeignKeys[0].RefTable = CommentsTable
 	CommentsTable.ForeignKeys[1].RefTable = UsersTable
 	CommentsTable.ForeignKeys[2].RefTable = WorksTable
+	ImagesTable.ForeignKeys[0].RefTable = WorksTable
 	WorksTable.ForeignKeys[0].RefTable = CategoriesTable
 	WorksTable.ForeignKeys[1].RefTable = UsersTable
 	UserLikesTable.ForeignKeys[0].RefTable = UsersTable
 	UserLikesTable.ForeignKeys[1].RefTable = WorksTable
 	UserTreasuresTable.ForeignKeys[0].RefTable = UsersTable
 	UserTreasuresTable.ForeignKeys[1].RefTable = WorksTable
+	UserLikeCommentsTable.ForeignKeys[0].RefTable = UsersTable
+	UserLikeCommentsTable.ForeignKeys[1].RefTable = CommentsTable
 }
