@@ -50,7 +50,7 @@ jobs:
         with:
           config: ${{ secrets.GKE_ARTSIGN_DEV_KUBE_COFIG }}
           version: v1.21.5
-          command: set image -n artsign-api --record deployment/meshi-api meshi-api=bamboooo/artsign-api:$GITHUB_SHA
+          command: set image -n artsign-api --record deployment/artsign-api meshi-api=bamboooo/artsign-api:$GITHUB_SHA
 
       - name: Verify deployment
         uses: steebchen/kubectl@v2.0.0
