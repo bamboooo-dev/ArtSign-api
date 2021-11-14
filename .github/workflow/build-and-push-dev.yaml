@@ -1,4 +1,4 @@
-name: Build and Push ArtSign api to roots cluser
+name: Build and Push ArtSign api to dev cluser
 
 on:
   push:
