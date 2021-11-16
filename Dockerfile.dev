@@ -1,7 +1,4 @@
-FROM golang:1.17.2-alpine3.14
-
-RUN apk --update --no-cache add git build-base openssh curl nmap mysql-client tzdata bash ca-certificates jq && \
-  update-ca-certificates
+FROM golang:1.17.2-buster
 
 ENV TZ Asia/Tokyo
 
