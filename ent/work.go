@@ -22,6 +22,16 @@ type Work struct {
 	Title string `json:"title,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// Height holds the value of the "height" field.
+	Height float64 `json:"height,omitempty"`
+	// Width holds the value of the "width" field.
+	Width float64 `json:"width,omitempty"`
+	// SizeUnit holds the value of the "size_unit" field.
+	SizeUnit string `json:"size_unit,omitempty"`
+	// Year holds the value of the "year" field.
+	Year int `json:"year,omitempty"`
+	// Month holds the value of the "month" field.
+	Month int `json:"month,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -37,6 +47,8 @@ type Work struct {
 type WorkEdges struct {
 	// Category holds the value of the category edge.
 	Category *Category `json:"category,omitempty"`
+	// Tools holds the value of the tools edge.
+	Tools []*Tool `json:"tools,omitempty"`
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
 	// Likers holds the value of the likers edge.
@@ -49,7 +61,7 @@ type WorkEdges struct {
 	Images []*Image `json:"images,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // CategoryOrErr returns the Category value or an error if the edge
@@ -66,10 +78,19 @@ func (e WorkEdges) CategoryOrErr() (*Category, error) {
 	return nil, &NotLoadedError{edge: "category"}
 }
 
+// ToolsOrErr returns the Tools value or an error if the edge
+// was not loaded in eager-loading.
+func (e WorkEdges) ToolsOrErr() ([]*Tool, error) {
+	if e.loadedTypes[1] {
+		return e.Tools, nil
+	}
+	return nil, &NotLoadedError{edge: "tools"}
+}
+
 // OwnerOrErr returns the Owner value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkEdges) OwnerOrErr() (*User, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		if e.Owner == nil {
 			// The edge owner was loaded in eager-loading,
 			// but was not found.
@@ -83,7 +104,7 @@ func (e WorkEdges) OwnerOrErr() (*User, error) {
 // LikersOrErr returns the Likers value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkEdges) LikersOrErr() ([]*User, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Likers, nil
 	}
 	return nil, &NotLoadedError{edge: "likers"}
@@ -92,7 +113,7 @@ func (e WorkEdges) LikersOrErr() ([]*User, error) {
 // TreasurersOrErr returns the Treasurers value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkEdges) TreasurersOrErr() ([]*User, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.Treasurers, nil
 	}
 	return nil, &NotLoadedError{edge: "treasurers"}
@@ -101,7 +122,7 @@ func (e WorkEdges) TreasurersOrErr() ([]*User, error) {
 // CommentsOrErr returns the Comments value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkEdges) CommentsOrErr() ([]*Comment, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.Comments, nil
 	}
 	return nil, &NotLoadedError{edge: "comments"}
@@ -110,7 +131,7 @@ func (e WorkEdges) CommentsOrErr() ([]*Comment, error) {
 // ImagesOrErr returns the Images value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkEdges) ImagesOrErr() ([]*Image, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.Images, nil
 	}
 	return nil, &NotLoadedError{edge: "images"}
@@ -121,9 +142,11 @@ func (*Work) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case work.FieldID:
+		case work.FieldHeight, work.FieldWidth:
+			values[i] = new(sql.NullFloat64)
+		case work.FieldID, work.FieldYear, work.FieldMonth:
 			values[i] = new(sql.NullInt64)
-		case work.FieldTitle, work.FieldDescription:
+		case work.FieldTitle, work.FieldDescription, work.FieldSizeUnit:
 			values[i] = new(sql.NullString)
 		case work.FieldCreatedAt, work.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -164,6 +187,36 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				w.Description = value.String
 			}
+		case work.FieldHeight:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field height", values[i])
+			} else if value.Valid {
+				w.Height = value.Float64
+			}
+		case work.FieldWidth:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field width", values[i])
+			} else if value.Valid {
+				w.Width = value.Float64
+			}
+		case work.FieldSizeUnit:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field size_unit", values[i])
+			} else if value.Valid {
+				w.SizeUnit = value.String
+			}
+		case work.FieldYear:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field year", values[i])
+			} else if value.Valid {
+				w.Year = int(value.Int64)
+			}
+		case work.FieldMonth:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field month", values[i])
+			} else if value.Valid {
+				w.Month = int(value.Int64)
+			}
 		case work.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -198,6 +251,11 @@ func (w *Work) assignValues(columns []string, values []interface{}) error {
 // QueryCategory queries the "category" edge of the Work entity.
 func (w *Work) QueryCategory() *CategoryQuery {
 	return (&WorkClient{config: w.config}).QueryCategory(w)
+}
+
+// QueryTools queries the "tools" edge of the Work entity.
+func (w *Work) QueryTools() *ToolQuery {
+	return (&WorkClient{config: w.config}).QueryTools(w)
 }
 
 // QueryOwner queries the "owner" edge of the Work entity.
@@ -252,6 +310,16 @@ func (w *Work) String() string {
 	builder.WriteString(w.Title)
 	builder.WriteString(", description=")
 	builder.WriteString(w.Description)
+	builder.WriteString(", height=")
+	builder.WriteString(fmt.Sprintf("%v", w.Height))
+	builder.WriteString(", width=")
+	builder.WriteString(fmt.Sprintf("%v", w.Width))
+	builder.WriteString(", size_unit=")
+	builder.WriteString(w.SizeUnit)
+	builder.WriteString(", year=")
+	builder.WriteString(fmt.Sprintf("%v", w.Year))
+	builder.WriteString(", month=")
+	builder.WriteString(fmt.Sprintf("%v", w.Month))
 	builder.WriteString(", created_at=")
 	builder.WriteString(w.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", updated_at=")

@@ -15,12 +15,24 @@ const (
 	FieldTitle = "title"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldHeight holds the string denoting the height field in the database.
+	FieldHeight = "height"
+	// FieldWidth holds the string denoting the width field in the database.
+	FieldWidth = "width"
+	// FieldSizeUnit holds the string denoting the size_unit field in the database.
+	FieldSizeUnit = "size_unit"
+	// FieldYear holds the string denoting the year field in the database.
+	FieldYear = "year"
+	// FieldMonth holds the string denoting the month field in the database.
+	FieldMonth = "month"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// EdgeCategory holds the string denoting the category edge name in mutations.
 	EdgeCategory = "category"
+	// EdgeTools holds the string denoting the tools edge name in mutations.
+	EdgeTools = "tools"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// EdgeLikers holds the string denoting the likers edge name in mutations.
@@ -40,6 +52,11 @@ const (
 	CategoryInverseTable = "categories"
 	// CategoryColumn is the table column denoting the category relation/edge.
 	CategoryColumn = "category_works"
+	// ToolsTable is the table that holds the tools relation/edge. The primary key declared below.
+	ToolsTable = "tool_works"
+	// ToolsInverseTable is the table name for the Tool entity.
+	// It exists in this package in order to avoid circular dependency with the "tool" package.
+	ToolsInverseTable = "tools"
 	// OwnerTable is the table that holds the owner relation/edge.
 	OwnerTable = "works"
 	// OwnerInverseTable is the table name for the User entity.
@@ -78,6 +95,11 @@ var Columns = []string{
 	FieldID,
 	FieldTitle,
 	FieldDescription,
+	FieldHeight,
+	FieldWidth,
+	FieldSizeUnit,
+	FieldYear,
+	FieldMonth,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -90,6 +112,9 @@ var ForeignKeys = []string{
 }
 
 var (
+	// ToolsPrimaryKey and ToolsColumn2 are the table columns denoting the
+	// primary key for the tools relation (M2M).
+	ToolsPrimaryKey = []string{"tool_id", "work_id"}
 	// LikersPrimaryKey and LikersColumn2 are the table columns denoting the
 	// primary key for the likers relation (M2M).
 	LikersPrimaryKey = []string{"user_id", "work_id"}
@@ -118,6 +143,12 @@ var (
 	TitleValidator func(string) error
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
+	// SizeUnitValidator is a validator for the "size_unit" field. It is called by the builders before save.
+	SizeUnitValidator func(string) error
+	// YearValidator is a validator for the "year" field. It is called by the builders before save.
+	YearValidator func(int) error
+	// MonthValidator is a validator for the "month" field. It is called by the builders before save.
+	MonthValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.

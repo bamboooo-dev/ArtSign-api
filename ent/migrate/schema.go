@@ -77,6 +77,17 @@ var (
 			},
 		},
 	}
+	// ToolsColumns holds the columns for the "tools" table.
+	ToolsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+	}
+	// ToolsTable holds the schema information for the "tools" table.
+	ToolsTable = &schema.Table{
+		Name:       "tools",
+		Columns:    ToolsColumns,
+		PrimaryKey: []*schema.Column{ToolsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -94,6 +105,11 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
+		{Name: "height", Type: field.TypeFloat64},
+		{Name: "width", Type: field.TypeFloat64},
+		{Name: "size_unit", Type: field.TypeString},
+		{Name: "year", Type: field.TypeInt},
+		{Name: "month", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "category_works", Type: field.TypeInt, Nullable: true},
@@ -107,15 +123,40 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "works_categories_works",
-				Columns:    []*schema.Column{WorksColumns[5]},
+				Columns:    []*schema.Column{WorksColumns[10]},
 				RefColumns: []*schema.Column{CategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "works_users_works",
-				Columns:    []*schema.Column{WorksColumns[6]},
+				Columns:    []*schema.Column{WorksColumns[11]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// ToolWorksColumns holds the columns for the "tool_works" table.
+	ToolWorksColumns = []*schema.Column{
+		{Name: "tool_id", Type: field.TypeInt},
+		{Name: "work_id", Type: field.TypeInt},
+	}
+	// ToolWorksTable holds the schema information for the "tool_works" table.
+	ToolWorksTable = &schema.Table{
+		Name:       "tool_works",
+		Columns:    ToolWorksColumns,
+		PrimaryKey: []*schema.Column{ToolWorksColumns[0], ToolWorksColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tool_works_tool_id",
+				Columns:    []*schema.Column{ToolWorksColumns[0]},
+				RefColumns: []*schema.Column{ToolsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "tool_works_work_id",
+				Columns:    []*schema.Column{ToolWorksColumns[1]},
+				RefColumns: []*schema.Column{WorksColumns[0]},
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -199,8 +240,10 @@ var (
 		CategoriesTable,
 		CommentsTable,
 		ImagesTable,
+		ToolsTable,
 		UsersTable,
 		WorksTable,
+		ToolWorksTable,
 		UserLikesTable,
 		UserTreasuresTable,
 		UserLikeCommentsTable,
@@ -214,6 +257,8 @@ func init() {
 	ImagesTable.ForeignKeys[0].RefTable = WorksTable
 	WorksTable.ForeignKeys[0].RefTable = CategoriesTable
 	WorksTable.ForeignKeys[1].RefTable = UsersTable
+	ToolWorksTable.ForeignKeys[0].RefTable = ToolsTable
+	ToolWorksTable.ForeignKeys[1].RefTable = WorksTable
 	UserLikesTable.ForeignKeys[0].RefTable = UsersTable
 	UserLikesTable.ForeignKeys[1].RefTable = WorksTable
 	UserTreasuresTable.ForeignKeys[0].RefTable = UsersTable

@@ -7,6 +7,7 @@ import (
 	"artsign/ent/comment"
 	"artsign/ent/image"
 	"artsign/ent/predicate"
+	"artsign/ent/tool"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -31,6 +32,7 @@ type WorkQuery struct {
 	predicates []predicate.Work
 	// eager-loading edges.
 	withCategory   *CategoryQuery
+	withTools      *ToolQuery
 	withOwner      *UserQuery
 	withLikers     *UserQuery
 	withTreasurers *UserQuery
@@ -88,6 +90,28 @@ func (wq *WorkQuery) QueryCategory() *CategoryQuery {
 			sqlgraph.From(work.Table, work.FieldID, selector),
 			sqlgraph.To(category.Table, category.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, work.CategoryTable, work.CategoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTools chains the current query on the "tools" edge.
+func (wq *WorkQuery) QueryTools() *ToolQuery {
+	query := &ToolQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(tool.Table, tool.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, work.ToolsTable, work.ToolsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -387,6 +411,7 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 		order:          append([]OrderFunc{}, wq.order...),
 		predicates:     append([]predicate.Work{}, wq.predicates...),
 		withCategory:   wq.withCategory.Clone(),
+		withTools:      wq.withTools.Clone(),
 		withOwner:      wq.withOwner.Clone(),
 		withLikers:     wq.withLikers.Clone(),
 		withTreasurers: wq.withTreasurers.Clone(),
@@ -406,6 +431,17 @@ func (wq *WorkQuery) WithCategory(opts ...func(*CategoryQuery)) *WorkQuery {
 		opt(query)
 	}
 	wq.withCategory = query
+	return wq
+}
+
+// WithTools tells the query-builder to eager-load the nodes that are connected to
+// the "tools" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithTools(opts ...func(*ToolQuery)) *WorkQuery {
+	query := &ToolQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withTools = query
 	return wq
 }
 
@@ -530,8 +566,9 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 		nodes       = []*Work{}
 		withFKs     = wq.withFKs
 		_spec       = wq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			wq.withCategory != nil,
+			wq.withTools != nil,
 			wq.withOwner != nil,
 			wq.withLikers != nil,
 			wq.withTreasurers != nil,
@@ -590,6 +627,71 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 			}
 			for i := range nodes {
 				nodes[i].Edges.Category = n
+			}
+		}
+	}
+
+	if query := wq.withTools; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[int]*Work, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Tools = []*Tool{}
+		}
+		var (
+			edgeids []int
+			edges   = make(map[int][]*Work)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: true,
+				Table:   work.ToolsTable,
+				Columns: work.ToolsPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(work.ToolsPrimaryKey[1], fks...))
+			},
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*sql.NullInt64)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*sql.NullInt64)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := int(eout.Int64)
+				inValue := int(ein.Int64)
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				if _, ok := edges[inValue]; !ok {
+					edgeids = append(edgeids, inValue)
+				}
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, wq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "tools": %w`, err)
+		}
+		query.Where(tool.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "tools" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Tools = append(nodes[i].Edges.Tools, n)
 			}
 		}
 	}

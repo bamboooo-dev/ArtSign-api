@@ -107,6 +107,41 @@ func Description(v string) predicate.Work {
 	})
 }
 
+// Height applies equality check predicate on the "height" field. It's identical to HeightEQ.
+func Height(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldHeight), v))
+	})
+}
+
+// Width applies equality check predicate on the "width" field. It's identical to WidthEQ.
+func Width(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldWidth), v))
+	})
+}
+
+// SizeUnit applies equality check predicate on the "size_unit" field. It's identical to SizeUnitEQ.
+func SizeUnit(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSizeUnit), v))
+	})
+}
+
+// Year applies equality check predicate on the "year" field. It's identical to YearEQ.
+func Year(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldYear), v))
+	})
+}
+
+// Month applies equality check predicate on the "month" field. It's identical to MonthEQ.
+func Month(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMonth), v))
+	})
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Work {
 	return predicate.Work(func(s *sql.Selector) {
@@ -343,6 +378,421 @@ func DescriptionContainsFold(v string) predicate.Work {
 	})
 }
 
+// HeightEQ applies the EQ predicate on the "height" field.
+func HeightEQ(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldHeight), v))
+	})
+}
+
+// HeightNEQ applies the NEQ predicate on the "height" field.
+func HeightNEQ(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldHeight), v))
+	})
+}
+
+// HeightIn applies the In predicate on the "height" field.
+func HeightIn(vs ...float64) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldHeight), v...))
+	})
+}
+
+// HeightNotIn applies the NotIn predicate on the "height" field.
+func HeightNotIn(vs ...float64) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldHeight), v...))
+	})
+}
+
+// HeightGT applies the GT predicate on the "height" field.
+func HeightGT(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldHeight), v))
+	})
+}
+
+// HeightGTE applies the GTE predicate on the "height" field.
+func HeightGTE(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldHeight), v))
+	})
+}
+
+// HeightLT applies the LT predicate on the "height" field.
+func HeightLT(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldHeight), v))
+	})
+}
+
+// HeightLTE applies the LTE predicate on the "height" field.
+func HeightLTE(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldHeight), v))
+	})
+}
+
+// WidthEQ applies the EQ predicate on the "width" field.
+func WidthEQ(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldWidth), v))
+	})
+}
+
+// WidthNEQ applies the NEQ predicate on the "width" field.
+func WidthNEQ(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldWidth), v))
+	})
+}
+
+// WidthIn applies the In predicate on the "width" field.
+func WidthIn(vs ...float64) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldWidth), v...))
+	})
+}
+
+// WidthNotIn applies the NotIn predicate on the "width" field.
+func WidthNotIn(vs ...float64) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldWidth), v...))
+	})
+}
+
+// WidthGT applies the GT predicate on the "width" field.
+func WidthGT(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldWidth), v))
+	})
+}
+
+// WidthGTE applies the GTE predicate on the "width" field.
+func WidthGTE(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldWidth), v))
+	})
+}
+
+// WidthLT applies the LT predicate on the "width" field.
+func WidthLT(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldWidth), v))
+	})
+}
+
+// WidthLTE applies the LTE predicate on the "width" field.
+func WidthLTE(v float64) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldWidth), v))
+	})
+}
+
+// SizeUnitEQ applies the EQ predicate on the "size_unit" field.
+func SizeUnitEQ(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitNEQ applies the NEQ predicate on the "size_unit" field.
+func SizeUnitNEQ(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitIn applies the In predicate on the "size_unit" field.
+func SizeUnitIn(vs ...string) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldSizeUnit), v...))
+	})
+}
+
+// SizeUnitNotIn applies the NotIn predicate on the "size_unit" field.
+func SizeUnitNotIn(vs ...string) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldSizeUnit), v...))
+	})
+}
+
+// SizeUnitGT applies the GT predicate on the "size_unit" field.
+func SizeUnitGT(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitGTE applies the GTE predicate on the "size_unit" field.
+func SizeUnitGTE(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitLT applies the LT predicate on the "size_unit" field.
+func SizeUnitLT(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitLTE applies the LTE predicate on the "size_unit" field.
+func SizeUnitLTE(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitContains applies the Contains predicate on the "size_unit" field.
+func SizeUnitContains(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitHasPrefix applies the HasPrefix predicate on the "size_unit" field.
+func SizeUnitHasPrefix(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitHasSuffix applies the HasSuffix predicate on the "size_unit" field.
+func SizeUnitHasSuffix(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitEqualFold applies the EqualFold predicate on the "size_unit" field.
+func SizeUnitEqualFold(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldSizeUnit), v))
+	})
+}
+
+// SizeUnitContainsFold applies the ContainsFold predicate on the "size_unit" field.
+func SizeUnitContainsFold(v string) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldSizeUnit), v))
+	})
+}
+
+// YearEQ applies the EQ predicate on the "year" field.
+func YearEQ(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldYear), v))
+	})
+}
+
+// YearNEQ applies the NEQ predicate on the "year" field.
+func YearNEQ(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldYear), v))
+	})
+}
+
+// YearIn applies the In predicate on the "year" field.
+func YearIn(vs ...int) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldYear), v...))
+	})
+}
+
+// YearNotIn applies the NotIn predicate on the "year" field.
+func YearNotIn(vs ...int) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldYear), v...))
+	})
+}
+
+// YearGT applies the GT predicate on the "year" field.
+func YearGT(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldYear), v))
+	})
+}
+
+// YearGTE applies the GTE predicate on the "year" field.
+func YearGTE(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldYear), v))
+	})
+}
+
+// YearLT applies the LT predicate on the "year" field.
+func YearLT(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldYear), v))
+	})
+}
+
+// YearLTE applies the LTE predicate on the "year" field.
+func YearLTE(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldYear), v))
+	})
+}
+
+// MonthEQ applies the EQ predicate on the "month" field.
+func MonthEQ(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMonth), v))
+	})
+}
+
+// MonthNEQ applies the NEQ predicate on the "month" field.
+func MonthNEQ(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldMonth), v))
+	})
+}
+
+// MonthIn applies the In predicate on the "month" field.
+func MonthIn(vs ...int) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldMonth), v...))
+	})
+}
+
+// MonthNotIn applies the NotIn predicate on the "month" field.
+func MonthNotIn(vs ...int) predicate.Work {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Work(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldMonth), v...))
+	})
+}
+
+// MonthGT applies the GT predicate on the "month" field.
+func MonthGT(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldMonth), v))
+	})
+}
+
+// MonthGTE applies the GTE predicate on the "month" field.
+func MonthGTE(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldMonth), v))
+	})
+}
+
+// MonthLT applies the LT predicate on the "month" field.
+func MonthLT(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldMonth), v))
+	})
+}
+
+// MonthLTE applies the LTE predicate on the "month" field.
+func MonthLTE(v int) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldMonth), v))
+	})
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Work {
 	return predicate.Work(func(s *sql.Selector) {
@@ -514,6 +964,34 @@ func HasCategoryWith(preds ...predicate.Category) predicate.Work {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(CategoryInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTools applies the HasEdge predicate on the "tools" edge.
+func HasTools() predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ToolsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ToolsTable, ToolsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasToolsWith applies the HasEdge predicate on the "tools" edge with a given conditions (other predicates).
+func HasToolsWith(preds ...predicate.Tool) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ToolsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ToolsTable, ToolsPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

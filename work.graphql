@@ -273,6 +273,12 @@ input CreateWorkInput {
   description: String!
   categoryID: ID!
   ownerID: ID!
+  height: Float
+  width: Float
+  sizeUnit: String!
+  year: Int!
+  month: Int!
+  toolIDs: [ID]!
 }
 
 input CreateUserInput {

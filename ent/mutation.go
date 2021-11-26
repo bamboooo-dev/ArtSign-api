@@ -7,6 +7,7 @@ import (
 	"artsign/ent/comment"
 	"artsign/ent/image"
 	"artsign/ent/predicate"
+	"artsign/ent/tool"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -29,6 +30,7 @@ const (
 	TypeCategory = "Category"
 	TypeComment  = "Comment"
 	TypeImage    = "Image"
+	TypeTool     = "Tool"
 	TypeUser     = "User"
 	TypeWork     = "Work"
 )
@@ -1640,6 +1642,391 @@ func (m *ImageMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Image edge %s", name)
 }
 
+// ToolMutation represents an operation that mutates the Tool nodes in the graph.
+type ToolMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	name          *string
+	clearedFields map[string]struct{}
+	works         map[int]struct{}
+	removedworks  map[int]struct{}
+	clearedworks  bool
+	done          bool
+	oldValue      func(context.Context) (*Tool, error)
+	predicates    []predicate.Tool
+}
+
+var _ ent.Mutation = (*ToolMutation)(nil)
+
+// toolOption allows management of the mutation configuration using functional options.
+type toolOption func(*ToolMutation)
+
+// newToolMutation creates new mutation for the Tool entity.
+func newToolMutation(c config, op Op, opts ...toolOption) *ToolMutation {
+	m := &ToolMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTool,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withToolID sets the ID field of the mutation.
+func withToolID(id int) toolOption {
+	return func(m *ToolMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Tool
+		)
+		m.oldValue = func(ctx context.Context) (*Tool, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Tool.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTool sets the old Tool of the mutation.
+func withTool(node *Tool) toolOption {
+	return func(m *ToolMutation) {
+		m.oldValue = func(context.Context) (*Tool, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ToolMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ToolMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ToolMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetName sets the "name" field.
+func (m *ToolMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ToolMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Tool entity.
+// If the Tool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ToolMutation) ResetName() {
+	m.name = nil
+}
+
+// AddWorkIDs adds the "works" edge to the Work entity by ids.
+func (m *ToolMutation) AddWorkIDs(ids ...int) {
+	if m.works == nil {
+		m.works = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.works[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorks clears the "works" edge to the Work entity.
+func (m *ToolMutation) ClearWorks() {
+	m.clearedworks = true
+}
+
+// WorksCleared reports if the "works" edge to the Work entity was cleared.
+func (m *ToolMutation) WorksCleared() bool {
+	return m.clearedworks
+}
+
+// RemoveWorkIDs removes the "works" edge to the Work entity by IDs.
+func (m *ToolMutation) RemoveWorkIDs(ids ...int) {
+	if m.removedworks == nil {
+		m.removedworks = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.works, ids[i])
+		m.removedworks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorks returns the removed IDs of the "works" edge to the Work entity.
+func (m *ToolMutation) RemovedWorksIDs() (ids []int) {
+	for id := range m.removedworks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorksIDs returns the "works" edge IDs in the mutation.
+func (m *ToolMutation) WorksIDs() (ids []int) {
+	for id := range m.works {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorks resets all changes to the "works" edge.
+func (m *ToolMutation) ResetWorks() {
+	m.works = nil
+	m.clearedworks = false
+	m.removedworks = nil
+}
+
+// Where appends a list predicates to the ToolMutation builder.
+func (m *ToolMutation) Where(ps ...predicate.Tool) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *ToolMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Tool).
+func (m *ToolMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ToolMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.name != nil {
+		fields = append(fields, tool.FieldName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ToolMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tool.FieldName:
+		return m.Name()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ToolMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tool.FieldName:
+		return m.OldName(ctx)
+	}
+	return nil, fmt.Errorf("unknown Tool field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ToolMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tool.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Tool field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ToolMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ToolMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ToolMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Tool numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ToolMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ToolMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ToolMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Tool nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ToolMutation) ResetField(name string) error {
+	switch name {
+	case tool.FieldName:
+		m.ResetName()
+		return nil
+	}
+	return fmt.Errorf("unknown Tool field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ToolMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.works != nil {
+		edges = append(edges, tool.EdgeWorks)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ToolMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case tool.EdgeWorks:
+		ids := make([]ent.Value, 0, len(m.works))
+		for id := range m.works {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ToolMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedworks != nil {
+		edges = append(edges, tool.EdgeWorks)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ToolMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case tool.EdgeWorks:
+		ids := make([]ent.Value, 0, len(m.removedworks))
+		for id := range m.removedworks {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ToolMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedworks {
+		edges = append(edges, tool.EdgeWorks)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ToolMutation) EdgeCleared(name string) bool {
+	switch name {
+	case tool.EdgeWorks:
+		return m.clearedworks
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ToolMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Tool unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ToolMutation) ResetEdge(name string) error {
+	switch name {
+	case tool.EdgeWorks:
+		m.ResetWorks()
+		return nil
+	}
+	return fmt.Errorf("unknown Tool edge %s", name)
+}
+
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
@@ -2419,11 +2806,23 @@ type WorkMutation struct {
 	id                *int
 	title             *string
 	description       *string
+	height            *float64
+	addheight         *float64
+	width             *float64
+	addwidth          *float64
+	size_unit         *string
+	year              *int
+	addyear           *int
+	month             *int
+	addmonth          *int
 	created_at        *time.Time
 	updated_at        *time.Time
 	clearedFields     map[string]struct{}
 	category          *int
 	clearedcategory   bool
+	tools             map[int]struct{}
+	removedtools      map[int]struct{}
+	clearedtools      bool
 	owner             *int
 	clearedowner      bool
 	likers            map[int]struct{}
@@ -2594,6 +2993,266 @@ func (m *WorkMutation) ResetDescription() {
 	m.description = nil
 }
 
+// SetHeight sets the "height" field.
+func (m *WorkMutation) SetHeight(f float64) {
+	m.height = &f
+	m.addheight = nil
+}
+
+// Height returns the value of the "height" field in the mutation.
+func (m *WorkMutation) Height() (r float64, exists bool) {
+	v := m.height
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHeight returns the old "height" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldHeight(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldHeight is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldHeight requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHeight: %w", err)
+	}
+	return oldValue.Height, nil
+}
+
+// AddHeight adds f to the "height" field.
+func (m *WorkMutation) AddHeight(f float64) {
+	if m.addheight != nil {
+		*m.addheight += f
+	} else {
+		m.addheight = &f
+	}
+}
+
+// AddedHeight returns the value that was added to the "height" field in this mutation.
+func (m *WorkMutation) AddedHeight() (r float64, exists bool) {
+	v := m.addheight
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetHeight resets all changes to the "height" field.
+func (m *WorkMutation) ResetHeight() {
+	m.height = nil
+	m.addheight = nil
+}
+
+// SetWidth sets the "width" field.
+func (m *WorkMutation) SetWidth(f float64) {
+	m.width = &f
+	m.addwidth = nil
+}
+
+// Width returns the value of the "width" field in the mutation.
+func (m *WorkMutation) Width() (r float64, exists bool) {
+	v := m.width
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWidth returns the old "width" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldWidth(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldWidth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldWidth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWidth: %w", err)
+	}
+	return oldValue.Width, nil
+}
+
+// AddWidth adds f to the "width" field.
+func (m *WorkMutation) AddWidth(f float64) {
+	if m.addwidth != nil {
+		*m.addwidth += f
+	} else {
+		m.addwidth = &f
+	}
+}
+
+// AddedWidth returns the value that was added to the "width" field in this mutation.
+func (m *WorkMutation) AddedWidth() (r float64, exists bool) {
+	v := m.addwidth
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetWidth resets all changes to the "width" field.
+func (m *WorkMutation) ResetWidth() {
+	m.width = nil
+	m.addwidth = nil
+}
+
+// SetSizeUnit sets the "size_unit" field.
+func (m *WorkMutation) SetSizeUnit(s string) {
+	m.size_unit = &s
+}
+
+// SizeUnit returns the value of the "size_unit" field in the mutation.
+func (m *WorkMutation) SizeUnit() (r string, exists bool) {
+	v := m.size_unit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeUnit returns the old "size_unit" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldSizeUnit(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldSizeUnit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldSizeUnit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeUnit: %w", err)
+	}
+	return oldValue.SizeUnit, nil
+}
+
+// ResetSizeUnit resets all changes to the "size_unit" field.
+func (m *WorkMutation) ResetSizeUnit() {
+	m.size_unit = nil
+}
+
+// SetYear sets the "year" field.
+func (m *WorkMutation) SetYear(i int) {
+	m.year = &i
+	m.addyear = nil
+}
+
+// Year returns the value of the "year" field in the mutation.
+func (m *WorkMutation) Year() (r int, exists bool) {
+	v := m.year
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldYear returns the old "year" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldYear(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldYear is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldYear requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldYear: %w", err)
+	}
+	return oldValue.Year, nil
+}
+
+// AddYear adds i to the "year" field.
+func (m *WorkMutation) AddYear(i int) {
+	if m.addyear != nil {
+		*m.addyear += i
+	} else {
+		m.addyear = &i
+	}
+}
+
+// AddedYear returns the value that was added to the "year" field in this mutation.
+func (m *WorkMutation) AddedYear() (r int, exists bool) {
+	v := m.addyear
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetYear resets all changes to the "year" field.
+func (m *WorkMutation) ResetYear() {
+	m.year = nil
+	m.addyear = nil
+}
+
+// SetMonth sets the "month" field.
+func (m *WorkMutation) SetMonth(i int) {
+	m.month = &i
+	m.addmonth = nil
+}
+
+// Month returns the value of the "month" field in the mutation.
+func (m *WorkMutation) Month() (r int, exists bool) {
+	v := m.month
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMonth returns the old "month" field's value of the Work entity.
+// If the Work object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkMutation) OldMonth(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldMonth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldMonth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMonth: %w", err)
+	}
+	return oldValue.Month, nil
+}
+
+// AddMonth adds i to the "month" field.
+func (m *WorkMutation) AddMonth(i int) {
+	if m.addmonth != nil {
+		*m.addmonth += i
+	} else {
+		m.addmonth = &i
+	}
+}
+
+// AddedMonth returns the value that was added to the "month" field in this mutation.
+func (m *WorkMutation) AddedMonth() (r int, exists bool) {
+	v := m.addmonth
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMonth resets all changes to the "month" field.
+func (m *WorkMutation) ResetMonth() {
+	m.month = nil
+	m.addmonth = nil
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *WorkMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -2703,6 +3362,60 @@ func (m *WorkMutation) CategoryIDs() (ids []int) {
 func (m *WorkMutation) ResetCategory() {
 	m.category = nil
 	m.clearedcategory = false
+}
+
+// AddToolIDs adds the "tools" edge to the Tool entity by ids.
+func (m *WorkMutation) AddToolIDs(ids ...int) {
+	if m.tools == nil {
+		m.tools = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tools[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTools clears the "tools" edge to the Tool entity.
+func (m *WorkMutation) ClearTools() {
+	m.clearedtools = true
+}
+
+// ToolsCleared reports if the "tools" edge to the Tool entity was cleared.
+func (m *WorkMutation) ToolsCleared() bool {
+	return m.clearedtools
+}
+
+// RemoveToolIDs removes the "tools" edge to the Tool entity by IDs.
+func (m *WorkMutation) RemoveToolIDs(ids ...int) {
+	if m.removedtools == nil {
+		m.removedtools = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tools, ids[i])
+		m.removedtools[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTools returns the removed IDs of the "tools" edge to the Tool entity.
+func (m *WorkMutation) RemovedToolsIDs() (ids []int) {
+	for id := range m.removedtools {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ToolsIDs returns the "tools" edge IDs in the mutation.
+func (m *WorkMutation) ToolsIDs() (ids []int) {
+	for id := range m.tools {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTools resets all changes to the "tools" edge.
+func (m *WorkMutation) ResetTools() {
+	m.tools = nil
+	m.clearedtools = false
+	m.removedtools = nil
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by id.
@@ -2979,12 +3692,27 @@ func (m *WorkMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 9)
 	if m.title != nil {
 		fields = append(fields, work.FieldTitle)
 	}
 	if m.description != nil {
 		fields = append(fields, work.FieldDescription)
+	}
+	if m.height != nil {
+		fields = append(fields, work.FieldHeight)
+	}
+	if m.width != nil {
+		fields = append(fields, work.FieldWidth)
+	}
+	if m.size_unit != nil {
+		fields = append(fields, work.FieldSizeUnit)
+	}
+	if m.year != nil {
+		fields = append(fields, work.FieldYear)
+	}
+	if m.month != nil {
+		fields = append(fields, work.FieldMonth)
 	}
 	if m.created_at != nil {
 		fields = append(fields, work.FieldCreatedAt)
@@ -3004,6 +3732,16 @@ func (m *WorkMutation) Field(name string) (ent.Value, bool) {
 		return m.Title()
 	case work.FieldDescription:
 		return m.Description()
+	case work.FieldHeight:
+		return m.Height()
+	case work.FieldWidth:
+		return m.Width()
+	case work.FieldSizeUnit:
+		return m.SizeUnit()
+	case work.FieldYear:
+		return m.Year()
+	case work.FieldMonth:
+		return m.Month()
 	case work.FieldCreatedAt:
 		return m.CreatedAt()
 	case work.FieldUpdatedAt:
@@ -3021,6 +3759,16 @@ func (m *WorkMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldTitle(ctx)
 	case work.FieldDescription:
 		return m.OldDescription(ctx)
+	case work.FieldHeight:
+		return m.OldHeight(ctx)
+	case work.FieldWidth:
+		return m.OldWidth(ctx)
+	case work.FieldSizeUnit:
+		return m.OldSizeUnit(ctx)
+	case work.FieldYear:
+		return m.OldYear(ctx)
+	case work.FieldMonth:
+		return m.OldMonth(ctx)
 	case work.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case work.FieldUpdatedAt:
@@ -3048,6 +3796,41 @@ func (m *WorkMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDescription(v)
 		return nil
+	case work.FieldHeight:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHeight(v)
+		return nil
+	case work.FieldWidth:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWidth(v)
+		return nil
+	case work.FieldSizeUnit:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeUnit(v)
+		return nil
+	case work.FieldYear:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetYear(v)
+		return nil
+	case work.FieldMonth:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMonth(v)
+		return nil
 	case work.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -3069,13 +3852,36 @@ func (m *WorkMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *WorkMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addheight != nil {
+		fields = append(fields, work.FieldHeight)
+	}
+	if m.addwidth != nil {
+		fields = append(fields, work.FieldWidth)
+	}
+	if m.addyear != nil {
+		fields = append(fields, work.FieldYear)
+	}
+	if m.addmonth != nil {
+		fields = append(fields, work.FieldMonth)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *WorkMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case work.FieldHeight:
+		return m.AddedHeight()
+	case work.FieldWidth:
+		return m.AddedWidth()
+	case work.FieldYear:
+		return m.AddedYear()
+	case work.FieldMonth:
+		return m.AddedMonth()
+	}
 	return nil, false
 }
 
@@ -3084,6 +3890,34 @@ func (m *WorkMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *WorkMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case work.FieldHeight:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHeight(v)
+		return nil
+	case work.FieldWidth:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWidth(v)
+		return nil
+	case work.FieldYear:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddYear(v)
+		return nil
+	case work.FieldMonth:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMonth(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Work numeric field %s", name)
 }
@@ -3117,6 +3951,21 @@ func (m *WorkMutation) ResetField(name string) error {
 	case work.FieldDescription:
 		m.ResetDescription()
 		return nil
+	case work.FieldHeight:
+		m.ResetHeight()
+		return nil
+	case work.FieldWidth:
+		m.ResetWidth()
+		return nil
+	case work.FieldSizeUnit:
+		m.ResetSizeUnit()
+		return nil
+	case work.FieldYear:
+		m.ResetYear()
+		return nil
+	case work.FieldMonth:
+		m.ResetMonth()
+		return nil
 	case work.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
@@ -3129,9 +3978,12 @@ func (m *WorkMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.category != nil {
 		edges = append(edges, work.EdgeCategory)
+	}
+	if m.tools != nil {
+		edges = append(edges, work.EdgeTools)
 	}
 	if m.owner != nil {
 		edges = append(edges, work.EdgeOwner)
@@ -3159,6 +4011,12 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 		if id := m.category; id != nil {
 			return []ent.Value{*id}
 		}
+	case work.EdgeTools:
+		ids := make([]ent.Value, 0, len(m.tools))
+		for id := range m.tools {
+			ids = append(ids, id)
+		}
+		return ids
 	case work.EdgeOwner:
 		if id := m.owner; id != nil {
 			return []ent.Value{*id}
@@ -3193,7 +4051,10 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
+	if m.removedtools != nil {
+		edges = append(edges, work.EdgeTools)
+	}
 	if m.removedlikers != nil {
 		edges = append(edges, work.EdgeLikers)
 	}
@@ -3213,6 +4074,12 @@ func (m *WorkMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case work.EdgeTools:
+		ids := make([]ent.Value, 0, len(m.removedtools))
+		for id := range m.removedtools {
+			ids = append(ids, id)
+		}
+		return ids
 	case work.EdgeLikers:
 		ids := make([]ent.Value, 0, len(m.removedlikers))
 		for id := range m.removedlikers {
@@ -3243,9 +4110,12 @@ func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.clearedcategory {
 		edges = append(edges, work.EdgeCategory)
+	}
+	if m.clearedtools {
+		edges = append(edges, work.EdgeTools)
 	}
 	if m.clearedowner {
 		edges = append(edges, work.EdgeOwner)
@@ -3271,6 +4141,8 @@ func (m *WorkMutation) EdgeCleared(name string) bool {
 	switch name {
 	case work.EdgeCategory:
 		return m.clearedcategory
+	case work.EdgeTools:
+		return m.clearedtools
 	case work.EdgeOwner:
 		return m.clearedowner
 	case work.EdgeLikers:
@@ -3305,6 +4177,9 @@ func (m *WorkMutation) ResetEdge(name string) error {
 	switch name {
 	case work.EdgeCategory:
 		m.ResetCategory()
+		return nil
+	case work.EdgeTools:
+		m.ResetTools()
 		return nil
 	case work.EdgeOwner:
 		m.ResetOwner()

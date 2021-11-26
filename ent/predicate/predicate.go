@@ -15,6 +15,9 @@ type Comment func(*sql.Selector)
 // Image is the predicate function for image builders.
 type Image func(*sql.Selector)
 
+// Tool is the predicate function for tool builders.
+type Tool func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

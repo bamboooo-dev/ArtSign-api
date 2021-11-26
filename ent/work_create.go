@@ -6,6 +6,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/tool"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -33,6 +34,36 @@ func (wc *WorkCreate) SetTitle(s string) *WorkCreate {
 // SetDescription sets the "description" field.
 func (wc *WorkCreate) SetDescription(s string) *WorkCreate {
 	wc.mutation.SetDescription(s)
+	return wc
+}
+
+// SetHeight sets the "height" field.
+func (wc *WorkCreate) SetHeight(f float64) *WorkCreate {
+	wc.mutation.SetHeight(f)
+	return wc
+}
+
+// SetWidth sets the "width" field.
+func (wc *WorkCreate) SetWidth(f float64) *WorkCreate {
+	wc.mutation.SetWidth(f)
+	return wc
+}
+
+// SetSizeUnit sets the "size_unit" field.
+func (wc *WorkCreate) SetSizeUnit(s string) *WorkCreate {
+	wc.mutation.SetSizeUnit(s)
+	return wc
+}
+
+// SetYear sets the "year" field.
+func (wc *WorkCreate) SetYear(i int) *WorkCreate {
+	wc.mutation.SetYear(i)
+	return wc
+}
+
+// SetMonth sets the "month" field.
+func (wc *WorkCreate) SetMonth(i int) *WorkCreate {
+	wc.mutation.SetMonth(i)
 	return wc
 }
 
@@ -81,6 +112,21 @@ func (wc *WorkCreate) SetNillableCategoryID(id *int) *WorkCreate {
 // SetCategory sets the "category" edge to the Category entity.
 func (wc *WorkCreate) SetCategory(c *Category) *WorkCreate {
 	return wc.SetCategoryID(c.ID)
+}
+
+// AddToolIDs adds the "tools" edge to the Tool entity by IDs.
+func (wc *WorkCreate) AddToolIDs(ids ...int) *WorkCreate {
+	wc.mutation.AddToolIDs(ids...)
+	return wc
+}
+
+// AddTools adds the "tools" edges to the Tool entity.
+func (wc *WorkCreate) AddTools(t ...*Tool) *WorkCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wc.AddToolIDs(ids...)
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by ID.
@@ -261,6 +307,36 @@ func (wc *WorkCreate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "description": %w`, err)}
 		}
 	}
+	if _, ok := wc.mutation.Height(); !ok {
+		return &ValidationError{Name: "height", err: errors.New(`ent: missing required field "height"`)}
+	}
+	if _, ok := wc.mutation.Width(); !ok {
+		return &ValidationError{Name: "width", err: errors.New(`ent: missing required field "width"`)}
+	}
+	if _, ok := wc.mutation.SizeUnit(); !ok {
+		return &ValidationError{Name: "size_unit", err: errors.New(`ent: missing required field "size_unit"`)}
+	}
+	if v, ok := wc.mutation.SizeUnit(); ok {
+		if err := work.SizeUnitValidator(v); err != nil {
+			return &ValidationError{Name: "size_unit", err: fmt.Errorf(`ent: validator failed for field "size_unit": %w`, err)}
+		}
+	}
+	if _, ok := wc.mutation.Year(); !ok {
+		return &ValidationError{Name: "year", err: errors.New(`ent: missing required field "year"`)}
+	}
+	if v, ok := wc.mutation.Year(); ok {
+		if err := work.YearValidator(v); err != nil {
+			return &ValidationError{Name: "year", err: fmt.Errorf(`ent: validator failed for field "year": %w`, err)}
+		}
+	}
+	if _, ok := wc.mutation.Month(); !ok {
+		return &ValidationError{Name: "month", err: errors.New(`ent: missing required field "month"`)}
+	}
+	if v, ok := wc.mutation.Month(); ok {
+		if err := work.MonthValidator(v); err != nil {
+			return &ValidationError{Name: "month", err: fmt.Errorf(`ent: validator failed for field "month": %w`, err)}
+		}
+	}
 	if _, ok := wc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
@@ -310,6 +386,46 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 		})
 		_node.Description = value
 	}
+	if value, ok := wc.mutation.Height(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldHeight,
+		})
+		_node.Height = value
+	}
+	if value, ok := wc.mutation.Width(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldWidth,
+		})
+		_node.Width = value
+	}
+	if value, ok := wc.mutation.SizeUnit(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldSizeUnit,
+		})
+		_node.SizeUnit = value
+	}
+	if value, ok := wc.mutation.Year(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldYear,
+		})
+		_node.Year = value
+	}
+	if value, ok := wc.mutation.Month(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldMonth,
+		})
+		_node.Month = value
+	}
 	if value, ok := wc.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -344,6 +460,25 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.category_works = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.ToolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.ToolsTable,
+			Columns: work.ToolsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tool.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wc.mutation.OwnerIDs(); len(nodes) > 0 {

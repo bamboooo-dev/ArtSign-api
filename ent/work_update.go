@@ -7,6 +7,7 @@ import (
 	"artsign/ent/comment"
 	"artsign/ent/image"
 	"artsign/ent/predicate"
+	"artsign/ent/tool"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -43,6 +44,64 @@ func (wu *WorkUpdate) SetDescription(s string) *WorkUpdate {
 	return wu
 }
 
+// SetHeight sets the "height" field.
+func (wu *WorkUpdate) SetHeight(f float64) *WorkUpdate {
+	wu.mutation.ResetHeight()
+	wu.mutation.SetHeight(f)
+	return wu
+}
+
+// AddHeight adds f to the "height" field.
+func (wu *WorkUpdate) AddHeight(f float64) *WorkUpdate {
+	wu.mutation.AddHeight(f)
+	return wu
+}
+
+// SetWidth sets the "width" field.
+func (wu *WorkUpdate) SetWidth(f float64) *WorkUpdate {
+	wu.mutation.ResetWidth()
+	wu.mutation.SetWidth(f)
+	return wu
+}
+
+// AddWidth adds f to the "width" field.
+func (wu *WorkUpdate) AddWidth(f float64) *WorkUpdate {
+	wu.mutation.AddWidth(f)
+	return wu
+}
+
+// SetSizeUnit sets the "size_unit" field.
+func (wu *WorkUpdate) SetSizeUnit(s string) *WorkUpdate {
+	wu.mutation.SetSizeUnit(s)
+	return wu
+}
+
+// SetYear sets the "year" field.
+func (wu *WorkUpdate) SetYear(i int) *WorkUpdate {
+	wu.mutation.ResetYear()
+	wu.mutation.SetYear(i)
+	return wu
+}
+
+// AddYear adds i to the "year" field.
+func (wu *WorkUpdate) AddYear(i int) *WorkUpdate {
+	wu.mutation.AddYear(i)
+	return wu
+}
+
+// SetMonth sets the "month" field.
+func (wu *WorkUpdate) SetMonth(i int) *WorkUpdate {
+	wu.mutation.ResetMonth()
+	wu.mutation.SetMonth(i)
+	return wu
+}
+
+// AddMonth adds i to the "month" field.
+func (wu *WorkUpdate) AddMonth(i int) *WorkUpdate {
+	wu.mutation.AddMonth(i)
+	return wu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (wu *WorkUpdate) SetUpdatedAt(t time.Time) *WorkUpdate {
 	wu.mutation.SetUpdatedAt(t)
@@ -74,6 +133,21 @@ func (wu *WorkUpdate) SetNillableCategoryID(id *int) *WorkUpdate {
 // SetCategory sets the "category" edge to the Category entity.
 func (wu *WorkUpdate) SetCategory(c *Category) *WorkUpdate {
 	return wu.SetCategoryID(c.ID)
+}
+
+// AddToolIDs adds the "tools" edge to the Tool entity by IDs.
+func (wu *WorkUpdate) AddToolIDs(ids ...int) *WorkUpdate {
+	wu.mutation.AddToolIDs(ids...)
+	return wu
+}
+
+// AddTools adds the "tools" edges to the Tool entity.
+func (wu *WorkUpdate) AddTools(t ...*Tool) *WorkUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wu.AddToolIDs(ids...)
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by ID.
@@ -164,6 +238,27 @@ func (wu *WorkUpdate) Mutation() *WorkMutation {
 func (wu *WorkUpdate) ClearCategory() *WorkUpdate {
 	wu.mutation.ClearCategory()
 	return wu
+}
+
+// ClearTools clears all "tools" edges to the Tool entity.
+func (wu *WorkUpdate) ClearTools() *WorkUpdate {
+	wu.mutation.ClearTools()
+	return wu
+}
+
+// RemoveToolIDs removes the "tools" edge to Tool entities by IDs.
+func (wu *WorkUpdate) RemoveToolIDs(ids ...int) *WorkUpdate {
+	wu.mutation.RemoveToolIDs(ids...)
+	return wu
+}
+
+// RemoveTools removes "tools" edges to Tool entities.
+func (wu *WorkUpdate) RemoveTools(t ...*Tool) *WorkUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wu.RemoveToolIDs(ids...)
 }
 
 // ClearOwner clears the "owner" edge to the User entity.
@@ -328,6 +423,21 @@ func (wu *WorkUpdate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf("ent: validator failed for field \"description\": %w", err)}
 		}
 	}
+	if v, ok := wu.mutation.SizeUnit(); ok {
+		if err := work.SizeUnitValidator(v); err != nil {
+			return &ValidationError{Name: "size_unit", err: fmt.Errorf("ent: validator failed for field \"size_unit\": %w", err)}
+		}
+	}
+	if v, ok := wu.mutation.Year(); ok {
+		if err := work.YearValidator(v); err != nil {
+			return &ValidationError{Name: "year", err: fmt.Errorf("ent: validator failed for field \"year\": %w", err)}
+		}
+	}
+	if v, ok := wu.mutation.Month(); ok {
+		if err := work.MonthValidator(v); err != nil {
+			return &ValidationError{Name: "month", err: fmt.Errorf("ent: validator failed for field \"month\": %w", err)}
+		}
+	}
 	return nil
 }
 
@@ -361,6 +471,69 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: work.FieldDescription,
+		})
+	}
+	if value, ok := wu.mutation.Height(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldHeight,
+		})
+	}
+	if value, ok := wu.mutation.AddedHeight(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldHeight,
+		})
+	}
+	if value, ok := wu.mutation.Width(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldWidth,
+		})
+	}
+	if value, ok := wu.mutation.AddedWidth(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldWidth,
+		})
+	}
+	if value, ok := wu.mutation.SizeUnit(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldSizeUnit,
+		})
+	}
+	if value, ok := wu.mutation.Year(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldYear,
+		})
+	}
+	if value, ok := wu.mutation.AddedYear(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldYear,
+		})
+	}
+	if value, ok := wu.mutation.Month(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldMonth,
+		})
+	}
+	if value, ok := wu.mutation.AddedMonth(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldMonth,
 		})
 	}
 	if value, ok := wu.mutation.UpdatedAt(); ok {
@@ -397,6 +570,60 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wu.mutation.ToolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.ToolsTable,
+			Columns: work.ToolsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tool.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedToolsIDs(); len(nodes) > 0 && !wu.mutation.ToolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.ToolsTable,
+			Columns: work.ToolsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tool.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.ToolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.ToolsTable,
+			Columns: work.ToolsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tool.FieldID,
 				},
 			},
 		}
@@ -687,6 +914,64 @@ func (wuo *WorkUpdateOne) SetDescription(s string) *WorkUpdateOne {
 	return wuo
 }
 
+// SetHeight sets the "height" field.
+func (wuo *WorkUpdateOne) SetHeight(f float64) *WorkUpdateOne {
+	wuo.mutation.ResetHeight()
+	wuo.mutation.SetHeight(f)
+	return wuo
+}
+
+// AddHeight adds f to the "height" field.
+func (wuo *WorkUpdateOne) AddHeight(f float64) *WorkUpdateOne {
+	wuo.mutation.AddHeight(f)
+	return wuo
+}
+
+// SetWidth sets the "width" field.
+func (wuo *WorkUpdateOne) SetWidth(f float64) *WorkUpdateOne {
+	wuo.mutation.ResetWidth()
+	wuo.mutation.SetWidth(f)
+	return wuo
+}
+
+// AddWidth adds f to the "width" field.
+func (wuo *WorkUpdateOne) AddWidth(f float64) *WorkUpdateOne {
+	wuo.mutation.AddWidth(f)
+	return wuo
+}
+
+// SetSizeUnit sets the "size_unit" field.
+func (wuo *WorkUpdateOne) SetSizeUnit(s string) *WorkUpdateOne {
+	wuo.mutation.SetSizeUnit(s)
+	return wuo
+}
+
+// SetYear sets the "year" field.
+func (wuo *WorkUpdateOne) SetYear(i int) *WorkUpdateOne {
+	wuo.mutation.ResetYear()
+	wuo.mutation.SetYear(i)
+	return wuo
+}
+
+// AddYear adds i to the "year" field.
+func (wuo *WorkUpdateOne) AddYear(i int) *WorkUpdateOne {
+	wuo.mutation.AddYear(i)
+	return wuo
+}
+
+// SetMonth sets the "month" field.
+func (wuo *WorkUpdateOne) SetMonth(i int) *WorkUpdateOne {
+	wuo.mutation.ResetMonth()
+	wuo.mutation.SetMonth(i)
+	return wuo
+}
+
+// AddMonth adds i to the "month" field.
+func (wuo *WorkUpdateOne) AddMonth(i int) *WorkUpdateOne {
+	wuo.mutation.AddMonth(i)
+	return wuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (wuo *WorkUpdateOne) SetUpdatedAt(t time.Time) *WorkUpdateOne {
 	wuo.mutation.SetUpdatedAt(t)
@@ -718,6 +1003,21 @@ func (wuo *WorkUpdateOne) SetNillableCategoryID(id *int) *WorkUpdateOne {
 // SetCategory sets the "category" edge to the Category entity.
 func (wuo *WorkUpdateOne) SetCategory(c *Category) *WorkUpdateOne {
 	return wuo.SetCategoryID(c.ID)
+}
+
+// AddToolIDs adds the "tools" edge to the Tool entity by IDs.
+func (wuo *WorkUpdateOne) AddToolIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.AddToolIDs(ids...)
+	return wuo
+}
+
+// AddTools adds the "tools" edges to the Tool entity.
+func (wuo *WorkUpdateOne) AddTools(t ...*Tool) *WorkUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wuo.AddToolIDs(ids...)
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by ID.
@@ -808,6 +1108,27 @@ func (wuo *WorkUpdateOne) Mutation() *WorkMutation {
 func (wuo *WorkUpdateOne) ClearCategory() *WorkUpdateOne {
 	wuo.mutation.ClearCategory()
 	return wuo
+}
+
+// ClearTools clears all "tools" edges to the Tool entity.
+func (wuo *WorkUpdateOne) ClearTools() *WorkUpdateOne {
+	wuo.mutation.ClearTools()
+	return wuo
+}
+
+// RemoveToolIDs removes the "tools" edge to Tool entities by IDs.
+func (wuo *WorkUpdateOne) RemoveToolIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.RemoveToolIDs(ids...)
+	return wuo
+}
+
+// RemoveTools removes "tools" edges to Tool entities.
+func (wuo *WorkUpdateOne) RemoveTools(t ...*Tool) *WorkUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return wuo.RemoveToolIDs(ids...)
 }
 
 // ClearOwner clears the "owner" edge to the User entity.
@@ -979,6 +1300,21 @@ func (wuo *WorkUpdateOne) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf("ent: validator failed for field \"description\": %w", err)}
 		}
 	}
+	if v, ok := wuo.mutation.SizeUnit(); ok {
+		if err := work.SizeUnitValidator(v); err != nil {
+			return &ValidationError{Name: "size_unit", err: fmt.Errorf("ent: validator failed for field \"size_unit\": %w", err)}
+		}
+	}
+	if v, ok := wuo.mutation.Year(); ok {
+		if err := work.YearValidator(v); err != nil {
+			return &ValidationError{Name: "year", err: fmt.Errorf("ent: validator failed for field \"year\": %w", err)}
+		}
+	}
+	if v, ok := wuo.mutation.Month(); ok {
+		if err := work.MonthValidator(v); err != nil {
+			return &ValidationError{Name: "month", err: fmt.Errorf("ent: validator failed for field \"month\": %w", err)}
+		}
+	}
 	return nil
 }
 
@@ -1031,6 +1367,69 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 			Column: work.FieldDescription,
 		})
 	}
+	if value, ok := wuo.mutation.Height(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldHeight,
+		})
+	}
+	if value, ok := wuo.mutation.AddedHeight(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldHeight,
+		})
+	}
+	if value, ok := wuo.mutation.Width(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldWidth,
+		})
+	}
+	if value, ok := wuo.mutation.AddedWidth(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat64,
+			Value:  value,
+			Column: work.FieldWidth,
+		})
+	}
+	if value, ok := wuo.mutation.SizeUnit(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: work.FieldSizeUnit,
+		})
+	}
+	if value, ok := wuo.mutation.Year(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldYear,
+		})
+	}
+	if value, ok := wuo.mutation.AddedYear(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldYear,
+		})
+	}
+	if value, ok := wuo.mutation.Month(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldMonth,
+		})
+	}
+	if value, ok := wuo.mutation.AddedMonth(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: work.FieldMonth,
+		})
+	}
 	if value, ok := wuo.mutation.UpdatedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -1065,6 +1464,60 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.ToolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.ToolsTable,
+			Columns: work.ToolsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tool.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedToolsIDs(); len(nodes) > 0 && !wuo.mutation.ToolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.ToolsTable,
+			Columns: work.ToolsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tool.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.ToolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   work.ToolsTable,
+			Columns: work.ToolsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tool.FieldID,
 				},
 			},
 		}
