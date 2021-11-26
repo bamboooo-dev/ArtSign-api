@@ -155,6 +155,7 @@ type Query {
     orderBy: UserOrder
     where: UserWhereInput
   ): UserConnection
+  categories: [Category]!
   node(id: ID!): Node
   nodes(ids: [ID!]!): [Node]!
 }

@@ -148,6 +148,10 @@ func (r *queryResolver) Users(ctx context.Context, after *ent.Cursor, first *int
 		)
 }
 
+func (r *queryResolver) Categories(ctx context.Context) ([]*ent.Category, error) {
+	return r.client.Category.Query().All(ctx)
+}
+
 func (r *queryResolver) Node(ctx context.Context, id int) (ent.Noder, error) {
 	return r.client.Noder(ctx, id)
 }
