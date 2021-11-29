@@ -51,10 +51,10 @@ jobs:
           project_id: ${{ secrets.GKE_PROJECT_DEV }}
 
       - uses: google-github-actions/get-gke-credentials@v0.2.1
-      with:
-        cluster_name: artsign-dev-cluster
-        location: asia-east1-a
-        credentials: ${{ secrets.GKE_SA_KEY_DEV }}
+        with:
+          cluster_name: artsign-dev-cluster
+          location: asia-east1-a
+          credentials: ${{ secrets.GKE_SA_KEY_DEV }}
 
       - name: Kube Set image
         uses: steebchen/kubectl@v2.0.0
