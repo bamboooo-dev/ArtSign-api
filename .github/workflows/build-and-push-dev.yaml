@@ -50,22 +50,10 @@ jobs:
           service_account_key: ${{ secrets.GKE_SA_KEY_DEV }}
           project_id: ${{ secrets.GKE_PROJECT_DEV }}
 
-      - uses: google-github-actions/get-gke-credentials@v0.2.1
-        with:
-          cluster_name: artsign-dev-cluster
-          location: asia-east1-a
-          credentials: ${{ secrets.GKE_SA_KEY_DEV }}
+      - run: |-
+        gcloud container clusters get-credentials "artsign-dev-cluster" --zone "asia-east1-a"
 
-      - name: Kube Set image
-        uses: steebchen/kubectl@v2.0.0
-        with:
-          config: ${{ secrets.GKE_ARTSIGN_DEV_KUBE_COFIG }}
-          version: v1.21.5
-          command: set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
-
-      - name: Verify deployment
-        uses: steebchen/kubectl@v2.0.0
-        with:
-          config: ${{ secrets.GKE_ARTSIGN_DEV_KUBE_COFIG }}
-          version: v1.21.5
-          command: rollout status -n artsign-api deployment/artsign-api
+      - name: Deploy
+        run: |-
+          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
+          kubectl rollout status -n artsign-api deployment/artsign-api
