@@ -55,5 +55,5 @@ jobs:
 
       - name: Deploy
         run: |-
-          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
-          kubectl rollout status -n artsign-api deployment/artsign-api
+        kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
+        kubectl rollout status -n artsign-api deployment/artsign-api
