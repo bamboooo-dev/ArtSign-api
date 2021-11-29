@@ -45,16 +45,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Kube Set image
-        uses: steebchen/kubectl@v2.0.0
+      - uses: google-github-actions/setup-gcloud@v0.2.0
         with:
-          config: ${{ secrets.GKE_ARTSIGN_DEV_KUBE_COFIG }}
-          version: v1.21.5
-          command: set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
+          service_account_key: ${{ secrets.GKE_SA_KEY_DEV }}
+          project_id: ${{ secrets.GKE_PROJECT_DEV }}
 
-      - name: Verify deployment
-        uses: steebchen/kubectl@v2.0.0
-        with:
-          config: ${{ secrets.GKE_ARTSIGN_DEV_KUBE_COFIG }}
-          version: v1.21.5
-          command: rollout status -n artsign-api deployment/artsign-api
+      - run: |-
+          gcloud container clusters get-credentials "artsign-dev-cluster" --zone "asia-east1-a"
+
+      - name: Deploy
+        run: |
+          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
+          kubectl rollout status -n artsign-api deployment/artsign-api
