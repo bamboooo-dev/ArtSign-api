@@ -51,9 +51,9 @@ jobs:
           project_id: ${{ secrets.GKE_PROJECT_DEV }}
 
       - run: |-
-        gcloud container clusters get-credentials "artsign-dev-cluster" --zone "asia-east1-a"
+          gcloud container clusters get-credentials "artsign-dev-cluster" --zone "asia-east1-a"
 
       - name: Deploy
-        run: |-
-        kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
-        kubectl rollout status -n artsign-api deployment/artsign-api
+        run: |
+          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
+          kubectl rollout status -n artsign-api deployment/artsign-api
