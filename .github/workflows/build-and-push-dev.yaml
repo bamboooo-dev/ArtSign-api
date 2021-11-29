@@ -3,7 +3,7 @@ name: Build and Push ArtSign api to dev cluser
 on:
   push:
     branches:
-      - main
+      - yamagai/modify-github-actions
 
 jobs:
   build-and-push-image:
@@ -45,6 +45,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          service_account_key: ${{ secrets.GKE_SA_KEY_DEV }}
+          project_id: ${{ secrets.GKE_PROJECT_DEV }}
+
+      - uses: google-github-actions/get-gke-credentials@v0.2.1
+      with:
+        cluster_name: artsign-dev-cluster
+        location: asia-east1-a
+        credentials: ${{ secrets.GKE_SA_KEY_DEV }}
+
       - name: Kube Set image
         uses: steebchen/kubectl@v2.0.0
         with:
