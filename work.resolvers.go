@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
 )
 
@@ -46,6 +47,7 @@ func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkI
 			Key:         aws.String(uuid.String()),
 			Body:        image.File,
 			ContentType: aws.String(image.ContentType),
+			ACL:         types.ObjectCannedACLPublicRead,
 		})
 		if err != nil {
 			return nil, err
