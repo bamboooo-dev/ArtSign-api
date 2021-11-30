@@ -23,7 +23,6 @@ type Work implements Node {
   updatedAt: Time
   title: String!
   description: String!
-  image_url: String!
   category: Category!
   owner: User!
   imageConnection(

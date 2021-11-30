@@ -7,7 +7,6 @@ import (
 	"artsign/ent"
 	"artsign/ent/work"
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -179,10 +178,6 @@ func (r *userResolver) TreasureConnection(ctx context.Context, obj *ent.User, af
 		Paginate(ctx, after, first, before, last,
 			ent.WithWorkOrder(orderBy),
 		)
-}
-
-func (r *workResolver) ImageURL(ctx context.Context, obj *ent.Work) (string, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *workResolver) ImageConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) (*ent.ImageConnection, error) {
