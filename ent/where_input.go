@@ -7,6 +7,7 @@ import (
 	"artsign/ent/comment"
 	"artsign/ent/image"
 	"artsign/ent/predicate"
+	"artsign/ent/tool"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"fmt"
@@ -798,6 +799,193 @@ func (i *ImageWhereInput) P() (predicate.Image, error) {
 	}
 }
 
+// ToolWhereInput represents a where input for filtering Tool queries.
+type ToolWhereInput struct {
+	Not *ToolWhereInput   `json:"not,omitempty"`
+	Or  []*ToolWhereInput `json:"or,omitempty"`
+	And []*ToolWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "name" field predicates.
+	Name             *string  `json:"name,omitempty"`
+	NameNEQ          *string  `json:"nameNEQ,omitempty"`
+	NameIn           []string `json:"nameIn,omitempty"`
+	NameNotIn        []string `json:"nameNotIn,omitempty"`
+	NameGT           *string  `json:"nameGT,omitempty"`
+	NameGTE          *string  `json:"nameGTE,omitempty"`
+	NameLT           *string  `json:"nameLT,omitempty"`
+	NameLTE          *string  `json:"nameLTE,omitempty"`
+	NameContains     *string  `json:"nameContains,omitempty"`
+	NameHasPrefix    *string  `json:"nameHasPrefix,omitempty"`
+	NameHasSuffix    *string  `json:"nameHasSuffix,omitempty"`
+	NameEqualFold    *string  `json:"nameEqualFold,omitempty"`
+	NameContainsFold *string  `json:"nameContainsFold,omitempty"`
+
+	// "works" edge predicates.
+	HasWorks     *bool             `json:"hasWorks,omitempty"`
+	HasWorksWith []*WorkWhereInput `json:"hasWorksWith,omitempty"`
+}
+
+// Filter applies the ToolWhereInput filter on the ToolQuery builder.
+func (i *ToolWhereInput) Filter(q *ToolQuery) (*ToolQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// P returns a predicate for filtering tools.
+// An error is returned if the input is empty or invalid.
+func (i *ToolWhereInput) P() (predicate.Tool, error) {
+	var predicates []predicate.Tool
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, tool.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.Tool, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, tool.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.Tool, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, tool.And(and...))
+	}
+	if i.ID != nil {
+		predicates = append(predicates, tool.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, tool.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, tool.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, tool.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, tool.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, tool.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, tool.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, tool.IDLTE(*i.IDLTE))
+	}
+	if i.Name != nil {
+		predicates = append(predicates, tool.NameEQ(*i.Name))
+	}
+	if i.NameNEQ != nil {
+		predicates = append(predicates, tool.NameNEQ(*i.NameNEQ))
+	}
+	if len(i.NameIn) > 0 {
+		predicates = append(predicates, tool.NameIn(i.NameIn...))
+	}
+	if len(i.NameNotIn) > 0 {
+		predicates = append(predicates, tool.NameNotIn(i.NameNotIn...))
+	}
+	if i.NameGT != nil {
+		predicates = append(predicates, tool.NameGT(*i.NameGT))
+	}
+	if i.NameGTE != nil {
+		predicates = append(predicates, tool.NameGTE(*i.NameGTE))
+	}
+	if i.NameLT != nil {
+		predicates = append(predicates, tool.NameLT(*i.NameLT))
+	}
+	if i.NameLTE != nil {
+		predicates = append(predicates, tool.NameLTE(*i.NameLTE))
+	}
+	if i.NameContains != nil {
+		predicates = append(predicates, tool.NameContains(*i.NameContains))
+	}
+	if i.NameHasPrefix != nil {
+		predicates = append(predicates, tool.NameHasPrefix(*i.NameHasPrefix))
+	}
+	if i.NameHasSuffix != nil {
+		predicates = append(predicates, tool.NameHasSuffix(*i.NameHasSuffix))
+	}
+	if i.NameEqualFold != nil {
+		predicates = append(predicates, tool.NameEqualFold(*i.NameEqualFold))
+	}
+	if i.NameContainsFold != nil {
+		predicates = append(predicates, tool.NameContainsFold(*i.NameContainsFold))
+	}
+
+	if i.HasWorks != nil {
+		p := tool.HasWorks()
+		if !*i.HasWorks {
+			p = tool.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasWorksWith) > 0 {
+		with := make([]predicate.Work, 0, len(i.HasWorksWith))
+		for _, w := range i.HasWorksWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, tool.HasWorksWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, fmt.Errorf("artsign/ent: empty predicate ToolWhereInput")
+	case 1:
+		return predicates[0], nil
+	default:
+		return tool.And(predicates...), nil
+	}
+}
+
 // UserWhereInput represents a where input for filtering User queries.
 type UserWhereInput struct {
 	Not *UserWhereInput   `json:"not,omitempty"`
@@ -1173,6 +1361,61 @@ type WorkWhereInput struct {
 	DescriptionEqualFold    *string  `json:"descriptionEqualFold,omitempty"`
 	DescriptionContainsFold *string  `json:"descriptionContainsFold,omitempty"`
 
+	// "height" field predicates.
+	Height      *float64  `json:"height,omitempty"`
+	HeightNEQ   *float64  `json:"heightNEQ,omitempty"`
+	HeightIn    []float64 `json:"heightIn,omitempty"`
+	HeightNotIn []float64 `json:"heightNotIn,omitempty"`
+	HeightGT    *float64  `json:"heightGT,omitempty"`
+	HeightGTE   *float64  `json:"heightGTE,omitempty"`
+	HeightLT    *float64  `json:"heightLT,omitempty"`
+	HeightLTE   *float64  `json:"heightLTE,omitempty"`
+
+	// "width" field predicates.
+	Width      *float64  `json:"width,omitempty"`
+	WidthNEQ   *float64  `json:"widthNEQ,omitempty"`
+	WidthIn    []float64 `json:"widthIn,omitempty"`
+	WidthNotIn []float64 `json:"widthNotIn,omitempty"`
+	WidthGT    *float64  `json:"widthGT,omitempty"`
+	WidthGTE   *float64  `json:"widthGTE,omitempty"`
+	WidthLT    *float64  `json:"widthLT,omitempty"`
+	WidthLTE   *float64  `json:"widthLTE,omitempty"`
+
+	// "size_unit" field predicates.
+	SizeUnit             *string  `json:"sizeUnit,omitempty"`
+	SizeUnitNEQ          *string  `json:"sizeUnitNEQ,omitempty"`
+	SizeUnitIn           []string `json:"sizeUnitIn,omitempty"`
+	SizeUnitNotIn        []string `json:"sizeUnitNotIn,omitempty"`
+	SizeUnitGT           *string  `json:"sizeUnitGT,omitempty"`
+	SizeUnitGTE          *string  `json:"sizeUnitGTE,omitempty"`
+	SizeUnitLT           *string  `json:"sizeUnitLT,omitempty"`
+	SizeUnitLTE          *string  `json:"sizeUnitLTE,omitempty"`
+	SizeUnitContains     *string  `json:"sizeUnitContains,omitempty"`
+	SizeUnitHasPrefix    *string  `json:"sizeUnitHasPrefix,omitempty"`
+	SizeUnitHasSuffix    *string  `json:"sizeUnitHasSuffix,omitempty"`
+	SizeUnitEqualFold    *string  `json:"sizeUnitEqualFold,omitempty"`
+	SizeUnitContainsFold *string  `json:"sizeUnitContainsFold,omitempty"`
+
+	// "year" field predicates.
+	Year      *int  `json:"year,omitempty"`
+	YearNEQ   *int  `json:"yearNEQ,omitempty"`
+	YearIn    []int `json:"yearIn,omitempty"`
+	YearNotIn []int `json:"yearNotIn,omitempty"`
+	YearGT    *int  `json:"yearGT,omitempty"`
+	YearGTE   *int  `json:"yearGTE,omitempty"`
+	YearLT    *int  `json:"yearLT,omitempty"`
+	YearLTE   *int  `json:"yearLTE,omitempty"`
+
+	// "month" field predicates.
+	Month      *int  `json:"month,omitempty"`
+	MonthNEQ   *int  `json:"monthNEQ,omitempty"`
+	MonthIn    []int `json:"monthIn,omitempty"`
+	MonthNotIn []int `json:"monthNotIn,omitempty"`
+	MonthGT    *int  `json:"monthGT,omitempty"`
+	MonthGTE   *int  `json:"monthGTE,omitempty"`
+	MonthLT    *int  `json:"monthLT,omitempty"`
+	MonthLTE   *int  `json:"monthLTE,omitempty"`
+
 	// "created_at" field predicates.
 	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
 	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
@@ -1196,6 +1439,10 @@ type WorkWhereInput struct {
 	// "category" edge predicates.
 	HasCategory     *bool                 `json:"hasCategory,omitempty"`
 	HasCategoryWith []*CategoryWhereInput `json:"hasCategoryWith,omitempty"`
+
+	// "tools" edge predicates.
+	HasTools     *bool             `json:"hasTools,omitempty"`
+	HasToolsWith []*ToolWhereInput `json:"hasToolsWith,omitempty"`
 
 	// "owner" edge predicates.
 	HasOwner     *bool             `json:"hasOwner,omitempty"`
@@ -1379,6 +1626,141 @@ func (i *WorkWhereInput) P() (predicate.Work, error) {
 	if i.DescriptionContainsFold != nil {
 		predicates = append(predicates, work.DescriptionContainsFold(*i.DescriptionContainsFold))
 	}
+	if i.Height != nil {
+		predicates = append(predicates, work.HeightEQ(*i.Height))
+	}
+	if i.HeightNEQ != nil {
+		predicates = append(predicates, work.HeightNEQ(*i.HeightNEQ))
+	}
+	if len(i.HeightIn) > 0 {
+		predicates = append(predicates, work.HeightIn(i.HeightIn...))
+	}
+	if len(i.HeightNotIn) > 0 {
+		predicates = append(predicates, work.HeightNotIn(i.HeightNotIn...))
+	}
+	if i.HeightGT != nil {
+		predicates = append(predicates, work.HeightGT(*i.HeightGT))
+	}
+	if i.HeightGTE != nil {
+		predicates = append(predicates, work.HeightGTE(*i.HeightGTE))
+	}
+	if i.HeightLT != nil {
+		predicates = append(predicates, work.HeightLT(*i.HeightLT))
+	}
+	if i.HeightLTE != nil {
+		predicates = append(predicates, work.HeightLTE(*i.HeightLTE))
+	}
+	if i.Width != nil {
+		predicates = append(predicates, work.WidthEQ(*i.Width))
+	}
+	if i.WidthNEQ != nil {
+		predicates = append(predicates, work.WidthNEQ(*i.WidthNEQ))
+	}
+	if len(i.WidthIn) > 0 {
+		predicates = append(predicates, work.WidthIn(i.WidthIn...))
+	}
+	if len(i.WidthNotIn) > 0 {
+		predicates = append(predicates, work.WidthNotIn(i.WidthNotIn...))
+	}
+	if i.WidthGT != nil {
+		predicates = append(predicates, work.WidthGT(*i.WidthGT))
+	}
+	if i.WidthGTE != nil {
+		predicates = append(predicates, work.WidthGTE(*i.WidthGTE))
+	}
+	if i.WidthLT != nil {
+		predicates = append(predicates, work.WidthLT(*i.WidthLT))
+	}
+	if i.WidthLTE != nil {
+		predicates = append(predicates, work.WidthLTE(*i.WidthLTE))
+	}
+	if i.SizeUnit != nil {
+		predicates = append(predicates, work.SizeUnitEQ(*i.SizeUnit))
+	}
+	if i.SizeUnitNEQ != nil {
+		predicates = append(predicates, work.SizeUnitNEQ(*i.SizeUnitNEQ))
+	}
+	if len(i.SizeUnitIn) > 0 {
+		predicates = append(predicates, work.SizeUnitIn(i.SizeUnitIn...))
+	}
+	if len(i.SizeUnitNotIn) > 0 {
+		predicates = append(predicates, work.SizeUnitNotIn(i.SizeUnitNotIn...))
+	}
+	if i.SizeUnitGT != nil {
+		predicates = append(predicates, work.SizeUnitGT(*i.SizeUnitGT))
+	}
+	if i.SizeUnitGTE != nil {
+		predicates = append(predicates, work.SizeUnitGTE(*i.SizeUnitGTE))
+	}
+	if i.SizeUnitLT != nil {
+		predicates = append(predicates, work.SizeUnitLT(*i.SizeUnitLT))
+	}
+	if i.SizeUnitLTE != nil {
+		predicates = append(predicates, work.SizeUnitLTE(*i.SizeUnitLTE))
+	}
+	if i.SizeUnitContains != nil {
+		predicates = append(predicates, work.SizeUnitContains(*i.SizeUnitContains))
+	}
+	if i.SizeUnitHasPrefix != nil {
+		predicates = append(predicates, work.SizeUnitHasPrefix(*i.SizeUnitHasPrefix))
+	}
+	if i.SizeUnitHasSuffix != nil {
+		predicates = append(predicates, work.SizeUnitHasSuffix(*i.SizeUnitHasSuffix))
+	}
+	if i.SizeUnitEqualFold != nil {
+		predicates = append(predicates, work.SizeUnitEqualFold(*i.SizeUnitEqualFold))
+	}
+	if i.SizeUnitContainsFold != nil {
+		predicates = append(predicates, work.SizeUnitContainsFold(*i.SizeUnitContainsFold))
+	}
+	if i.Year != nil {
+		predicates = append(predicates, work.YearEQ(*i.Year))
+	}
+	if i.YearNEQ != nil {
+		predicates = append(predicates, work.YearNEQ(*i.YearNEQ))
+	}
+	if len(i.YearIn) > 0 {
+		predicates = append(predicates, work.YearIn(i.YearIn...))
+	}
+	if len(i.YearNotIn) > 0 {
+		predicates = append(predicates, work.YearNotIn(i.YearNotIn...))
+	}
+	if i.YearGT != nil {
+		predicates = append(predicates, work.YearGT(*i.YearGT))
+	}
+	if i.YearGTE != nil {
+		predicates = append(predicates, work.YearGTE(*i.YearGTE))
+	}
+	if i.YearLT != nil {
+		predicates = append(predicates, work.YearLT(*i.YearLT))
+	}
+	if i.YearLTE != nil {
+		predicates = append(predicates, work.YearLTE(*i.YearLTE))
+	}
+	if i.Month != nil {
+		predicates = append(predicates, work.MonthEQ(*i.Month))
+	}
+	if i.MonthNEQ != nil {
+		predicates = append(predicates, work.MonthNEQ(*i.MonthNEQ))
+	}
+	if len(i.MonthIn) > 0 {
+		predicates = append(predicates, work.MonthIn(i.MonthIn...))
+	}
+	if len(i.MonthNotIn) > 0 {
+		predicates = append(predicates, work.MonthNotIn(i.MonthNotIn...))
+	}
+	if i.MonthGT != nil {
+		predicates = append(predicates, work.MonthGT(*i.MonthGT))
+	}
+	if i.MonthGTE != nil {
+		predicates = append(predicates, work.MonthGTE(*i.MonthGTE))
+	}
+	if i.MonthLT != nil {
+		predicates = append(predicates, work.MonthLT(*i.MonthLT))
+	}
+	if i.MonthLTE != nil {
+		predicates = append(predicates, work.MonthLTE(*i.MonthLTE))
+	}
 	if i.CreatedAt != nil {
 		predicates = append(predicates, work.CreatedAtEQ(*i.CreatedAt))
 	}
@@ -1445,6 +1827,24 @@ func (i *WorkWhereInput) P() (predicate.Work, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, work.HasCategoryWith(with...))
+	}
+	if i.HasTools != nil {
+		p := work.HasTools()
+		if !*i.HasTools {
+			p = work.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasToolsWith) > 0 {
+		with := make([]predicate.Tool, 0, len(i.HasToolsWith))
+		for _, w := range i.HasToolsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, work.HasToolsWith(with...))
 	}
 	if i.HasOwner != nil {
 		p := work.HasOwner()

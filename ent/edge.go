@@ -60,6 +60,14 @@ func (i *Image) Work(ctx context.Context) (*Work, error) {
 	return result, err
 }
 
+func (t *Tool) Works(ctx context.Context) ([]*Work, error) {
+	result, err := t.Edges.WorksOrErr()
+	if IsNotLoaded(err) {
+		result, err = t.QueryWorks().All(ctx)
+	}
+	return result, err
+}
+
 func (u *User) Works(ctx context.Context) ([]*Work, error) {
 	result, err := u.Edges.WorksOrErr()
 	if IsNotLoaded(err) {
@@ -106,6 +114,14 @@ func (w *Work) Category(ctx context.Context) (*Category, error) {
 		result, err = w.QueryCategory().Only(ctx)
 	}
 	return result, MaskNotFound(err)
+}
+
+func (w *Work) Tools(ctx context.Context) ([]*Tool, error) {
+	result, err := w.Edges.ToolsOrErr()
+	if IsNotLoaded(err) {
+		result, err = w.QueryTools().All(ctx)
+	}
+	return result, err
 }
 
 func (w *Work) Owner(ctx context.Context) (*User, error) {

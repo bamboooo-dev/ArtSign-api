@@ -24,6 +24,12 @@ func (Work) Fields() []ent.Field {
 			),
 		field.Text("description").
 			NotEmpty(),
+		field.Float("height"),
+		field.Float("width"),
+		field.String("size_unit").
+			NotEmpty(),
+		field.Int("year").Positive(),
+		field.Int("month").Max(12).Min(1),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
@@ -45,6 +51,8 @@ func (Work) Edges() []ent.Edge {
 		edge.From("category", Category.Type).
 			Ref("works").
 			Unique(),
+		edge.From("tools", Tool.Type).
+			Ref("works"),
 		edge.From("owner", User.Type).
 			Ref("works").
 			Unique(),

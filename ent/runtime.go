@@ -7,6 +7,7 @@ import (
 	"artsign/ent/comment"
 	"artsign/ent/image"
 	"artsign/ent/schema"
+	"artsign/ent/tool"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"time"
@@ -64,6 +65,12 @@ func init() {
 	imageDescURL := imageFields[0].Descriptor()
 	// image.URLValidator is a validator for the "url" field. It is called by the builders before save.
 	image.URLValidator = imageDescURL.Validators[0].(func(string) error)
+	toolFields := schema.Tool{}.Fields()
+	_ = toolFields
+	// toolDescName is the schema descriptor for name field.
+	toolDescName := toolFields[0].Descriptor()
+	// tool.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tool.NameValidator = toolDescName.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescName is the schema descriptor for name field.
@@ -80,12 +87,38 @@ func init() {
 	workDescDescription := workFields[1].Descriptor()
 	// work.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	work.DescriptionValidator = workDescDescription.Validators[0].(func(string) error)
+	// workDescSizeUnit is the schema descriptor for size_unit field.
+	workDescSizeUnit := workFields[4].Descriptor()
+	// work.SizeUnitValidator is a validator for the "size_unit" field. It is called by the builders before save.
+	work.SizeUnitValidator = workDescSizeUnit.Validators[0].(func(string) error)
+	// workDescYear is the schema descriptor for year field.
+	workDescYear := workFields[5].Descriptor()
+	// work.YearValidator is a validator for the "year" field. It is called by the builders before save.
+	work.YearValidator = workDescYear.Validators[0].(func(int) error)
+	// workDescMonth is the schema descriptor for month field.
+	workDescMonth := workFields[6].Descriptor()
+	// work.MonthValidator is a validator for the "month" field. It is called by the builders before save.
+	work.MonthValidator = func() func(int) error {
+		validators := workDescMonth.Validators
+		fns := [...]func(int) error{
+			validators[0].(func(int) error),
+			validators[1].(func(int) error),
+		}
+		return func(month int) error {
+			for _, fn := range fns {
+				if err := fn(month); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// workDescCreatedAt is the schema descriptor for created_at field.
-	workDescCreatedAt := workFields[2].Descriptor()
+	workDescCreatedAt := workFields[7].Descriptor()
 	// work.DefaultCreatedAt holds the default value on creation for the created_at field.
 	work.DefaultCreatedAt = workDescCreatedAt.Default.(func() time.Time)
 	// workDescUpdatedAt is the schema descriptor for updated_at field.
-	workDescUpdatedAt := workFields[3].Descriptor()
+	workDescUpdatedAt := workFields[8].Descriptor()
 	// work.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	work.DefaultUpdatedAt = workDescUpdatedAt.Default.(func() time.Time)
 }

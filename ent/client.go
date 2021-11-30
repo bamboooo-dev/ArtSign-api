@@ -12,6 +12,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/tool"
 	"artsign/ent/user"
 	"artsign/ent/work"
 
@@ -31,6 +32,8 @@ type Client struct {
 	Comment *CommentClient
 	// Image is the client for interacting with the Image builders.
 	Image *ImageClient
+	// Tool is the client for interacting with the Tool builders.
+	Tool *ToolClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// Work is the client for interacting with the Work builders.
@@ -53,6 +56,7 @@ func (c *Client) init() {
 	c.Category = NewCategoryClient(c.config)
 	c.Comment = NewCommentClient(c.config)
 	c.Image = NewImageClient(c.config)
+	c.Tool = NewToolClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Work = NewWorkClient(c.config)
 }
@@ -91,6 +95,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Category: NewCategoryClient(cfg),
 		Comment:  NewCommentClient(cfg),
 		Image:    NewImageClient(cfg),
+		Tool:     NewToolClient(cfg),
 		User:     NewUserClient(cfg),
 		Work:     NewWorkClient(cfg),
 	}, nil
@@ -114,6 +119,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Category: NewCategoryClient(cfg),
 		Comment:  NewCommentClient(cfg),
 		Image:    NewImageClient(cfg),
+		Tool:     NewToolClient(cfg),
 		User:     NewUserClient(cfg),
 		Work:     NewWorkClient(cfg),
 	}, nil
@@ -148,6 +154,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Category.Use(hooks...)
 	c.Comment.Use(hooks...)
 	c.Image.Use(hooks...)
+	c.Tool.Use(hooks...)
 	c.User.Use(hooks...)
 	c.Work.Use(hooks...)
 }
@@ -534,6 +541,112 @@ func (c *ImageClient) Hooks() []Hook {
 	return c.hooks.Image
 }
 
+// ToolClient is a client for the Tool schema.
+type ToolClient struct {
+	config
+}
+
+// NewToolClient returns a client for the Tool from the given config.
+func NewToolClient(c config) *ToolClient {
+	return &ToolClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tool.Hooks(f(g(h())))`.
+func (c *ToolClient) Use(hooks ...Hook) {
+	c.hooks.Tool = append(c.hooks.Tool, hooks...)
+}
+
+// Create returns a create builder for Tool.
+func (c *ToolClient) Create() *ToolCreate {
+	mutation := newToolMutation(c.config, OpCreate)
+	return &ToolCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Tool entities.
+func (c *ToolClient) CreateBulk(builders ...*ToolCreate) *ToolCreateBulk {
+	return &ToolCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Tool.
+func (c *ToolClient) Update() *ToolUpdate {
+	mutation := newToolMutation(c.config, OpUpdate)
+	return &ToolUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ToolClient) UpdateOne(t *Tool) *ToolUpdateOne {
+	mutation := newToolMutation(c.config, OpUpdateOne, withTool(t))
+	return &ToolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ToolClient) UpdateOneID(id int) *ToolUpdateOne {
+	mutation := newToolMutation(c.config, OpUpdateOne, withToolID(id))
+	return &ToolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Tool.
+func (c *ToolClient) Delete() *ToolDelete {
+	mutation := newToolMutation(c.config, OpDelete)
+	return &ToolDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *ToolClient) DeleteOne(t *Tool) *ToolDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *ToolClient) DeleteOneID(id int) *ToolDeleteOne {
+	builder := c.Delete().Where(tool.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ToolDeleteOne{builder}
+}
+
+// Query returns a query builder for Tool.
+func (c *ToolClient) Query() *ToolQuery {
+	return &ToolQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Tool entity by its id.
+func (c *ToolClient) Get(ctx context.Context, id int) (*Tool, error) {
+	return c.Query().Where(tool.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ToolClient) GetX(ctx context.Context, id int) *Tool {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryWorks queries the works edge of a Tool.
+func (c *ToolClient) QueryWorks(t *Tool) *WorkQuery {
+	query := &WorkQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tool.Table, tool.FieldID, id),
+			sqlgraph.To(work.Table, work.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, tool.WorksTable, tool.WorksPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ToolClient) Hooks() []Hook {
+	return c.hooks.Tool
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -798,6 +911,22 @@ func (c *WorkClient) QueryCategory(w *Work) *CategoryQuery {
 			sqlgraph.From(work.Table, work.FieldID, id),
 			sqlgraph.To(category.Table, category.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, work.CategoryTable, work.CategoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTools queries the tools edge of a Work.
+func (c *WorkClient) QueryTools(w *Work) *ToolQuery {
+	query := &ToolQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, id),
+			sqlgraph.To(tool.Table, tool.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, work.ToolsTable, work.ToolsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
 		return fromV, nil

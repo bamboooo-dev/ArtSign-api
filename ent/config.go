@@ -27,6 +27,7 @@ type hooks struct {
 	Category []ent.Hook
 	Comment  []ent.Hook
 	Image    []ent.Hook
+	Tool     []ent.Hook
 	User     []ent.Hook
 	Work     []ent.Hook
 }

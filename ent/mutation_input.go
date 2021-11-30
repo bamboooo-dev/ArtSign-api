@@ -220,6 +220,58 @@ func (u *ImageUpdateOne) SetInput(i UpdateImageInput) *ImageUpdateOne {
 	return u
 }
 
+// CreateToolInput represents a mutation input for creating tools.
+type CreateToolInput struct {
+	Name    string
+	WorkIDs []int
+}
+
+// Mutate applies the CreateToolInput on the ToolCreate builder.
+func (i *CreateToolInput) Mutate(m *ToolCreate) {
+	m.SetName(i.Name)
+	if ids := i.WorkIDs; len(ids) > 0 {
+		m.AddWorkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the CreateToolInput on the create builder.
+func (c *ToolCreate) SetInput(i CreateToolInput) *ToolCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateToolInput represents a mutation input for updating tools.
+type UpdateToolInput struct {
+	Name          *string
+	AddWorkIDs    []int
+	RemoveWorkIDs []int
+}
+
+// Mutate applies the UpdateToolInput on the ToolMutation.
+func (i *UpdateToolInput) Mutate(m *ToolMutation) {
+	if v := i.Name; v != nil {
+		m.SetName(*v)
+	}
+	if ids := i.AddWorkIDs; len(ids) > 0 {
+		m.AddWorkIDs(ids...)
+	}
+	if ids := i.RemoveWorkIDs; len(ids) > 0 {
+		m.RemoveWorkIDs(ids...)
+	}
+}
+
+// SetInput applies the change-set in the UpdateToolInput on the update builder.
+func (u *ToolUpdate) SetInput(i UpdateToolInput) *ToolUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateToolInput on the update-one builder.
+func (u *ToolUpdateOne) SetInput(i UpdateToolInput) *ToolUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
 	Name           string
@@ -330,9 +382,15 @@ func (u *UserUpdateOne) SetInput(i UpdateUserInput) *UserUpdateOne {
 type CreateWorkInput struct {
 	Title        string
 	Description  string
+	Height       float64
+	Width        float64
+	SizeUnit     string
+	Year         int
+	Month        int
 	CreatedAt    *time.Time
 	UpdatedAt    *time.Time
 	CategoryID   *int
+	ToolIDs      []int
 	OwnerID      *int
 	LikerIDs     []int
 	TreasurerIDs []int
@@ -344,6 +402,11 @@ type CreateWorkInput struct {
 func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	m.SetTitle(i.Title)
 	m.SetDescription(i.Description)
+	m.SetHeight(i.Height)
+	m.SetWidth(i.Width)
+	m.SetSizeUnit(i.SizeUnit)
+	m.SetYear(i.Year)
+	m.SetMonth(i.Month)
 	if v := i.CreatedAt; v != nil {
 		m.SetCreatedAt(*v)
 	}
@@ -352,6 +415,9 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	}
 	if v := i.CategoryID; v != nil {
 		m.SetCategoryID(*v)
+	}
+	if ids := i.ToolIDs; len(ids) > 0 {
+		m.AddToolIDs(ids...)
 	}
 	if v := i.OwnerID; v != nil {
 		m.SetOwnerID(*v)
@@ -380,9 +446,16 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 type UpdateWorkInput struct {
 	Title              *string
 	Description        *string
+	Height             *float64
+	Width              *float64
+	SizeUnit           *string
+	Year               *int
+	Month              *int
 	UpdatedAt          *time.Time
 	CategoryID         *int
 	ClearCategory      bool
+	AddToolIDs         []int
+	RemoveToolIDs      []int
 	OwnerID            *int
 	ClearOwner         bool
 	AddLikerIDs        []int
@@ -403,6 +476,21 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	if v := i.Description; v != nil {
 		m.SetDescription(*v)
 	}
+	if v := i.Height; v != nil {
+		m.SetHeight(*v)
+	}
+	if v := i.Width; v != nil {
+		m.SetWidth(*v)
+	}
+	if v := i.SizeUnit; v != nil {
+		m.SetSizeUnit(*v)
+	}
+	if v := i.Year; v != nil {
+		m.SetYear(*v)
+	}
+	if v := i.Month; v != nil {
+		m.SetMonth(*v)
+	}
 	if v := i.UpdatedAt; v != nil {
 		m.SetUpdatedAt(*v)
 	}
@@ -411,6 +499,12 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	}
 	if v := i.CategoryID; v != nil {
 		m.SetCategoryID(*v)
+	}
+	if ids := i.AddToolIDs; len(ids) > 0 {
+		m.AddToolIDs(ids...)
+	}
+	if ids := i.RemoveToolIDs; len(ids) > 0 {
+		m.RemoveToolIDs(ids...)
 	}
 	if i.ClearOwner {
 		m.ClearOwner()
