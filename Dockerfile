@@ -11,6 +11,7 @@ RUN make
 FROM debian:buster-slim
 
 WORKDIR /artsign
+RUN apt update && apt install -y ca-certificates
 COPY ./entry-point.sh ./entry-point.sh
 COPY --from=go_build /artsign/bin/ ./bin/
 
