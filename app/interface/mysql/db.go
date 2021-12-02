@@ -26,6 +26,7 @@ type Config struct {
 
 	Loc       string
 	Collation string
+	Tls       string
 }
 
 func NewClient(db *sql.DB) (*ent.Client, error) {
@@ -79,6 +80,7 @@ func buildConnectionString(cfg Config) (string, error) {
 	mysqlCfg.Passwd = cfg.Password
 
 	mysqlCfg.ParseTime = true
+	mysqlCfg.TLSConfig = cfg.Tls
 
 	if cfg.Loc != "" {
 		loc, err := time.LoadLocation(cfg.Loc)
