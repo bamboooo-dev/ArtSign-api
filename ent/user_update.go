@@ -40,6 +40,12 @@ func (uu *UserUpdate) SetProfile(s string) *UserUpdate {
 	return uu
 }
 
+// SetAvatarURL sets the "avatar_url" field.
+func (uu *UserUpdate) SetAvatarURL(s string) *UserUpdate {
+	uu.mutation.SetAvatarURL(s)
+	return uu
+}
+
 // AddWorkIDs adds the "works" edge to the Work entity by IDs.
 func (uu *UserUpdate) AddWorkIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddWorkIDs(ids...)
@@ -325,6 +331,13 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: user.FieldProfile,
+		})
+	}
+	if value, ok := uu.mutation.AvatarURL(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldAvatarURL,
 		})
 	}
 	if uu.mutation.WorksCleared() {
@@ -625,6 +638,12 @@ func (uuo *UserUpdateOne) SetName(s string) *UserUpdateOne {
 // SetProfile sets the "profile" field.
 func (uuo *UserUpdateOne) SetProfile(s string) *UserUpdateOne {
 	uuo.mutation.SetProfile(s)
+	return uuo
+}
+
+// SetAvatarURL sets the "avatar_url" field.
+func (uuo *UserUpdateOne) SetAvatarURL(s string) *UserUpdateOne {
+	uuo.mutation.SetAvatarURL(s)
 	return uuo
 }
 
@@ -937,6 +956,13 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Type:   field.TypeString,
 			Value:  value,
 			Column: user.FieldProfile,
+		})
+	}
+	if value, ok := uuo.mutation.AvatarURL(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldAvatarURL,
 		})
 	}
 	if uuo.mutation.WorksCleared() {

@@ -21,6 +21,7 @@ func (User) Fields() []ent.Field {
 				entgql.OrderField("NAME"),
 			),
 		field.Text("profile"),
+		field.String("avatar_url"),
 	}
 }
 

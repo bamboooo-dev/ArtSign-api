@@ -2035,6 +2035,7 @@ type UserMutation struct {
 	id                   *int
 	name                 *string
 	profile              *string
+	avatar_url           *string
 	clearedFields        map[string]struct{}
 	works                map[int]struct{}
 	removedworks         map[int]struct{}
@@ -2205,6 +2206,42 @@ func (m *UserMutation) OldProfile(ctx context.Context) (v string, err error) {
 // ResetProfile resets all changes to the "profile" field.
 func (m *UserMutation) ResetProfile() {
 	m.profile = nil
+}
+
+// SetAvatarURL sets the "avatar_url" field.
+func (m *UserMutation) SetAvatarURL(s string) {
+	m.avatar_url = &s
+}
+
+// AvatarURL returns the value of the "avatar_url" field in the mutation.
+func (m *UserMutation) AvatarURL() (r string, exists bool) {
+	v := m.avatar_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvatarURL returns the old "avatar_url" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldAvatarURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldAvatarURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldAvatarURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvatarURL: %w", err)
+	}
+	return oldValue.AvatarURL, nil
+}
+
+// ResetAvatarURL resets all changes to the "avatar_url" field.
+func (m *UserMutation) ResetAvatarURL() {
+	m.avatar_url = nil
 }
 
 // AddWorkIDs adds the "works" edge to the Work entity by ids.
@@ -2496,12 +2533,15 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.name != nil {
 		fields = append(fields, user.FieldName)
 	}
 	if m.profile != nil {
 		fields = append(fields, user.FieldProfile)
+	}
+	if m.avatar_url != nil {
+		fields = append(fields, user.FieldAvatarURL)
 	}
 	return fields
 }
@@ -2515,6 +2555,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case user.FieldProfile:
 		return m.Profile()
+	case user.FieldAvatarURL:
+		return m.AvatarURL()
 	}
 	return nil, false
 }
@@ -2528,6 +2570,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldName(ctx)
 	case user.FieldProfile:
 		return m.OldProfile(ctx)
+	case user.FieldAvatarURL:
+		return m.OldAvatarURL(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -2550,6 +2594,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProfile(v)
+		return nil
+	case user.FieldAvatarURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvatarURL(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -2605,6 +2656,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldProfile:
 		m.ResetProfile()
+		return nil
+	case user.FieldAvatarURL:
+		m.ResetAvatarURL()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

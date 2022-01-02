@@ -11,6 +11,8 @@ const (
 	FieldName = "name"
 	// FieldProfile holds the string denoting the profile field in the database.
 	FieldProfile = "profile"
+	// FieldAvatarURL holds the string denoting the avatar_url field in the database.
+	FieldAvatarURL = "avatar_url"
 	// EdgeWorks holds the string denoting the works edge name in mutations.
 	EdgeWorks = "works"
 	// EdgeLikes holds the string denoting the likes edge name in mutations.
@@ -59,6 +61,7 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldProfile,
+	FieldAvatarURL,
 }
 
 var (

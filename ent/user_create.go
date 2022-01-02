@@ -33,6 +33,12 @@ func (uc *UserCreate) SetProfile(s string) *UserCreate {
 	return uc
 }
 
+// SetAvatarURL sets the "avatar_url" field.
+func (uc *UserCreate) SetAvatarURL(s string) *UserCreate {
+	uc.mutation.SetAvatarURL(s)
+	return uc
+}
+
 // AddWorkIDs adds the "works" edge to the Work entity by IDs.
 func (uc *UserCreate) AddWorkIDs(ids ...int) *UserCreate {
 	uc.mutation.AddWorkIDs(ids...)
@@ -189,6 +195,9 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Profile(); !ok {
 		return &ValidationError{Name: "profile", err: errors.New(`ent: missing required field "profile"`)}
 	}
+	if _, ok := uc.mutation.AvatarURL(); !ok {
+		return &ValidationError{Name: "avatar_url", err: errors.New(`ent: missing required field "avatar_url"`)}
+	}
 	return nil
 }
 
@@ -231,6 +240,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldProfile,
 		})
 		_node.Profile = value
+	}
+	if value, ok := uc.mutation.AvatarURL(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldAvatarURL,
+		})
+		_node.AvatarURL = value
 	}
 	if nodes := uc.mutation.WorksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

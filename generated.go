@@ -59,6 +59,7 @@ type ComplexityRoot struct {
 		CreateTime         func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		LikerConnection    func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
+		Owner              func(childComplexity int) int
 		Parent             func(childComplexity int) int
 		UpdateTime         func(childComplexity int) int
 	}
@@ -129,7 +130,13 @@ type ComplexityRoot struct {
 		Works      func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) int
 	}
 
+	Tool struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
+	}
+
 	User struct {
+		AvatarURL          func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		LikeConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) int
 		Name               func(childComplexity int) int
@@ -154,12 +161,18 @@ type ComplexityRoot struct {
 		CommentConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) int
 		CreatedAt         func(childComplexity int) int
 		Description       func(childComplexity int) int
+		Height            func(childComplexity int) int
 		ID                func(childComplexity int) int
 		ImageConnection   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) int
 		LikerConnection   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
+		Month             func(childComplexity int) int
 		Owner             func(childComplexity int) int
+		SizeUnit          func(childComplexity int) int
 		Title             func(childComplexity int) int
+		Tools             func(childComplexity int) int
 		UpdatedAt         func(childComplexity int) int
+		Width             func(childComplexity int) int
+		Year              func(childComplexity int) int
 	}
 
 	WorkConnection struct {
@@ -280,6 +293,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Comment.LikerConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder)), true
+
+	case "Comment.owner":
+		if e.complexity.Comment.Owner == nil {
+			break
+		}
+
+		return e.complexity.Comment.Owner(childComplexity), true
 
 	case "Comment.parent":
 		if e.complexity.Comment.Parent == nil {
@@ -591,6 +611,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Works(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.WorkOrder), args["where"].(*ent.WorkWhereInput)), true
 
+	case "Tool.id":
+		if e.complexity.Tool.ID == nil {
+			break
+		}
+
+		return e.complexity.Tool.ID(childComplexity), true
+
+	case "Tool.name":
+		if e.complexity.Tool.Name == nil {
+			break
+		}
+
+		return e.complexity.Tool.Name(childComplexity), true
+
+	case "User.avatarURL":
+		if e.complexity.User.AvatarURL == nil {
+			break
+		}
+
+		return e.complexity.User.AvatarURL(childComplexity), true
+
 	case "User.id":
 		if e.complexity.User.ID == nil {
 			break
@@ -716,6 +757,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Work.Description(childComplexity), true
 
+	case "Work.height":
+		if e.complexity.Work.Height == nil {
+			break
+		}
+
+		return e.complexity.Work.Height(childComplexity), true
+
 	case "Work.id":
 		if e.complexity.Work.ID == nil {
 			break
@@ -747,12 +795,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Work.LikerConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder)), true
 
+	case "Work.month":
+		if e.complexity.Work.Month == nil {
+			break
+		}
+
+		return e.complexity.Work.Month(childComplexity), true
+
 	case "Work.owner":
 		if e.complexity.Work.Owner == nil {
 			break
 		}
 
 		return e.complexity.Work.Owner(childComplexity), true
+
+	case "Work.sizeUnit":
+		if e.complexity.Work.SizeUnit == nil {
+			break
+		}
+
+		return e.complexity.Work.SizeUnit(childComplexity), true
 
 	case "Work.title":
 		if e.complexity.Work.Title == nil {
@@ -761,12 +823,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Work.Title(childComplexity), true
 
+	case "Work.tools":
+		if e.complexity.Work.Tools == nil {
+			break
+		}
+
+		return e.complexity.Work.Tools(childComplexity), true
+
 	case "Work.updatedAt":
 		if e.complexity.Work.UpdatedAt == nil {
 			break
 		}
 
 		return e.complexity.Work.UpdatedAt(childComplexity), true
+
+	case "Work.width":
+		if e.complexity.Work.Width == nil {
+			break
+		}
+
+		return e.complexity.Work.Width(childComplexity), true
+
+	case "Work.year":
+		if e.complexity.Work.Year == nil {
+			break
+		}
+
+		return e.complexity.Work.Year(childComplexity), true
 
 	case "WorkConnection.edges":
 		if e.complexity.WorkConnection.Edges == nil {
@@ -892,8 +975,14 @@ type Work implements Node {
   updatedAt: Time
   title: String!
   description: String!
+  height: Float
+  width: Float
+  sizeUnit: String!
+  year: Int!
+  month: Int!
   category: Category!
   owner: User!
+  tools: [Tool]!
   imageConnection(
     after: Cursor
     first: Int
@@ -932,6 +1021,7 @@ type User implements Node {
   id: ID!
   name: String!
   profile: String
+  avatarURL: String
   workConnection(
     after: Cursor
     first: Int
@@ -961,6 +1051,7 @@ type Comment implements Node {
   createTime: Time!
   updateTime: Time!
   parent: Comment
+  owner: User
   childrenConnection(
     after: Cursor
     first: Int
@@ -975,6 +1066,11 @@ type Comment implements Node {
     last: Int
     orderBy: UserOrder
   ): UserConnection
+}
+
+type Tool {
+  id: ID!
+  name: String!
 }
 
 type CreateUserLikePayload {
@@ -1489,6 +1585,21 @@ input UserWhereInput {
   profileHasSuffix: String
   profileEqualFold: String
   profileContainsFold: String
+  
+  """avatar_url field predicates"""
+  avatarURL: String
+  avatarURLNEQ: String
+  avatarURLIn: [String!]
+  avatarURLNotIn: [String!]
+  avatarURLGT: String
+  avatarURLGTE: String
+  avatarURLLT: String
+  avatarURLLTE: String
+  avatarURLContains: String
+  avatarURLHasPrefix: String
+  avatarURLHasSuffix: String
+  avatarURLEqualFold: String
+  avatarURLContainsFold: String
   
   """id field predicates"""
   id: ID
@@ -2657,6 +2768,38 @@ func (ec *executionContext) _Comment_parent(ctx context.Context, field graphql.C
 	res := resTmp.(*ent.Comment)
 	fc.Result = res
 	return ec.marshalOComment2ᚖartsignᚋentᚐComment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Comment_owner(ctx context.Context, field graphql.CollectedField, obj *ent.Comment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Comment",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Comment_childrenConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Comment) (ret graphql.Marshaler) {
@@ -4009,6 +4152,76 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Tool_id(ctx context.Context, field graphql.CollectedField, obj *ent.Tool) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Tool",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Tool_name(ctx context.Context, field graphql.CollectedField, obj *ent.Tool) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Tool",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4098,6 +4311,38 @@ func (ec *executionContext) _User_profile(ctx context.Context, field graphql.Col
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Profile, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_avatarURL(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AvatarURL, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4566,6 +4811,175 @@ func (ec *executionContext) _Work_description(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Work_height(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalOFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Work_width(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Width, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalOFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Work_sizeUnit(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SizeUnit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Work_year(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Work_month(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Month, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Work_category(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4634,6 +5048,41 @@ func (ec *executionContext) _Work_owner(ctx context.Context, field graphql.Colle
 	res := resTmp.(*ent.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Work_tools(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tools(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Tool)
+	fc.Result = res
+	return ec.marshalNTool2ᚕᚖartsignᚋentᚐTool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Work_imageConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
@@ -7950,6 +8399,110 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
+		case "avatarURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURL"))
+			it.AvatarURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLNEQ"))
+			it.AvatarURLNEQ, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLIn"))
+			it.AvatarURLIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLNotIn"))
+			it.AvatarURLNotIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLGT"))
+			it.AvatarURLGT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLGTE"))
+			it.AvatarURLGTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLLT"))
+			it.AvatarURLLT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLLTE"))
+			it.AvatarURLLTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLContains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLContains"))
+			it.AvatarURLContains, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLHasPrefix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLHasPrefix"))
+			it.AvatarURLHasPrefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLHasSuffix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLHasSuffix"))
+			it.AvatarURLHasSuffix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLEqualFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLEqualFold"))
+			it.AvatarURLEqualFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURLContainsFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURLContainsFold"))
+			it.AvatarURLContainsFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "id":
 			var err error
 
@@ -9158,6 +9711,17 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 				res = ec._Comment_parent(ctx, field, obj)
 				return res
 			})
+		case "owner":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Comment_owner(ctx, field, obj)
+				return res
+			})
 		case "childrenConnection":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -9610,6 +10174,38 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var toolImplementors = []string{"Tool"}
+
+func (ec *executionContext) _Tool(ctx context.Context, sel ast.SelectionSet, obj *ent.Tool) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, toolImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Tool")
+		case "id":
+			out.Values[i] = ec._Tool_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Tool_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var userImplementors = []string{"User", "Node"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *ent.User) graphql.Marshaler {
@@ -9633,6 +10229,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "profile":
 			out.Values[i] = ec._User_profile(ctx, field, obj)
+		case "avatarURL":
+			out.Values[i] = ec._User_avatarURL(ctx, field, obj)
 		case "workConnection":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -9770,6 +10368,25 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "height":
+			out.Values[i] = ec._Work_height(ctx, field, obj)
+		case "width":
+			out.Values[i] = ec._Work_width(ctx, field, obj)
+		case "sizeUnit":
+			out.Values[i] = ec._Work_sizeUnit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "year":
+			out.Values[i] = ec._Work_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "month":
+			out.Values[i] = ec._Work_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "category":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -9793,6 +10410,20 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Work_owner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "tools":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Work_tools(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -10499,6 +11130,44 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTool2ᚕᚖartsignᚋentᚐTool(ctx context.Context, sel ast.SelectionSet, v []*ent.Tool) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOTool2ᚖartsignᚋentᚐTool(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNToolWhereInput2ᚖartsignᚋentᚐToolWhereInput(ctx context.Context, v interface{}) (*ent.ToolWhereInput, error) {
@@ -11538,6 +12207,13 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 		return graphql.Null
 	}
 	return graphql.MarshalTime(*v)
+}
+
+func (ec *executionContext) marshalOTool2ᚖartsignᚋentᚐTool(ctx context.Context, sel ast.SelectionSet, v *ent.Tool) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Tool(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOToolWhereInput2ᚕᚖartsignᚋentᚐToolWhereInputᚄ(ctx context.Context, v interface{}) ([]*ent.ToolWhereInput, error) {
