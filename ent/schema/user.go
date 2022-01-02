@@ -20,7 +20,13 @@ func (User) Fields() []ent.Field {
 			Annotations(
 				entgql.OrderField("NAME"),
 			),
+		field.String("username").
+			NotEmpty().
+			Annotations(
+				entgql.OrderField("USERNAME"),
+			),
 		field.Text("profile"),
+		field.String("avatar_url"),
 	}
 }
 

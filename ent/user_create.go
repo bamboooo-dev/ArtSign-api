@@ -27,9 +27,21 @@ func (uc *UserCreate) SetName(s string) *UserCreate {
 	return uc
 }
 
+// SetUsername sets the "username" field.
+func (uc *UserCreate) SetUsername(s string) *UserCreate {
+	uc.mutation.SetUsername(s)
+	return uc
+}
+
 // SetProfile sets the "profile" field.
 func (uc *UserCreate) SetProfile(s string) *UserCreate {
 	uc.mutation.SetProfile(s)
+	return uc
+}
+
+// SetAvatarURL sets the "avatar_url" field.
+func (uc *UserCreate) SetAvatarURL(s string) *UserCreate {
+	uc.mutation.SetAvatarURL(s)
 	return uc
 }
 
@@ -186,8 +198,19 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "name": %w`, err)}
 		}
 	}
+	if _, ok := uc.mutation.Username(); !ok {
+		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "username"`)}
+	}
+	if v, ok := uc.mutation.Username(); ok {
+		if err := user.UsernameValidator(v); err != nil {
+			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "username": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.Profile(); !ok {
 		return &ValidationError{Name: "profile", err: errors.New(`ent: missing required field "profile"`)}
+	}
+	if _, ok := uc.mutation.AvatarURL(); !ok {
+		return &ValidationError{Name: "avatar_url", err: errors.New(`ent: missing required field "avatar_url"`)}
 	}
 	return nil
 }
@@ -224,6 +247,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		})
 		_node.Name = value
 	}
+	if value, ok := uc.mutation.Username(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldUsername,
+		})
+		_node.Username = value
+	}
 	if value, ok := uc.mutation.Profile(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -231,6 +262,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldProfile,
 		})
 		_node.Profile = value
+	}
+	if value, ok := uc.mutation.AvatarURL(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldAvatarURL,
+		})
+		_node.AvatarURL = value
 	}
 	if nodes := uc.mutation.WorksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

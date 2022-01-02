@@ -289,6 +289,21 @@ input UserWhereInput {
   nameEqualFold: String
   nameContainsFold: String
   
+  """username field predicates"""
+  username: String
+  usernameNEQ: String
+  usernameIn: [String!]
+  usernameNotIn: [String!]
+  usernameGT: String
+  usernameGTE: String
+  usernameLT: String
+  usernameLTE: String
+  usernameContains: String
+  usernameHasPrefix: String
+  usernameHasSuffix: String
+  usernameEqualFold: String
+  usernameContainsFold: String
+  
   """profile field predicates"""
   profile: String
   profileNEQ: String
@@ -303,6 +318,21 @@ input UserWhereInput {
   profileHasSuffix: String
   profileEqualFold: String
   profileContainsFold: String
+  
+  """avatar_url field predicates"""
+  avatarURL: String
+  avatarURLNEQ: String
+  avatarURLIn: [String!]
+  avatarURLNotIn: [String!]
+  avatarURLGT: String
+  avatarURLGTE: String
+  avatarURLLT: String
+  avatarURLLTE: String
+  avatarURLContains: String
+  avatarURLHasPrefix: String
+  avatarURLHasSuffix: String
+  avatarURLEqualFold: String
+  avatarURLContainsFold: String
   
   """id field predicates"""
   id: ID

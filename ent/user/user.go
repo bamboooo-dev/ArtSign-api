@@ -9,8 +9,12 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldUsername holds the string denoting the username field in the database.
+	FieldUsername = "username"
 	// FieldProfile holds the string denoting the profile field in the database.
 	FieldProfile = "profile"
+	// FieldAvatarURL holds the string denoting the avatar_url field in the database.
+	FieldAvatarURL = "avatar_url"
 	// EdgeWorks holds the string denoting the works edge name in mutations.
 	EdgeWorks = "works"
 	// EdgeLikes holds the string denoting the likes edge name in mutations.
@@ -58,7 +62,9 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldName,
+	FieldUsername,
 	FieldProfile,
+	FieldAvatarURL,
 }
 
 var (
@@ -86,4 +92,6 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
+	UsernameValidator func(string) error
 )

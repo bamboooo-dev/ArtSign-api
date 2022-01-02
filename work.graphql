@@ -23,8 +23,14 @@ type Work implements Node {
   updatedAt: Time
   title: String!
   description: String!
+  height: Float
+  width: Float
+  sizeUnit: String!
+  year: Int!
+  month: Int!
   category: Category!
   owner: User!
+  tools: [Tool]!
   imageConnection(
     after: Cursor
     first: Int
@@ -62,7 +68,9 @@ type Image implements Node {
 type User implements Node {
   id: ID!
   name: String!
+  username: String!
   profile: String
+  avatarURL: String
   workConnection(
     after: Cursor
     first: Int
@@ -92,6 +100,7 @@ type Comment implements Node {
   createTime: Time!
   updateTime: Time!
   parent: Comment
+  owner: User
   childrenConnection(
     after: Cursor
     first: Int
@@ -106,6 +115,11 @@ type Comment implements Node {
     last: Int
     orderBy: UserOrder
   ): UserConnection
+}
+
+type Tool {
+  id: ID!
+  name: String!
 }
 
 type CreateUserLikePayload {

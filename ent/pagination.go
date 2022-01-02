@@ -1549,6 +1549,16 @@ var (
 			}
 		},
 	}
+	// UserOrderFieldUsername orders User by username.
+	UserOrderFieldUsername = &UserOrderField{
+		field: user.FieldUsername,
+		toCursor: func(u *User) Cursor {
+			return Cursor{
+				ID:    u.ID,
+				Value: u.Username,
+			}
+		},
+	}
 )
 
 // String implement fmt.Stringer interface.
@@ -1557,6 +1567,8 @@ func (f UserOrderField) String() string {
 	switch f.field {
 	case user.FieldName:
 		str = "NAME"
+	case user.FieldUsername:
+		str = "USERNAME"
 	}
 	return str
 }
@@ -1575,6 +1587,8 @@ func (f *UserOrderField) UnmarshalGQL(v interface{}) error {
 	switch str {
 	case "NAME":
 		*f = *UserOrderFieldName
+	case "USERNAME":
+		*f = *UserOrderFieldUsername
 	default:
 		return fmt.Errorf("%s is not a valid UserOrderField", str)
 	}

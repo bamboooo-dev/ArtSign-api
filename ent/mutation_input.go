@@ -275,7 +275,9 @@ func (u *ToolUpdateOne) SetInput(i UpdateToolInput) *ToolUpdateOne {
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
 	Name           string
+	Username       string
 	Profile        string
+	AvatarURL      string
 	WorkIDs        []int
 	LikeIDs        []int
 	TreasureIDs    []int
@@ -286,7 +288,9 @@ type CreateUserInput struct {
 // Mutate applies the CreateUserInput on the UserCreate builder.
 func (i *CreateUserInput) Mutate(m *UserCreate) {
 	m.SetName(i.Name)
+	m.SetUsername(i.Username)
 	m.SetProfile(i.Profile)
+	m.SetAvatarURL(i.AvatarURL)
 	if ids := i.WorkIDs; len(ids) > 0 {
 		m.AddWorkIDs(ids...)
 	}
@@ -313,7 +317,9 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
 	Name                 *string
+	Username             *string
 	Profile              *string
+	AvatarURL            *string
 	AddWorkIDs           []int
 	RemoveWorkIDs        []int
 	AddLikeIDs           []int
@@ -331,8 +337,14 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	if v := i.Name; v != nil {
 		m.SetName(*v)
 	}
+	if v := i.Username; v != nil {
+		m.SetUsername(*v)
+	}
 	if v := i.Profile; v != nil {
 		m.SetProfile(*v)
+	}
+	if v := i.AvatarURL; v != nil {
+		m.SetAvatarURL(*v)
 	}
 	if ids := i.AddWorkIDs; len(ids) > 0 {
 		m.AddWorkIDs(ids...)
