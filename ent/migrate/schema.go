@@ -92,6 +92,7 @@ var (
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
+		{Name: "username", Type: field.TypeString},
 		{Name: "profile", Type: field.TypeString, Size: 2147483647},
 		{Name: "avatar_url", Type: field.TypeString},
 	}

@@ -68,6 +68,7 @@ type Image implements Node {
 type User implements Node {
   id: ID!
   name: String!
+  username: String!
   profile: String
   avatarURL: String
   workConnection(

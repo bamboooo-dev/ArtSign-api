@@ -27,6 +27,12 @@ func (uc *UserCreate) SetName(s string) *UserCreate {
 	return uc
 }
 
+// SetUsername sets the "username" field.
+func (uc *UserCreate) SetUsername(s string) *UserCreate {
+	uc.mutation.SetUsername(s)
+	return uc
+}
+
 // SetProfile sets the "profile" field.
 func (uc *UserCreate) SetProfile(s string) *UserCreate {
 	uc.mutation.SetProfile(s)
@@ -192,6 +198,14 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "name": %w`, err)}
 		}
 	}
+	if _, ok := uc.mutation.Username(); !ok {
+		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "username"`)}
+	}
+	if v, ok := uc.mutation.Username(); ok {
+		if err := user.UsernameValidator(v); err != nil {
+			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "username": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.Profile(); !ok {
 		return &ValidationError{Name: "profile", err: errors.New(`ent: missing required field "profile"`)}
 	}
@@ -232,6 +246,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldName,
 		})
 		_node.Name = value
+	}
+	if value, ok := uc.mutation.Username(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldUsername,
+		})
+		_node.Username = value
 	}
 	if value, ok := uc.mutation.Profile(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

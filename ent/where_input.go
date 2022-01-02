@@ -1017,6 +1017,21 @@ type UserWhereInput struct {
 	NameEqualFold    *string  `json:"nameEqualFold,omitempty"`
 	NameContainsFold *string  `json:"nameContainsFold,omitempty"`
 
+	// "username" field predicates.
+	Username             *string  `json:"username,omitempty"`
+	UsernameNEQ          *string  `json:"usernameNEQ,omitempty"`
+	UsernameIn           []string `json:"usernameIn,omitempty"`
+	UsernameNotIn        []string `json:"usernameNotIn,omitempty"`
+	UsernameGT           *string  `json:"usernameGT,omitempty"`
+	UsernameGTE          *string  `json:"usernameGTE,omitempty"`
+	UsernameLT           *string  `json:"usernameLT,omitempty"`
+	UsernameLTE          *string  `json:"usernameLTE,omitempty"`
+	UsernameContains     *string  `json:"usernameContains,omitempty"`
+	UsernameHasPrefix    *string  `json:"usernameHasPrefix,omitempty"`
+	UsernameHasSuffix    *string  `json:"usernameHasSuffix,omitempty"`
+	UsernameEqualFold    *string  `json:"usernameEqualFold,omitempty"`
+	UsernameContainsFold *string  `json:"usernameContainsFold,omitempty"`
+
 	// "profile" field predicates.
 	Profile             *string  `json:"profile,omitempty"`
 	ProfileNEQ          *string  `json:"profileNEQ,omitempty"`
@@ -1189,6 +1204,45 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 	}
 	if i.NameContainsFold != nil {
 		predicates = append(predicates, user.NameContainsFold(*i.NameContainsFold))
+	}
+	if i.Username != nil {
+		predicates = append(predicates, user.UsernameEQ(*i.Username))
+	}
+	if i.UsernameNEQ != nil {
+		predicates = append(predicates, user.UsernameNEQ(*i.UsernameNEQ))
+	}
+	if len(i.UsernameIn) > 0 {
+		predicates = append(predicates, user.UsernameIn(i.UsernameIn...))
+	}
+	if len(i.UsernameNotIn) > 0 {
+		predicates = append(predicates, user.UsernameNotIn(i.UsernameNotIn...))
+	}
+	if i.UsernameGT != nil {
+		predicates = append(predicates, user.UsernameGT(*i.UsernameGT))
+	}
+	if i.UsernameGTE != nil {
+		predicates = append(predicates, user.UsernameGTE(*i.UsernameGTE))
+	}
+	if i.UsernameLT != nil {
+		predicates = append(predicates, user.UsernameLT(*i.UsernameLT))
+	}
+	if i.UsernameLTE != nil {
+		predicates = append(predicates, user.UsernameLTE(*i.UsernameLTE))
+	}
+	if i.UsernameContains != nil {
+		predicates = append(predicates, user.UsernameContains(*i.UsernameContains))
+	}
+	if i.UsernameHasPrefix != nil {
+		predicates = append(predicates, user.UsernameHasPrefix(*i.UsernameHasPrefix))
+	}
+	if i.UsernameHasSuffix != nil {
+		predicates = append(predicates, user.UsernameHasSuffix(*i.UsernameHasSuffix))
+	}
+	if i.UsernameEqualFold != nil {
+		predicates = append(predicates, user.UsernameEqualFold(*i.UsernameEqualFold))
+	}
+	if i.UsernameContainsFold != nil {
+		predicates = append(predicates, user.UsernameContainsFold(*i.UsernameContainsFold))
 	}
 	if i.Profile != nil {
 		predicates = append(predicates, user.ProfileEQ(*i.Profile))
