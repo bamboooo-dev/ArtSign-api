@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/comment"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -75,17 +76,17 @@ func (uc *UserCreate) AddLikes(w ...*Work) *UserCreate {
 	return uc.AddLikeIDs(ids...)
 }
 
-// AddTreasureIDs adds the "treasures" edge to the Work entity by IDs.
+// AddTreasureIDs adds the "treasures" edge to the Treasure entity by IDs.
 func (uc *UserCreate) AddTreasureIDs(ids ...int) *UserCreate {
 	uc.mutation.AddTreasureIDs(ids...)
 	return uc
 }
 
-// AddTreasures adds the "treasures" edges to the Work entity.
-func (uc *UserCreate) AddTreasures(w ...*Work) *UserCreate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+// AddTreasures adds the "treasures" edges to the Treasure entity.
+func (uc *UserCreate) AddTreasures(t ...*Treasure) *UserCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
 	return uc.AddTreasureIDs(ids...)
 }
@@ -311,15 +312,15 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.TreasuresIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.TreasuresTable,
-			Columns: user.TreasuresPrimaryKey,
+			Columns: []string{user.TreasuresColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: treasure.FieldID,
 				},
 			},
 		}

@@ -272,6 +272,68 @@ func (u *ToolUpdateOne) SetInput(i UpdateToolInput) *ToolUpdateOne {
 	return u
 }
 
+// CreateTreasureInput represents a mutation input for creating treasures.
+type CreateTreasureInput struct {
+	CreateTime *time.Time
+	UpdateTime *time.Time
+	OwnerID    int
+	WorkID     int
+}
+
+// Mutate applies the CreateTreasureInput on the TreasureCreate builder.
+func (i *CreateTreasureInput) Mutate(m *TreasureCreate) {
+	if v := i.CreateTime; v != nil {
+		m.SetCreateTime(*v)
+	}
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	m.SetOwnerID(i.OwnerID)
+	m.SetWorkID(i.WorkID)
+}
+
+// SetInput applies the change-set in the CreateTreasureInput on the create builder.
+func (c *TreasureCreate) SetInput(i CreateTreasureInput) *TreasureCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateTreasureInput represents a mutation input for updating treasures.
+type UpdateTreasureInput struct {
+	OwnerID    *int
+	ClearOwner bool
+	WorkID     *int
+	ClearWork  bool
+}
+
+// Mutate applies the UpdateTreasureInput on the TreasureMutation.
+func (i *UpdateTreasureInput) Mutate(m *TreasureMutation) {
+	if i.ClearOwner {
+		m.ClearOwner()
+	}
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
+	}
+	if i.ClearWork {
+		m.ClearWork()
+	}
+	if v := i.WorkID; v != nil {
+		m.SetWorkID(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdateTreasureInput on the update builder.
+func (u *TreasureUpdate) SetInput(i UpdateTreasureInput) *TreasureUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateTreasureInput on the update-one builder.
+func (u *TreasureUpdateOne) SetInput(i UpdateTreasureInput) *TreasureUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
 	Name           string
@@ -392,22 +454,22 @@ func (u *UserUpdateOne) SetInput(i UpdateUserInput) *UserUpdateOne {
 
 // CreateWorkInput represents a mutation input for creating works.
 type CreateWorkInput struct {
-	Title        string
-	Description  string
-	Height       float64
-	Width        float64
-	SizeUnit     string
-	Year         int
-	Month        int
-	CreatedAt    *time.Time
-	UpdatedAt    *time.Time
-	CategoryID   *int
-	ToolIDs      []int
-	OwnerID      *int
-	LikerIDs     []int
-	TreasurerIDs []int
-	CommentIDs   []int
-	ImageIDs     []int
+	Title       string
+	Description string
+	Height      float64
+	Width       float64
+	SizeUnit    string
+	Year        int
+	Month       int
+	CreatedAt   *time.Time
+	UpdatedAt   *time.Time
+	CategoryID  *int
+	ToolIDs     []int
+	OwnerID     *int
+	LikerIDs    []int
+	TreasureIDs []int
+	CommentIDs  []int
+	ImageIDs    []int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
@@ -437,8 +499,8 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	if ids := i.LikerIDs; len(ids) > 0 {
 		m.AddLikerIDs(ids...)
 	}
-	if ids := i.TreasurerIDs; len(ids) > 0 {
-		m.AddTreasurerIDs(ids...)
+	if ids := i.TreasureIDs; len(ids) > 0 {
+		m.AddTreasureIDs(ids...)
 	}
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
@@ -456,28 +518,28 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 
 // UpdateWorkInput represents a mutation input for updating works.
 type UpdateWorkInput struct {
-	Title              *string
-	Description        *string
-	Height             *float64
-	Width              *float64
-	SizeUnit           *string
-	Year               *int
-	Month              *int
-	UpdatedAt          *time.Time
-	CategoryID         *int
-	ClearCategory      bool
-	AddToolIDs         []int
-	RemoveToolIDs      []int
-	OwnerID            *int
-	ClearOwner         bool
-	AddLikerIDs        []int
-	RemoveLikerIDs     []int
-	AddTreasurerIDs    []int
-	RemoveTreasurerIDs []int
-	AddCommentIDs      []int
-	RemoveCommentIDs   []int
-	AddImageIDs        []int
-	RemoveImageIDs     []int
+	Title             *string
+	Description       *string
+	Height            *float64
+	Width             *float64
+	SizeUnit          *string
+	Year              *int
+	Month             *int
+	UpdatedAt         *time.Time
+	CategoryID        *int
+	ClearCategory     bool
+	AddToolIDs        []int
+	RemoveToolIDs     []int
+	OwnerID           *int
+	ClearOwner        bool
+	AddLikerIDs       []int
+	RemoveLikerIDs    []int
+	AddTreasureIDs    []int
+	RemoveTreasureIDs []int
+	AddCommentIDs     []int
+	RemoveCommentIDs  []int
+	AddImageIDs       []int
+	RemoveImageIDs    []int
 }
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
@@ -530,11 +592,11 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	if ids := i.RemoveLikerIDs; len(ids) > 0 {
 		m.RemoveLikerIDs(ids...)
 	}
-	if ids := i.AddTreasurerIDs; len(ids) > 0 {
-		m.AddTreasurerIDs(ids...)
+	if ids := i.AddTreasureIDs; len(ids) > 0 {
+		m.AddTreasureIDs(ids...)
 	}
-	if ids := i.RemoveTreasurerIDs; len(ids) > 0 {
-		m.RemoveTreasurerIDs(ids...)
+	if ids := i.RemoveTreasureIDs; len(ids) > 0 {
+		m.RemoveTreasureIDs(ids...)
 	}
 	if ids := i.AddCommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)

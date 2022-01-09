@@ -7,6 +7,7 @@ import (
 	"artsign/ent/comment"
 	"artsign/ent/image"
 	"artsign/ent/tool"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -239,6 +240,53 @@ func (t *Tool) Node(ctx context.Context) (node *Node, err error) {
 	return node, nil
 }
 
+func (t *Treasure) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     t.ID,
+		Type:   "Treasure",
+		Fields: make([]*Field, 2),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(t.CreateTime); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "create_time",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(t.UpdateTime); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "update_time",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "owner",
+	}
+	err = t.QueryOwner().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "Work",
+		Name: "work",
+	}
+	err = t.QueryWork().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
 func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     u.ID,
@@ -300,11 +348,11 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[2] = &Edge{
-		Type: "Work",
+		Type: "Treasure",
 		Name: "treasures",
 	}
 	err = u.QueryTreasures().
-		Select(work.FieldID).
+		Select(treasure.FieldID).
 		Scan(ctx, &node.Edges[2].IDs)
 	if err != nil {
 		return nil, err
@@ -453,11 +501,11 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[4] = &Edge{
-		Type: "User",
-		Name: "treasurers",
+		Type: "Treasure",
+		Name: "treasures",
 	}
-	err = w.QueryTreasurers().
-		Select(user.FieldID).
+	err = w.QueryTreasures().
+		Select(treasure.FieldID).
 		Scan(ctx, &node.Edges[4].IDs)
 	if err != nil {
 		return nil, err
@@ -583,6 +631,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 		n, err := c.Tool.Query().
 			Where(tool.ID(id)).
 			CollectFields(ctx, "Tool").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case treasure.Table:
+		n, err := c.Treasure.Query().
+			Where(treasure.ID(id)).
+			CollectFields(ctx, "Treasure").
 			Only(ctx)
 		if err != nil {
 			return nil, err
@@ -722,6 +779,19 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		nodes, err := c.Tool.Query().
 			Where(tool.IDIn(ids...)).
 			CollectFields(ctx, "Tool").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case treasure.Table:
+		nodes, err := c.Treasure.Query().
+			Where(treasure.IDIn(ids...)).
+			CollectFields(ctx, "Treasure").
 			All(ctx)
 		if err != nil {
 			return nil, err

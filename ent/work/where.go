@@ -1057,25 +1057,25 @@ func HasLikersWith(preds ...predicate.User) predicate.Work {
 	})
 }
 
-// HasTreasurers applies the HasEdge predicate on the "treasurers" edge.
-func HasTreasurers() predicate.Work {
+// HasTreasures applies the HasEdge predicate on the "treasures" edge.
+func HasTreasures() predicate.Work {
 	return predicate.Work(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TreasurersTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, TreasurersTable, TreasurersPrimaryKey...),
+			sqlgraph.To(TreasuresTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TreasuresTable, TreasuresColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTreasurersWith applies the HasEdge predicate on the "treasurers" edge with a given conditions (other predicates).
-func HasTreasurersWith(preds ...predicate.User) predicate.Work {
+// HasTreasuresWith applies the HasEdge predicate on the "treasures" edge with a given conditions (other predicates).
+func HasTreasuresWith(preds ...predicate.Treasure) predicate.Work {
 	return predicate.Work(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TreasurersInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, TreasurersTable, TreasurersPrimaryKey...),
+			sqlgraph.To(TreasuresInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TreasuresTable, TreasuresColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

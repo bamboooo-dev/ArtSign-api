@@ -88,6 +88,34 @@ var (
 		Columns:    ToolsColumns,
 		PrimaryKey: []*schema.Column{ToolsColumns[0]},
 	}
+	// TreasuresColumns holds the columns for the "treasures" table.
+	TreasuresColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "user_treasures", Type: field.TypeInt, Nullable: true},
+		{Name: "work_treasures", Type: field.TypeInt, Nullable: true},
+	}
+	// TreasuresTable holds the schema information for the "treasures" table.
+	TreasuresTable = &schema.Table{
+		Name:       "treasures",
+		Columns:    TreasuresColumns,
+		PrimaryKey: []*schema.Column{TreasuresColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "treasures_users_treasures",
+				Columns:    []*schema.Column{TreasuresColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "treasures_works_treasures",
+				Columns:    []*schema.Column{TreasuresColumns[4]},
+				RefColumns: []*schema.Column{WorksColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -187,31 +215,6 @@ var (
 			},
 		},
 	}
-	// UserTreasuresColumns holds the columns for the "user_treasures" table.
-	UserTreasuresColumns = []*schema.Column{
-		{Name: "user_id", Type: field.TypeInt},
-		{Name: "work_id", Type: field.TypeInt},
-	}
-	// UserTreasuresTable holds the schema information for the "user_treasures" table.
-	UserTreasuresTable = &schema.Table{
-		Name:       "user_treasures",
-		Columns:    UserTreasuresColumns,
-		PrimaryKey: []*schema.Column{UserTreasuresColumns[0], UserTreasuresColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "user_treasures_user_id",
-				Columns:    []*schema.Column{UserTreasuresColumns[0]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "user_treasures_work_id",
-				Columns:    []*schema.Column{UserTreasuresColumns[1]},
-				RefColumns: []*schema.Column{WorksColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// UserLikeCommentsColumns holds the columns for the "user_like_comments" table.
 	UserLikeCommentsColumns = []*schema.Column{
 		{Name: "user_id", Type: field.TypeInt},
@@ -243,11 +246,11 @@ var (
 		CommentsTable,
 		ImagesTable,
 		ToolsTable,
+		TreasuresTable,
 		UsersTable,
 		WorksTable,
 		ToolWorksTable,
 		UserLikesTable,
-		UserTreasuresTable,
 		UserLikeCommentsTable,
 	}
 )
@@ -257,14 +260,14 @@ func init() {
 	CommentsTable.ForeignKeys[1].RefTable = UsersTable
 	CommentsTable.ForeignKeys[2].RefTable = WorksTable
 	ImagesTable.ForeignKeys[0].RefTable = WorksTable
+	TreasuresTable.ForeignKeys[0].RefTable = UsersTable
+	TreasuresTable.ForeignKeys[1].RefTable = WorksTable
 	WorksTable.ForeignKeys[0].RefTable = CategoriesTable
 	WorksTable.ForeignKeys[1].RefTable = UsersTable
 	ToolWorksTable.ForeignKeys[0].RefTable = ToolsTable
 	ToolWorksTable.ForeignKeys[1].RefTable = WorksTable
 	UserLikesTable.ForeignKeys[0].RefTable = UsersTable
 	UserLikesTable.ForeignKeys[1].RefTable = WorksTable
-	UserTreasuresTable.ForeignKeys[0].RefTable = UsersTable
-	UserTreasuresTable.ForeignKeys[1].RefTable = WorksTable
 	UserLikeCommentsTable.ForeignKeys[0].RefTable = UsersTable
 	UserLikeCommentsTable.ForeignKeys[1].RefTable = CommentsTable
 }

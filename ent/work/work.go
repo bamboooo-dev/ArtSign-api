@@ -37,8 +37,8 @@ const (
 	EdgeOwner = "owner"
 	// EdgeLikers holds the string denoting the likers edge name in mutations.
 	EdgeLikers = "likers"
-	// EdgeTreasurers holds the string denoting the treasurers edge name in mutations.
-	EdgeTreasurers = "treasurers"
+	// EdgeTreasures holds the string denoting the treasures edge name in mutations.
+	EdgeTreasures = "treasures"
 	// EdgeComments holds the string denoting the comments edge name in mutations.
 	EdgeComments = "comments"
 	// EdgeImages holds the string denoting the images edge name in mutations.
@@ -69,11 +69,13 @@ const (
 	// LikersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	LikersInverseTable = "users"
-	// TreasurersTable is the table that holds the treasurers relation/edge. The primary key declared below.
-	TreasurersTable = "user_treasures"
-	// TreasurersInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	TreasurersInverseTable = "users"
+	// TreasuresTable is the table that holds the treasures relation/edge.
+	TreasuresTable = "treasures"
+	// TreasuresInverseTable is the table name for the Treasure entity.
+	// It exists in this package in order to avoid circular dependency with the "treasure" package.
+	TreasuresInverseTable = "treasures"
+	// TreasuresColumn is the table column denoting the treasures relation/edge.
+	TreasuresColumn = "work_treasures"
 	// CommentsTable is the table that holds the comments relation/edge.
 	CommentsTable = "comments"
 	// CommentsInverseTable is the table name for the Comment entity.
@@ -118,9 +120,6 @@ var (
 	// LikersPrimaryKey and LikersColumn2 are the table columns denoting the
 	// primary key for the likers relation (M2M).
 	LikersPrimaryKey = []string{"user_id", "work_id"}
-	// TreasurersPrimaryKey and TreasurersColumn2 are the table columns denoting the
-	// primary key for the treasurers relation (M2M).
-	TreasurersPrimaryKey = []string{"user_id", "work_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

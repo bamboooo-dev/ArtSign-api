@@ -5,6 +5,7 @@ package ent
 import (
 	"artsign/ent/comment"
 	"artsign/ent/predicate"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -82,17 +83,17 @@ func (uu *UserUpdate) AddLikes(w ...*Work) *UserUpdate {
 	return uu.AddLikeIDs(ids...)
 }
 
-// AddTreasureIDs adds the "treasures" edge to the Work entity by IDs.
+// AddTreasureIDs adds the "treasures" edge to the Treasure entity by IDs.
 func (uu *UserUpdate) AddTreasureIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddTreasureIDs(ids...)
 	return uu
 }
 
-// AddTreasures adds the "treasures" edges to the Work entity.
-func (uu *UserUpdate) AddTreasures(w ...*Work) *UserUpdate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+// AddTreasures adds the "treasures" edges to the Treasure entity.
+func (uu *UserUpdate) AddTreasures(t ...*Treasure) *UserUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
 	return uu.AddTreasureIDs(ids...)
 }
@@ -174,23 +175,23 @@ func (uu *UserUpdate) RemoveLikes(w ...*Work) *UserUpdate {
 	return uu.RemoveLikeIDs(ids...)
 }
 
-// ClearTreasures clears all "treasures" edges to the Work entity.
+// ClearTreasures clears all "treasures" edges to the Treasure entity.
 func (uu *UserUpdate) ClearTreasures() *UserUpdate {
 	uu.mutation.ClearTreasures()
 	return uu
 }
 
-// RemoveTreasureIDs removes the "treasures" edge to Work entities by IDs.
+// RemoveTreasureIDs removes the "treasures" edge to Treasure entities by IDs.
 func (uu *UserUpdate) RemoveTreasureIDs(ids ...int) *UserUpdate {
 	uu.mutation.RemoveTreasureIDs(ids...)
 	return uu
 }
 
-// RemoveTreasures removes "treasures" edges to Work entities.
-func (uu *UserUpdate) RemoveTreasures(w ...*Work) *UserUpdate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+// RemoveTreasures removes "treasures" edges to Treasure entities.
+func (uu *UserUpdate) RemoveTreasures(t ...*Treasure) *UserUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
 	return uu.RemoveTreasureIDs(ids...)
 }
@@ -468,15 +469,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.TreasuresCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.TreasuresTable,
-			Columns: user.TreasuresPrimaryKey,
+			Columns: []string{user.TreasuresColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: treasure.FieldID,
 				},
 			},
 		}
@@ -484,15 +485,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RemovedTreasuresIDs(); len(nodes) > 0 && !uu.mutation.TreasuresCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.TreasuresTable,
-			Columns: user.TreasuresPrimaryKey,
+			Columns: []string{user.TreasuresColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: treasure.FieldID,
 				},
 			},
 		}
@@ -503,15 +504,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.TreasuresIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.TreasuresTable,
-			Columns: user.TreasuresPrimaryKey,
+			Columns: []string{user.TreasuresColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: treasure.FieldID,
 				},
 			},
 		}
@@ -701,17 +702,17 @@ func (uuo *UserUpdateOne) AddLikes(w ...*Work) *UserUpdateOne {
 	return uuo.AddLikeIDs(ids...)
 }
 
-// AddTreasureIDs adds the "treasures" edge to the Work entity by IDs.
+// AddTreasureIDs adds the "treasures" edge to the Treasure entity by IDs.
 func (uuo *UserUpdateOne) AddTreasureIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddTreasureIDs(ids...)
 	return uuo
 }
 
-// AddTreasures adds the "treasures" edges to the Work entity.
-func (uuo *UserUpdateOne) AddTreasures(w ...*Work) *UserUpdateOne {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+// AddTreasures adds the "treasures" edges to the Treasure entity.
+func (uuo *UserUpdateOne) AddTreasures(t ...*Treasure) *UserUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
 	return uuo.AddTreasureIDs(ids...)
 }
@@ -793,23 +794,23 @@ func (uuo *UserUpdateOne) RemoveLikes(w ...*Work) *UserUpdateOne {
 	return uuo.RemoveLikeIDs(ids...)
 }
 
-// ClearTreasures clears all "treasures" edges to the Work entity.
+// ClearTreasures clears all "treasures" edges to the Treasure entity.
 func (uuo *UserUpdateOne) ClearTreasures() *UserUpdateOne {
 	uuo.mutation.ClearTreasures()
 	return uuo
 }
 
-// RemoveTreasureIDs removes the "treasures" edge to Work entities by IDs.
+// RemoveTreasureIDs removes the "treasures" edge to Treasure entities by IDs.
 func (uuo *UserUpdateOne) RemoveTreasureIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.RemoveTreasureIDs(ids...)
 	return uuo
 }
 
-// RemoveTreasures removes "treasures" edges to Work entities.
-func (uuo *UserUpdateOne) RemoveTreasures(w ...*Work) *UserUpdateOne {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+// RemoveTreasures removes "treasures" edges to Treasure entities.
+func (uuo *UserUpdateOne) RemoveTreasures(t ...*Treasure) *UserUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
 	return uuo.RemoveTreasureIDs(ids...)
 }
@@ -1111,15 +1112,15 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if uuo.mutation.TreasuresCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.TreasuresTable,
-			Columns: user.TreasuresPrimaryKey,
+			Columns: []string{user.TreasuresColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: treasure.FieldID,
 				},
 			},
 		}
@@ -1127,15 +1128,15 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if nodes := uuo.mutation.RemovedTreasuresIDs(); len(nodes) > 0 && !uuo.mutation.TreasuresCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.TreasuresTable,
-			Columns: user.TreasuresPrimaryKey,
+			Columns: []string{user.TreasuresColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: treasure.FieldID,
 				},
 			},
 		}
@@ -1146,15 +1147,15 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if nodes := uuo.mutation.TreasuresIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.TreasuresTable,
-			Columns: user.TreasuresPrimaryKey,
+			Columns: []string{user.TreasuresColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: work.FieldID,
+					Column: treasure.FieldID,
 				},
 			},
 		}

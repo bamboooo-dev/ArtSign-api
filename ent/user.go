@@ -35,7 +35,7 @@ type UserEdges struct {
 	// Likes holds the value of the likes edge.
 	Likes []*Work `json:"likes,omitempty"`
 	// Treasures holds the value of the treasures edge.
-	Treasures []*Work `json:"treasures,omitempty"`
+	Treasures []*Treasure `json:"treasures,omitempty"`
 	// Comments holds the value of the comments edge.
 	Comments []*Comment `json:"comments,omitempty"`
 	// LikeComments holds the value of the like_comments edge.
@@ -65,7 +65,7 @@ func (e UserEdges) LikesOrErr() ([]*Work, error) {
 
 // TreasuresOrErr returns the Treasures value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) TreasuresOrErr() ([]*Work, error) {
+func (e UserEdges) TreasuresOrErr() ([]*Treasure, error) {
 	if e.loadedTypes[2] {
 		return e.Treasures, nil
 	}
@@ -160,7 +160,7 @@ func (u *User) QueryLikes() *WorkQuery {
 }
 
 // QueryTreasures queries the "treasures" edge of the User entity.
-func (u *User) QueryTreasures() *WorkQuery {
+func (u *User) QueryTreasures() *TreasureQuery {
 	return (&UserClient{config: u.config}).QueryTreasures(u)
 }
 

@@ -28,6 +28,7 @@ type hooks struct {
 	Comment  []ent.Hook
 	Image    []ent.Hook
 	Tool     []ent.Hook
+	Treasure []ent.Hook
 	User     []ent.Hook
 	Work     []ent.Hook
 }

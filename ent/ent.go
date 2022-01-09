@@ -7,6 +7,7 @@ import (
 	"artsign/ent/comment"
 	"artsign/ent/image"
 	"artsign/ent/tool"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"errors"
@@ -38,6 +39,7 @@ func columnChecker(table string) func(string) error {
 		comment.Table:  comment.ValidColumn,
 		image.Table:    image.ValidColumn,
 		tool.Table:     tool.ValidColumn,
+		treasure.Table: treasure.ValidColumn,
 		user.Table:     user.ValidColumn,
 		work.Table:     work.ValidColumn,
 	}
