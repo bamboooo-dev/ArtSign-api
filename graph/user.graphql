@@ -1,0 +1,58 @@
+type User implements Node {
+  id: ID!
+  name: String!
+  username: String!
+  profile: String
+  avatarURL: String
+  workConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+  ): WorkConnection
+  likeConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+  ): WorkConnection
+  treasureConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+  ): WorkConnection
+}
+
+type UserConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [UserEdge]
+}
+
+type UserEdge {
+  node: User
+  cursor: Cursor!
+}
+
+enum UserOrderField {
+  NAME
+}
+
+input UserOrder {
+  direction: OrderDirection!
+  field: UserOrderField
+}
+
+input CreateUserInput {
+  name: String!
+  profile: String
+}
+
+input UpdateUserInput {
+  name: String
+  profile: String
+}

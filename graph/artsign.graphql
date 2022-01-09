@@ -1,0 +1,111 @@
+# Maps a Time GraphQL scalar to a Go time.Time struct.
+scalar Time
+
+"The `Upload` scalar type represents a multipart file upload."
+scalar Upload
+
+scalar Cursor
+
+interface Node {
+  id: ID!
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: Cursor
+  endCursor: Cursor
+}
+
+type Query {
+  works(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+    where: WorkWhereInput
+  ): WorkConnection
+  users(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+    where: UserWhereInput
+  ): UserConnection
+  categories: [Category]!
+  node(id: ID!): Node
+  nodes(ids: [ID!]!): [Node]!
+}
+
+type Mutation {
+  createWork(input: CreateWorkInput!, images: [Upload!]): Work!
+  updateWork(id: ID!, input: UpdateWorkInput!): Work!
+  updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
+  deleteUserLike(input: DeleteUserLikeInput!): DeleteUserLikePayload
+  createComment(input: CreateCommentInput!): Comment!
+  createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
+  deleteUserTreasure(input: DeleteUserTreasureInput!): DeleteUserTreasurePayload
+  createUserLikeComment(
+    input: CreateUserLikeCommentInput!
+  ): CreateUserLikeCommentPayload
+}
+
+type CreateUserLikePayload {
+  clientMutationId: String
+}
+
+input CreateUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+type DeleteUserLikePayload {
+  clientMutationId: String
+}
+
+input DeleteUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+type CreateUserTreasurePayload {
+  clientMutationId: String
+}
+
+type DeleteUserTreasurePayload {
+  clientMutationId: String
+}
+
+type CreateUserLikeCommentPayload {
+  clientMutationId: String
+}
+
+input CreateUserLikeCommentInput {
+  clientMutationId: String
+  userID: ID!
+  commentID: ID!
+}
+
+input CreateUserTreasureInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+input DeleteUserTreasureInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}

@@ -1,0 +1,4 @@
+type Tool {
+  id: ID!
+  name: String!
+}

@@ -1,0 +1,89 @@
+type Work implements Node {
+  id: ID!
+  createdAt: Time
+  updatedAt: Time
+  title: String!
+  description: String!
+  height: Float
+  width: Float
+  sizeUnit: String!
+  year: Int!
+  month: Int!
+  category: Category!
+  owner: User!
+  tools: [Tool]!
+  imageConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: ImageOrder
+  ): ImageConnection
+  likerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
+  treasurerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
+  commentConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: CommentOrder
+    where: CommentWhereInput
+  ): CommentConnection
+}
+
+type WorkConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [WorkEdge]
+}
+
+type WorkEdge {
+  node: Work
+  cursor: Cursor!
+}
+
+# These enums are matched the entgql annotations in the ent/schema.
+enum WorkOrderField {
+  CREATED_AT
+  UPDATED_AT
+  TITLE
+  PRIORITY
+  STATUS
+  TEXT
+}
+
+input WorkOrder {
+  direction: OrderDirection!
+  field: WorkOrderField
+}
+
+input UpdateWorkInput {
+  title: String
+  description: String
+  categoryID: ID
+}
+
+input CreateWorkInput {
+  title: String!
+  description: String!
+  categoryID: ID!
+  ownerID: ID!
+  height: Float
+  width: Float
+  sizeUnit: String!
+  year: Int!
+  month: Int!
+  toolIDs: [ID]!
+}

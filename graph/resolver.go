@@ -1,7 +1,8 @@
-package artsign
+package graph
 
 import (
 	"artsign/ent"
+	"artsign/graph/generated"
 	"artsign/pkg/env"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -21,7 +22,7 @@ type Resolver struct {
 
 // NewSchema creates a graphql executable schema.
 func NewSchema(config *env.Config, client *ent.Client, uploader *manager.Uploader) graphql.ExecutableSchema {
-	return NewExecutableSchema(Config{
+	return generated.NewExecutableSchema(generated.Config{
 		Resolvers: &Resolver{config, client, uploader},
 	})
 }
