@@ -19,14 +19,14 @@ type Work implements Node {
     last: Int
     orderBy: ImageOrder
   ): ImageConnection
-  likerConnection(
+  treasureConnection(
     after: Cursor
     first: Int
     before: Cursor
     last: Int
-    orderBy: UserOrder
-  ): UserConnection
-  treasurerConnection(
+    orderBy: TreasureOrder
+  ): TreasureConnection
+  likerConnection(
     after: Cursor
     first: Int
     before: Cursor

@@ -146,13 +146,31 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	Treasure struct {
+		CreateTime func(childComplexity int) int
+		Owner      func(childComplexity int) int
+		UpdateTime func(childComplexity int) int
+		Work       func(childComplexity int) int
+	}
+
+	TreasureConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	TreasureEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	User struct {
 		AvatarURL          func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		LikeConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) int
 		Name               func(childComplexity int) int
 		Profile            func(childComplexity int) int
-		TreasureConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) int
+		TreasureConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) int
 		Username           func(childComplexity int) int
 		WorkConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) int
 	}
@@ -169,23 +187,23 @@ type ComplexityRoot struct {
 	}
 
 	Work struct {
-		Category            func(childComplexity int) int
-		CommentConnection   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) int
-		CreatedAt           func(childComplexity int) int
-		Description         func(childComplexity int) int
-		Height              func(childComplexity int) int
-		ID                  func(childComplexity int) int
-		ImageConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) int
-		LikerConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
-		Month               func(childComplexity int) int
-		Owner               func(childComplexity int) int
-		SizeUnit            func(childComplexity int) int
-		Title               func(childComplexity int) int
-		Tools               func(childComplexity int) int
-		TreasurerConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
-		UpdatedAt           func(childComplexity int) int
-		Width               func(childComplexity int) int
-		Year                func(childComplexity int) int
+		Category           func(childComplexity int) int
+		CommentConnection  func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) int
+		CreatedAt          func(childComplexity int) int
+		Description        func(childComplexity int) int
+		Height             func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		ImageConnection    func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) int
+		LikerConnection    func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
+		Month              func(childComplexity int) int
+		Owner              func(childComplexity int) int
+		SizeUnit           func(childComplexity int) int
+		Title              func(childComplexity int) int
+		Tools              func(childComplexity int) int
+		TreasureConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) int
+		UpdatedAt          func(childComplexity int) int
+		Width              func(childComplexity int) int
+		Year               func(childComplexity int) int
 	}
 
 	WorkConnection struct {
@@ -227,12 +245,12 @@ type QueryResolver interface {
 type UserResolver interface {
 	WorkConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
 	LikeConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
-	TreasureConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
+	TreasureConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) (*ent.TreasureConnection, error)
 }
 type WorkResolver interface {
 	ImageConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) (*ent.ImageConnection, error)
+	TreasureConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) (*ent.TreasureConnection, error)
 	LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error)
-	TreasurerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error)
 	CommentConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) (*ent.CommentConnection, error)
 }
 
@@ -679,6 +697,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Tool.Name(childComplexity), true
 
+	case "Treasure.createTime":
+		if e.complexity.Treasure.CreateTime == nil {
+			break
+		}
+
+		return e.complexity.Treasure.CreateTime(childComplexity), true
+
+	case "Treasure.owner":
+		if e.complexity.Treasure.Owner == nil {
+			break
+		}
+
+		return e.complexity.Treasure.Owner(childComplexity), true
+
+	case "Treasure.updateTime":
+		if e.complexity.Treasure.UpdateTime == nil {
+			break
+		}
+
+		return e.complexity.Treasure.UpdateTime(childComplexity), true
+
+	case "Treasure.work":
+		if e.complexity.Treasure.Work == nil {
+			break
+		}
+
+		return e.complexity.Treasure.Work(childComplexity), true
+
+	case "TreasureConnection.edges":
+		if e.complexity.TreasureConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.TreasureConnection.Edges(childComplexity), true
+
+	case "TreasureConnection.pageInfo":
+		if e.complexity.TreasureConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.TreasureConnection.PageInfo(childComplexity), true
+
+	case "TreasureConnection.totalCount":
+		if e.complexity.TreasureConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.TreasureConnection.TotalCount(childComplexity), true
+
+	case "TreasureEdge.cursor":
+		if e.complexity.TreasureEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.TreasureEdge.Cursor(childComplexity), true
+
+	case "TreasureEdge.node":
+		if e.complexity.TreasureEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.TreasureEdge.Node(childComplexity), true
+
 	case "User.avatarURL":
 		if e.complexity.User.AvatarURL == nil {
 			break
@@ -729,7 +810,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.User.TreasureConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.WorkOrder)), true
+		return e.complexity.User.TreasureConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.TreasureOrder)), true
 
 	case "User.username":
 		if e.complexity.User.Username == nil {
@@ -891,17 +972,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Work.Tools(childComplexity), true
 
-	case "Work.treasurerConnection":
-		if e.complexity.Work.TreasurerConnection == nil {
+	case "Work.treasureConnection":
+		if e.complexity.Work.TreasureConnection == nil {
 			break
 		}
 
-		args, err := ec.field_Work_treasurerConnection_args(context.TODO(), rawArgs)
+		args, err := ec.field_Work_treasureConnection_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Work.TreasurerConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder)), true
+		return e.complexity.Work.TreasureConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.TreasureOrder)), true
 
 	case "Work.updatedAt":
 		if e.complexity.Work.UpdatedAt == nil {
@@ -1331,9 +1412,9 @@ input WorkWhereInput {
   hasLikers: Boolean
   hasLikersWith: [UserWhereInput!]
   
-  """treasurers edge predicates"""
-  hasTreasurers: Boolean
-  hasTreasurersWith: [UserWhereInput!]
+  """treasures edge predicates"""
+  hasTreasures: Boolean
+  hasTreasuresWith: [TreasureWhereInput!]
   
   """comments edge predicates"""
   hasComments: Boolean
@@ -1547,7 +1628,7 @@ input UserWhereInput {
   
   """treasures edge predicates"""
   hasTreasures: Boolean
-  hasTreasuresWith: [WorkWhereInput!]
+  hasTreasuresWith: [TreasureWhereInput!]
   
   """comments edge predicates"""
   hasComments: Boolean
@@ -1655,6 +1736,54 @@ input ToolWhereInput {
   hasWorks: Boolean
   hasWorksWith: [WorkWhereInput!]
 }
+
+"""
+TreasureWhereInput is used for filtering Treasure objects.
+Input was generated by ent.
+"""
+input TreasureWhereInput {
+  not: TreasureWhereInput
+  and: [TreasureWhereInput!]
+  or: [TreasureWhereInput!]
+  
+  """create_time field predicates"""
+  createTime: Time
+  createTimeNEQ: Time
+  createTimeIn: [Time!]
+  createTimeNotIn: [Time!]
+  createTimeGT: Time
+  createTimeGTE: Time
+  createTimeLT: Time
+  createTimeLTE: Time
+  
+  """update_time field predicates"""
+  updateTime: Time
+  updateTimeNEQ: Time
+  updateTimeIn: [Time!]
+  updateTimeNotIn: [Time!]
+  updateTimeGT: Time
+  updateTimeGTE: Time
+  updateTimeLT: Time
+  updateTimeLTE: Time
+  
+  """id field predicates"""
+  id: ID
+  idNEQ: ID
+  idIn: [ID!]
+  idNotIn: [ID!]
+  idGT: ID
+  idGTE: ID
+  idLT: ID
+  idLTE: ID
+  
+  """owner edge predicates"""
+  hasOwner: Boolean
+  hasOwnerWith: [UserWhereInput!]
+  
+  """work edge predicates"""
+  hasWork: Boolean
+  hasWorkWith: [WorkWhereInput!]
+}
 `, BuiltIn: false},
 	{Name: "graph/image.graphql", Input: `type Image implements Node {
   id: ID!
@@ -1687,6 +1816,34 @@ input ImageOrder {
   name: String!
 }
 `, BuiltIn: false},
+	{Name: "graph/treasure.graphql", Input: `type Treasure {
+  owner: User!
+  work: Work!
+  createTime: Time!
+  updateTime: Time!
+}
+
+enum TreasureOrderField {
+  CREATE_TIME
+  UPDATE_TIME
+}
+
+input TreasureOrder {
+  direction: OrderDirection!
+  field: TreasureOrderField
+}
+
+type TreasureConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [TreasureEdge]
+}
+
+type TreasureEdge {
+  node: Treasure
+  cursor: Cursor!
+}
+`, BuiltIn: false},
 	{Name: "graph/user.graphql", Input: `type User implements Node {
   id: ID!
   name: String!
@@ -1712,8 +1869,8 @@ input ImageOrder {
     first: Int
     before: Cursor
     last: Int
-    orderBy: WorkOrder
-  ): WorkConnection
+    orderBy: TreasureOrder
+  ): TreasureConnection
 }
 
 type UserConnection {
@@ -1767,14 +1924,14 @@ input UpdateUserInput {
     last: Int
     orderBy: ImageOrder
   ): ImageConnection
-  likerConnection(
+  treasureConnection(
     after: Cursor
     first: Int
     before: Cursor
     last: Int
-    orderBy: UserOrder
-  ): UserConnection
-  treasurerConnection(
+    orderBy: TreasureOrder
+  ): TreasureConnection
+  likerConnection(
     after: Cursor
     first: Int
     before: Cursor
@@ -2401,10 +2558,10 @@ func (ec *executionContext) field_User_treasureConnection_args(ctx context.Conte
 		}
 	}
 	args["last"] = arg3
-	var arg4 *ent.WorkOrder
+	var arg4 *ent.TreasureOrder
 	if tmp, ok := rawArgs["orderBy"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
-		arg4, err = ec.unmarshalOWorkOrder2ᚖartsignᚋentᚐWorkOrder(ctx, tmp)
+		arg4, err = ec.unmarshalOTreasureOrder2ᚖartsignᚋentᚐTreasureOrder(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2626,7 +2783,7 @@ func (ec *executionContext) field_Work_likerConnection_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Work_treasurerConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Work_treasureConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *ent.Cursor
@@ -2665,10 +2822,10 @@ func (ec *executionContext) field_Work_treasurerConnection_args(ctx context.Cont
 		}
 	}
 	args["last"] = arg3
-	var arg4 *ent.UserOrder
+	var arg4 *ent.TreasureOrder
 	if tmp, ok := rawArgs["orderBy"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
-		arg4, err = ec.unmarshalOUserOrder2ᚖartsignᚋentᚐUserOrder(ctx, tmp)
+		arg4, err = ec.unmarshalOTreasureOrder2ᚖartsignᚋentᚐTreasureOrder(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4551,6 +4708,315 @@ func (ec *executionContext) _Tool_name(ctx context.Context, field graphql.Collec
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Treasure_owner(ctx context.Context, field graphql.CollectedField, obj *ent.Treasure) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Treasure",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ent.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Treasure_work(ctx context.Context, field graphql.CollectedField, obj *ent.Treasure) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Treasure",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Work(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Work)
+	fc.Result = res
+	return ec.marshalNWork2ᚖartsignᚋentᚐWork(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Treasure_createTime(ctx context.Context, field graphql.CollectedField, obj *ent.Treasure) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Treasure",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Treasure_updateTime(ctx context.Context, field graphql.CollectedField, obj *ent.Treasure) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Treasure",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreasureConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.TreasureConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreasureConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreasureConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.TreasureConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreasureConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(ent.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2artsignᚋentᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreasureConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.TreasureConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreasureConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.TreasureEdge)
+	fc.Result = res
+	return ec.marshalOTreasureEdge2ᚕᚖartsignᚋentᚐTreasureEdge(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreasureEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.TreasureEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreasureEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Treasure)
+	fc.Result = res
+	return ec.marshalOTreasure2ᚖartsignᚋentᚐTreasure(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreasureEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.TreasureEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreasureEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(ent.Cursor)
+	fc.Result = res
+	return ec.marshalNCursor2artsignᚋentᚐCursor(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4823,7 +5289,7 @@ func (ec *executionContext) _User_treasureConnection(ctx context.Context, field 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().TreasureConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.WorkOrder))
+		return ec.resolvers.User().TreasureConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.TreasureOrder))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4832,9 +5298,9 @@ func (ec *executionContext) _User_treasureConnection(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*ent.WorkConnection)
+	res := resTmp.(*ent.TreasureConnection)
 	fc.Result = res
-	return ec.marshalOWorkConnection2ᚖartsignᚋentᚐWorkConnection(ctx, field.Selections, res)
+	return ec.marshalOTreasureConnection2ᚖartsignᚋentᚐTreasureConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _UserConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.UserConnection) (ret graphql.Marshaler) {
@@ -5488,6 +5954,45 @@ func (ec *executionContext) _Work_imageConnection(ctx context.Context, field gra
 	return ec.marshalOImageConnection2ᚖartsignᚋentᚐImageConnection(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Work_treasureConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Work_treasureConnection_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Work().TreasureConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.TreasureOrder))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.TreasureConnection)
+	fc.Result = res
+	return ec.marshalOTreasureConnection2ᚖartsignᚋentᚐTreasureConnection(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Work_likerConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5514,45 +6019,6 @@ func (ec *executionContext) _Work_likerConnection(ctx context.Context, field gra
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Work().LikerConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*ent.UserConnection)
-	fc.Result = res
-	return ec.marshalOUserConnection2ᚖartsignᚋentᚐUserConnection(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Work_treasurerConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Work",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Work_treasurerConnection_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Work().TreasurerConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8538,6 +9004,300 @@ func (ec *executionContext) unmarshalInputToolWhereInput(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTreasureOrder(ctx context.Context, obj interface{}) (ent.TreasureOrder, error) {
+	var it ent.TreasureOrder
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "direction":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			it.Direction, err = ec.unmarshalNOrderDirection2artsignᚋentᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			it.Field, err = ec.unmarshalOTreasureOrderField2ᚖartsignᚋentᚐTreasureOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTreasureWhereInput(ctx context.Context, obj interface{}) (ent.TreasureWhereInput, error) {
+	var it ent.TreasureWhereInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "not":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			it.Not, err = ec.unmarshalOTreasureWhereInput2ᚖartsignᚋentᚐTreasureWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "and":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			it.And, err = ec.unmarshalOTreasureWhereInput2ᚕᚖartsignᚋentᚐTreasureWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "or":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			it.Or, err = ec.unmarshalOTreasureWhereInput2ᚕᚖartsignᚋentᚐTreasureWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTime":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTime"))
+			it.CreateTime, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeNEQ"))
+			it.CreateTimeNEQ, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeIn"))
+			it.CreateTimeIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeNotIn"))
+			it.CreateTimeNotIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeGT"))
+			it.CreateTimeGT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeGTE"))
+			it.CreateTimeGTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeLT"))
+			it.CreateTimeLT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeLTE"))
+			it.CreateTimeLTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTime":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTime"))
+			it.UpdateTime, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeNEQ"))
+			it.UpdateTimeNEQ, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeIn"))
+			it.UpdateTimeIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeNotIn"))
+			it.UpdateTimeNotIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeGT"))
+			it.UpdateTimeGT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeGTE"))
+			it.UpdateTimeGTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeLT"))
+			it.UpdateTimeLT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeLTE"))
+			it.UpdateTimeLTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			it.IDNEQ, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			it.IDIn, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			it.IDNotIn, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			it.IDGT, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			it.IDGTE, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			it.IDLT, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			it.IDLTE, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasOwner":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwner"))
+			it.HasOwner, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasOwnerWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnerWith"))
+			it.HasOwnerWith, err = ec.unmarshalOUserWhereInput2ᚕᚖartsignᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasWork":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasWork"))
+			it.HasWork, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasWorkWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasWorkWith"))
+			it.HasWorkWith, err = ec.unmarshalOWorkWhereInput2ᚕᚖartsignᚋentᚐWorkWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, obj interface{}) (ent.UpdateUserInput, error) {
 	var it ent.UpdateUserInput
 	asMap := map[string]interface{}{}
@@ -9196,7 +9956,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTreasuresWith"))
-			it.HasTreasuresWith, err = ec.unmarshalOWorkWhereInput2ᚕᚖartsignᚋentᚐWorkWhereInputᚄ(ctx, v)
+			it.HasTreasuresWith, err = ec.unmarshalOTreasureWhereInput2ᚕᚖartsignᚋentᚐTreasureWhereInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10126,19 +10886,19 @@ func (ec *executionContext) unmarshalInputWorkWhereInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-		case "hasTreasurers":
+		case "hasTreasures":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTreasurers"))
-			it.HasTreasurers, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTreasures"))
+			it.HasTreasures, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "hasTreasurersWith":
+		case "hasTreasuresWith":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTreasurersWith"))
-			it.HasTreasurersWith, err = ec.unmarshalOUserWhereInput2ᚕᚖartsignᚋentᚐUserWhereInputᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTreasuresWith"))
+			it.HasTreasuresWith, err = ec.unmarshalOTreasureWhereInput2ᚕᚖartsignᚋentᚐTreasureWhereInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10843,6 +11603,129 @@ func (ec *executionContext) _Tool(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var treasureImplementors = []string{"Treasure"}
+
+func (ec *executionContext) _Treasure(ctx context.Context, sel ast.SelectionSet, obj *ent.Treasure) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, treasureImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Treasure")
+		case "owner":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Treasure_owner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "work":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Treasure_work(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "createTime":
+			out.Values[i] = ec._Treasure_createTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updateTime":
+			out.Values[i] = ec._Treasure_updateTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var treasureConnectionImplementors = []string{"TreasureConnection"}
+
+func (ec *executionContext) _TreasureConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.TreasureConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, treasureConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TreasureConnection")
+		case "totalCount":
+			out.Values[i] = ec._TreasureConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._TreasureConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "edges":
+			out.Values[i] = ec._TreasureConnection_edges(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var treasureEdgeImplementors = []string{"TreasureEdge"}
+
+func (ec *executionContext) _TreasureEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.TreasureEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, treasureEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TreasureEdge")
+		case "node":
+			out.Values[i] = ec._TreasureEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._TreasureEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var userImplementors = []string{"User", "Node"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *ent.User) graphql.Marshaler {
@@ -11082,6 +11965,17 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 				res = ec._Work_imageConnection(ctx, field, obj)
 				return res
 			})
+		case "treasureConnection":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Work_treasureConnection(ctx, field, obj)
+				return res
+			})
 		case "likerConnection":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -11091,17 +11985,6 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Work_likerConnection(ctx, field, obj)
-				return res
-			})
-		case "treasurerConnection":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Work_treasurerConnection(ctx, field, obj)
 				return res
 			})
 		case "commentConnection":
@@ -11835,6 +12718,11 @@ func (ec *executionContext) marshalNTool2ᚕᚖartsignᚋentᚐTool(ctx context.
 
 func (ec *executionContext) unmarshalNToolWhereInput2ᚖartsignᚋentᚐToolWhereInput(ctx context.Context, v interface{}) (*ent.ToolWhereInput, error) {
 	res, err := ec.unmarshalInputToolWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNTreasureWhereInput2ᚖartsignᚋentᚐTreasureWhereInput(ctx context.Context, v interface{}) (*ent.TreasureWhereInput, error) {
+	res, err := ec.unmarshalInputTreasureWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -12922,6 +13810,124 @@ func (ec *executionContext) unmarshalOToolWhereInput2ᚖartsignᚋentᚐToolWher
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputToolWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTreasure2ᚖartsignᚋentᚐTreasure(ctx context.Context, sel ast.SelectionSet, v *ent.Treasure) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Treasure(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOTreasureConnection2ᚖartsignᚋentᚐTreasureConnection(ctx context.Context, sel ast.SelectionSet, v *ent.TreasureConnection) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TreasureConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOTreasureEdge2ᚕᚖartsignᚋentᚐTreasureEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.TreasureEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOTreasureEdge2ᚖartsignᚋentᚐTreasureEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOTreasureEdge2ᚖartsignᚋentᚐTreasureEdge(ctx context.Context, sel ast.SelectionSet, v *ent.TreasureEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TreasureEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOTreasureOrder2ᚖartsignᚋentᚐTreasureOrder(ctx context.Context, v interface{}) (*ent.TreasureOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTreasureOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOTreasureOrderField2ᚖartsignᚋentᚐTreasureOrderField(ctx context.Context, v interface{}) (*ent.TreasureOrderField, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(ent.TreasureOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTreasureOrderField2ᚖartsignᚋentᚐTreasureOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.TreasureOrderField) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOTreasureWhereInput2ᚕᚖartsignᚋentᚐTreasureWhereInputᚄ(ctx context.Context, v interface{}) ([]*ent.TreasureWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*ent.TreasureWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNTreasureWhereInput2ᚖartsignᚋentᚐTreasureWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOTreasureWhereInput2ᚖartsignᚋentᚐTreasureWhereInput(ctx context.Context, v interface{}) (*ent.TreasureWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTreasureWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

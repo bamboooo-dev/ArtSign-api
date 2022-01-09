@@ -23,8 +23,8 @@ type User implements Node {
     first: Int
     before: Cursor
     last: Int
-    orderBy: WorkOrder
-  ): WorkConnection
+    orderBy: TreasureOrder
+  ): TreasureConnection
 }
 
 type UserConnection {

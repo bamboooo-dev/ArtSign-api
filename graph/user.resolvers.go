@@ -23,10 +23,10 @@ func (r *userResolver) LikeConnection(ctx context.Context, obj *ent.User, after 
 		)
 }
 
-func (r *userResolver) TreasureConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
+func (r *userResolver) TreasureConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) (*ent.TreasureConnection, error) {
 	return obj.QueryTreasures().
 		Paginate(ctx, after, first, before, last,
-			ent.WithWorkOrder(orderBy),
+			ent.WithTreasureOrder(orderBy),
 		)
 }
 

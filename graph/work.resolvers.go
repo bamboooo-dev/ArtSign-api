@@ -16,15 +16,15 @@ func (r *workResolver) ImageConnection(ctx context.Context, obj *ent.Work, after
 		)
 }
 
-func (r *workResolver) LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
-	return obj.QueryLikers().
+func (r *workResolver) TreasureConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) (*ent.TreasureConnection, error) {
+	return obj.QueryTreasures().
 		Paginate(ctx, after, first, before, last,
-			ent.WithUserOrder(orderBy),
+			ent.WithTreasureOrder(orderBy),
 		)
 }
 
-func (r *workResolver) TreasurerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
-	return obj.QueryTreasurers().
+func (r *workResolver) LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
+	return obj.QueryLikers().
 		Paginate(ctx, after, first, before, last,
 			ent.WithUserOrder(orderBy),
 		)
