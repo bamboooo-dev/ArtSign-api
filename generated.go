@@ -87,6 +87,14 @@ type ComplexityRoot struct {
 		ClientMutationID func(childComplexity int) int
 	}
 
+	DeleteUserLikePayload struct {
+		ClientMutationID func(childComplexity int) int
+	}
+
+	DeleteUserTreasurePayload struct {
+		ClientMutationID func(childComplexity int) int
+	}
+
 	Image struct {
 		ID  func(childComplexity int) int
 		URL func(childComplexity int) int
@@ -110,6 +118,8 @@ type ComplexityRoot struct {
 		CreateUserLikeComment func(childComplexity int, input CreateUserLikeCommentInput) int
 		CreateUserTreasure    func(childComplexity int, input CreateUserTreasureInput) int
 		CreateWork            func(childComplexity int, input ent.CreateWorkInput, images []*graphql.Upload) int
+		DeleteUserLike        func(childComplexity int, input DeleteUserLikeInput) int
+		DeleteUserTreasure    func(childComplexity int, input DeleteUserTreasureInput) int
 		UpdateUser            func(childComplexity int, id int, input ent.UpdateUserInput) int
 		UpdateWork            func(childComplexity int, id int, input ent.UpdateWorkInput) int
 		UpdateWorks           func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
@@ -158,22 +168,23 @@ type ComplexityRoot struct {
 	}
 
 	Work struct {
-		Category          func(childComplexity int) int
-		CommentConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) int
-		CreatedAt         func(childComplexity int) int
-		Description       func(childComplexity int) int
-		Height            func(childComplexity int) int
-		ID                func(childComplexity int) int
-		ImageConnection   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) int
-		LikerConnection   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
-		Month             func(childComplexity int) int
-		Owner             func(childComplexity int) int
-		SizeUnit          func(childComplexity int) int
-		Title             func(childComplexity int) int
-		Tools             func(childComplexity int) int
-		UpdatedAt         func(childComplexity int) int
-		Width             func(childComplexity int) int
-		Year              func(childComplexity int) int
+		Category            func(childComplexity int) int
+		CommentConnection   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) int
+		CreatedAt           func(childComplexity int) int
+		Description         func(childComplexity int) int
+		Height              func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		ImageConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) int
+		LikerConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
+		Month               func(childComplexity int) int
+		Owner               func(childComplexity int) int
+		SizeUnit            func(childComplexity int) int
+		Title               func(childComplexity int) int
+		Tools               func(childComplexity int) int
+		TreasurerConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) int
+		UpdatedAt           func(childComplexity int) int
+		Width               func(childComplexity int) int
+		Year                func(childComplexity int) int
 	}
 
 	WorkConnection struct {
@@ -199,8 +210,10 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error)
 	UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error)
 	CreateUserLike(ctx context.Context, input CreateUserLikeInput) (*CreateUserLikePayload, error)
+	DeleteUserLike(ctx context.Context, input DeleteUserLikeInput) (*DeleteUserLikePayload, error)
 	CreateComment(ctx context.Context, input ent.CreateCommentInput) (*ent.Comment, error)
 	CreateUserTreasure(ctx context.Context, input CreateUserTreasureInput) (*CreateUserTreasurePayload, error)
+	DeleteUserTreasure(ctx context.Context, input DeleteUserTreasureInput) (*DeleteUserTreasurePayload, error)
 	CreateUserLikeComment(ctx context.Context, input CreateUserLikeCommentInput) (*CreateUserLikeCommentPayload, error)
 }
 type QueryResolver interface {
@@ -218,6 +231,7 @@ type UserResolver interface {
 type WorkResolver interface {
 	ImageConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ImageOrder) (*ent.ImageConnection, error)
 	LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error)
+	TreasurerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error)
 	CommentConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) (*ent.CommentConnection, error)
 }
 
@@ -372,6 +386,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CreateUserTreasurePayload.ClientMutationID(childComplexity), true
 
+	case "DeleteUserLikePayload.clientMutationId":
+		if e.complexity.DeleteUserLikePayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.DeleteUserLikePayload.ClientMutationID(childComplexity), true
+
+	case "DeleteUserTreasurePayload.clientMutationId":
+		if e.complexity.DeleteUserTreasurePayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.DeleteUserTreasurePayload.ClientMutationID(childComplexity), true
+
 	case "Image.id":
 		if e.complexity.Image.ID == nil {
 			break
@@ -492,6 +520,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput), args["images"].([]*graphql.Upload)), true
+
+	case "Mutation.deleteUserLike":
+		if e.complexity.Mutation.DeleteUserLike == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteUserLike_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteUserLike(childComplexity, args["input"].(DeleteUserLikeInput)), true
+
+	case "Mutation.deleteUserTreasure":
+		if e.complexity.Mutation.DeleteUserTreasure == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteUserTreasure_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteUserTreasure(childComplexity, args["input"].(DeleteUserTreasureInput)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -838,6 +890,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Work.Tools(childComplexity), true
 
+	case "Work.treasurerConnection":
+		if e.complexity.Work.TreasurerConnection == nil {
+			break
+		}
+
+		args, err := ec.field_Work_treasurerConnection_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Work.TreasurerConnection(childComplexity, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder)), true
+
 	case "Work.updatedAt":
 		if e.complexity.Work.UpdatedAt == nil {
 			break
@@ -1005,6 +1069,13 @@ type Work implements Node {
     last: Int
     orderBy: UserOrder
   ): UserConnection
+  treasurerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
   commentConnection(
     after: Cursor
     first: Int
@@ -1086,7 +1157,15 @@ type CreateUserLikePayload {
   clientMutationId: String
 }
 
+type DeleteUserLikePayload {
+  clientMutationId: String
+}
+
 type CreateUserTreasurePayload {
+  clientMutationId: String
+}
+
+type DeleteUserTreasurePayload {
   clientMutationId: String
 }
 
@@ -1103,8 +1182,10 @@ type Mutation {
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
+  deleteUserLike(input: DeleteUserLikeInput!): DeleteUserLikePayload
   createComment(input: CreateCommentInput!): Comment!
   createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
+  deleteUserTreasure(input: DeleteUserTreasureInput!): DeleteUserTreasurePayload
   createUserLikeComment(
     input: CreateUserLikeCommentInput!
   ): CreateUserLikeCommentPayload
@@ -1270,6 +1351,12 @@ input CreateUserLikeInput {
   workID: ID!
 }
 
+input DeleteUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
 input CreateUserLikeCommentInput {
   clientMutationId: String
   userID: ID!
@@ -1277,6 +1364,12 @@ input CreateUserLikeCommentInput {
 }
 
 input CreateUserTreasureInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+input DeleteUserTreasureInput {
   clientMutationId: String
   userID: ID!
   workID: ID!
@@ -1962,6 +2055,36 @@ func (ec *executionContext) field_Mutation_createWork_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteUserLike_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 DeleteUserLikeInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNDeleteUserLikeInput2artsignᚐDeleteUserLikeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteUserTreasure_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 DeleteUserTreasureInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNDeleteUserTreasureInput2artsignᚐDeleteUserTreasureInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2464,6 +2587,57 @@ func (ec *executionContext) field_Work_imageConnection_args(ctx context.Context,
 }
 
 func (ec *executionContext) field_Work_likerConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *ent.Cursor
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg0, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *ent.Cursor
+	if tmp, ok := rawArgs["before"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+		arg2, err = ec.unmarshalOCursor2ᚖartsignᚋentᚐCursor(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["before"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["last"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["last"] = arg3
+	var arg4 *ent.UserOrder
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+		arg4, err = ec.unmarshalOUserOrder2ᚖartsignᚋentᚐUserOrder(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Work_treasurerConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *ent.Cursor
@@ -3169,6 +3343,70 @@ func (ec *executionContext) _CreateUserTreasurePayload_clientMutationId(ctx cont
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _DeleteUserLikePayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *DeleteUserLikePayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "DeleteUserLikePayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientMutationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DeleteUserTreasurePayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *DeleteUserTreasurePayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "DeleteUserTreasurePayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientMutationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Image_id(ctx context.Context, field graphql.CollectedField, obj *ent.Image) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3657,6 +3895,45 @@ func (ec *executionContext) _Mutation_createUserLike(ctx context.Context, field 
 	return ec.marshalOCreateUserLikePayload2ᚖartsignᚐCreateUserLikePayload(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_deleteUserLike(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteUserLike_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteUserLike(rctx, args["input"].(DeleteUserLikeInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*DeleteUserLikePayload)
+	fc.Result = res
+	return ec.marshalODeleteUserLikePayload2ᚖartsignᚐDeleteUserLikePayload(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3736,6 +4013,45 @@ func (ec *executionContext) _Mutation_createUserTreasure(ctx context.Context, fi
 	res := resTmp.(*CreateUserTreasurePayload)
 	fc.Result = res
 	return ec.marshalOCreateUserTreasurePayload2ᚖartsignᚐCreateUserTreasurePayload(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteUserTreasure(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteUserTreasure_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteUserTreasure(rctx, args["input"].(DeleteUserTreasureInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*DeleteUserTreasurePayload)
+	fc.Result = res
+	return ec.marshalODeleteUserTreasurePayload2ᚖartsignᚐDeleteUserTreasurePayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUserLikeComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5209,6 +5525,45 @@ func (ec *executionContext) _Work_likerConnection(ctx context.Context, field gra
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Work().LikerConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.UserConnection)
+	fc.Result = res
+	return ec.marshalOUserConnection2ᚖartsignᚋentᚐUserConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Work_treasurerConnection(ctx context.Context, field graphql.CollectedField, obj *ent.Work) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Work",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Work_treasurerConnection_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Work().TreasurerConnection(rctx, obj, args["after"].(*ent.Cursor), args["first"].(*int), args["before"].(*ent.Cursor), args["last"].(*int), args["orderBy"].(*ent.UserOrder))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7502,6 +7857,84 @@ func (ec *executionContext) unmarshalInputCreateWorkInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toolIDs"))
 			it.ToolIDs, err = ec.unmarshalNID2ᚕint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeleteUserLikeInput(ctx context.Context, obj interface{}) (DeleteUserLikeInput, error) {
+	var it DeleteUserLikeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "clientMutationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			it.ClientMutationID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workID"))
+			it.WorkID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeleteUserTreasureInput(ctx context.Context, obj interface{}) (DeleteUserTreasureInput, error) {
+	var it DeleteUserTreasureInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "clientMutationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			it.ClientMutationID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workID"))
+			it.WorkID, err = ec.unmarshalNID2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10053,6 +10486,54 @@ func (ec *executionContext) _CreateUserTreasurePayload(ctx context.Context, sel 
 	return out
 }
 
+var deleteUserLikePayloadImplementors = []string{"DeleteUserLikePayload"}
+
+func (ec *executionContext) _DeleteUserLikePayload(ctx context.Context, sel ast.SelectionSet, obj *DeleteUserLikePayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteUserLikePayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteUserLikePayload")
+		case "clientMutationId":
+			out.Values[i] = ec._DeleteUserLikePayload_clientMutationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var deleteUserTreasurePayloadImplementors = []string{"DeleteUserTreasurePayload"}
+
+func (ec *executionContext) _DeleteUserTreasurePayload(ctx context.Context, sel ast.SelectionSet, obj *DeleteUserTreasurePayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteUserTreasurePayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteUserTreasurePayload")
+		case "clientMutationId":
+			out.Values[i] = ec._DeleteUserTreasurePayload_clientMutationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var imageImplementors = []string{"Image", "Node"}
 
 func (ec *executionContext) _Image(ctx context.Context, sel ast.SelectionSet, obj *ent.Image) graphql.Marshaler {
@@ -10190,6 +10671,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createUserLike":
 			out.Values[i] = ec._Mutation_createUserLike(ctx, field)
+		case "deleteUserLike":
+			out.Values[i] = ec._Mutation_deleteUserLike(ctx, field)
 		case "createComment":
 			out.Values[i] = ec._Mutation_createComment(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -10197,6 +10680,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createUserTreasure":
 			out.Values[i] = ec._Mutation_createUserTreasure(ctx, field)
+		case "deleteUserTreasure":
+			out.Values[i] = ec._Mutation_deleteUserTreasure(ctx, field)
 		case "createUserLikeComment":
 			out.Values[i] = ec._Mutation_createUserLikeComment(ctx, field)
 		default:
@@ -10617,6 +11102,17 @@ func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Work_likerConnection(ctx, field, obj)
+				return res
+			})
+		case "treasurerConnection":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Work_treasurerConnection(ctx, field, obj)
 				return res
 			})
 		case "commentConnection":
@@ -11079,6 +11575,16 @@ func (ec *executionContext) unmarshalNCursor2artsignᚋentᚐCursor(ctx context.
 
 func (ec *executionContext) marshalNCursor2artsignᚋentᚐCursor(ctx context.Context, sel ast.SelectionSet, v ent.Cursor) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNDeleteUserLikeInput2artsignᚐDeleteUserLikeInput(ctx context.Context, v interface{}) (DeleteUserLikeInput, error) {
+	res, err := ec.unmarshalInputDeleteUserLikeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNDeleteUserTreasureInput2artsignᚐDeleteUserTreasureInput(ctx context.Context, v interface{}) (DeleteUserTreasureInput, error) {
+	res, err := ec.unmarshalInputDeleteUserTreasureInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
@@ -11929,6 +12435,20 @@ func (ec *executionContext) marshalOCursor2ᚖartsignᚋentᚐCursor(ctx context
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalODeleteUserLikePayload2ᚖartsignᚐDeleteUserLikePayload(ctx context.Context, sel ast.SelectionSet, v *DeleteUserLikePayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DeleteUserLikePayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODeleteUserTreasurePayload2ᚖartsignᚐDeleteUserTreasurePayload(ctx context.Context, sel ast.SelectionSet, v *DeleteUserTreasurePayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DeleteUserTreasurePayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFloat2float64(ctx context.Context, v interface{}) (float64, error) {

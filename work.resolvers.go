@@ -101,6 +101,20 @@ func (r *mutationResolver) CreateUserLike(ctx context.Context, input CreateUserL
 	return &CreateUserLikePayload{}, nil
 }
 
+func (r *mutationResolver) DeleteUserLike(ctx context.Context, input DeleteUserLikeInput) (*DeleteUserLikePayload, error) {
+	user, err := ent.FromContext(ctx).User.Get(ctx, input.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = user.Update().RemoveLikeIDs(input.WorkID).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeleteUserLikePayload{}, nil
+}
+
 func (r *mutationResolver) CreateComment(ctx context.Context, input ent.CreateCommentInput) (*ent.Comment, error) {
 	return ent.FromContext(ctx).Comment.Create().SetInput(input).Save(ctx)
 }
@@ -117,6 +131,20 @@ func (r *mutationResolver) CreateUserTreasure(ctx context.Context, input CreateU
 	}
 
 	return &CreateUserTreasurePayload{}, nil
+}
+
+func (r *mutationResolver) DeleteUserTreasure(ctx context.Context, input DeleteUserTreasureInput) (*DeleteUserTreasurePayload, error) {
+	user, err := ent.FromContext(ctx).User.Get(ctx, input.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = user.Update().RemoveTreasureIDs(input.WorkID).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeleteUserTreasurePayload{}, nil
 }
 
 func (r *mutationResolver) CreateUserLikeComment(ctx context.Context, input CreateUserLikeCommentInput) (*CreateUserLikeCommentPayload, error) {
@@ -191,6 +219,13 @@ func (r *workResolver) ImageConnection(ctx context.Context, obj *ent.Work, after
 
 func (r *workResolver) LikerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
 	return obj.QueryLikers().
+		Paginate(ctx, after, first, before, last,
+			ent.WithUserOrder(orderBy),
+		)
+}
+
+func (r *workResolver) TreasurerConnection(ctx context.Context, obj *ent.Work, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
+	return obj.QueryTreasurers().
 		Paginate(ctx, after, first, before, last,
 			ent.WithUserOrder(orderBy),
 		)

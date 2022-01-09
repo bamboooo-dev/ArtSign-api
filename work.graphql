@@ -45,6 +45,13 @@ type Work implements Node {
     last: Int
     orderBy: UserOrder
   ): UserConnection
+  treasurerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
   commentConnection(
     after: Cursor
     first: Int
@@ -126,7 +133,15 @@ type CreateUserLikePayload {
   clientMutationId: String
 }
 
+type DeleteUserLikePayload {
+  clientMutationId: String
+}
+
 type CreateUserTreasurePayload {
+  clientMutationId: String
+}
+
+type DeleteUserTreasurePayload {
   clientMutationId: String
 }
 
@@ -143,8 +158,10 @@ type Mutation {
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
+  deleteUserLike(input: DeleteUserLikeInput!): DeleteUserLikePayload
   createComment(input: CreateCommentInput!): Comment!
   createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
+  deleteUserTreasure(input: DeleteUserTreasureInput!): DeleteUserTreasurePayload
   createUserLikeComment(
     input: CreateUserLikeCommentInput!
   ): CreateUserLikeCommentPayload
@@ -310,6 +327,12 @@ input CreateUserLikeInput {
   workID: ID!
 }
 
+input DeleteUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
 input CreateUserLikeCommentInput {
   clientMutationId: String
   userID: ID!
@@ -317,6 +340,12 @@ input CreateUserLikeCommentInput {
 }
 
 input CreateUserTreasureInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+input DeleteUserTreasureInput {
   clientMutationId: String
   userID: ID!
   workID: ID!

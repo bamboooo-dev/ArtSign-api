@@ -38,6 +38,26 @@ type CreateUserTreasurePayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
 
+type DeleteUserLikeInput struct {
+	ClientMutationID *string `json:"clientMutationId"`
+	UserID           int     `json:"userID"`
+	WorkID           int     `json:"workID"`
+}
+
+type DeleteUserLikePayload struct {
+	ClientMutationID *string `json:"clientMutationId"`
+}
+
+type DeleteUserTreasureInput struct {
+	ClientMutationID *string `json:"clientMutationId"`
+	UserID           int     `json:"userID"`
+	WorkID           int     `json:"workID"`
+}
+
+type DeleteUserTreasurePayload struct {
+	ClientMutationID *string `json:"clientMutationId"`
+}
+
 type Status string
 
 const (
