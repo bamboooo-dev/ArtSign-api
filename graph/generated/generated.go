@@ -76,6 +76,10 @@ type ComplexityRoot struct {
 		Node   func(childComplexity int) int
 	}
 
+	CreatePortfolioPayload struct {
+		ClientMutationID func(childComplexity int) int
+	}
+
 	CreateTreasurePayload struct {
 		ClientMutationID func(childComplexity int) int
 	}
@@ -88,11 +92,19 @@ type ComplexityRoot struct {
 		ClientMutationID func(childComplexity int) int
 	}
 
+	DeletePortfolioPayload struct {
+		ClientMutationID func(childComplexity int) int
+	}
+
 	DeleteTreasurePayload struct {
 		ClientMutationID func(childComplexity int) int
 	}
 
 	DeleteUserLikePayload struct {
+		ClientMutationID func(childComplexity int) int
+	}
+
+	DeleteWorkPayload struct {
 		ClientMutationID func(childComplexity int) int
 	}
 
@@ -114,13 +126,16 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateComment         func(childComplexity int, input ent.CreateCommentInput) int
+		CreatePortfolio       func(childComplexity int, input ent.CreatePortfolioInput) int
 		CreateTreasure        func(childComplexity int, input ent.CreateTreasureInput) int
 		CreateUser            func(childComplexity int, input ent.CreateUserInput) int
 		CreateUserLike        func(childComplexity int, input model.CreateUserLikeInput) int
 		CreateUserLikeComment func(childComplexity int, input model.CreateUserLikeCommentInput) int
 		CreateWork            func(childComplexity int, input ent.CreateWorkInput, images []*graphql.Upload) int
+		DeletePortfolio       func(childComplexity int, input model.DeletePortfolioInput) int
 		DeleteTreasure        func(childComplexity int, input model.DeleteTreasureInput) int
 		DeleteUserLike        func(childComplexity int, input model.DeleteUserLikeInput) int
+		DeleteWork            func(childComplexity int, id int) int
 		UpdateUser            func(childComplexity int, id int, input ent.UpdateUserInput) int
 		UpdateWork            func(childComplexity int, id int, input ent.UpdateWorkInput) int
 		UpdateWorks           func(childComplexity int, ids []int, input ent.UpdateWorkInput) int
@@ -225,6 +240,7 @@ type CommentResolver interface {
 type MutationResolver interface {
 	CreateWork(ctx context.Context, input ent.CreateWorkInput, images []*graphql.Upload) (*ent.Work, error)
 	UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error)
+	DeleteWork(ctx context.Context, id int) (*model.DeleteWorkPayload, error)
 	UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error)
 	CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error)
 	UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error)
@@ -234,6 +250,8 @@ type MutationResolver interface {
 	CreateTreasure(ctx context.Context, input ent.CreateTreasureInput) (*model.CreateTreasurePayload, error)
 	DeleteTreasure(ctx context.Context, input model.DeleteTreasureInput) (*model.DeleteTreasurePayload, error)
 	CreateUserLikeComment(ctx context.Context, input model.CreateUserLikeCommentInput) (*model.CreateUserLikeCommentPayload, error)
+	CreatePortfolio(ctx context.Context, input ent.CreatePortfolioInput) (*model.CreatePortfolioPayload, error)
+	DeletePortfolio(ctx context.Context, input model.DeletePortfolioInput) (*model.DeletePortfolioPayload, error)
 }
 type QueryResolver interface {
 	Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error)
@@ -384,6 +402,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CommentEdge.Node(childComplexity), true
 
+	case "CreatePortfolioPayload.clientMutationId":
+		if e.complexity.CreatePortfolioPayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.CreatePortfolioPayload.ClientMutationID(childComplexity), true
+
 	case "CreateTreasurePayload.clientMutationId":
 		if e.complexity.CreateTreasurePayload.ClientMutationID == nil {
 			break
@@ -405,6 +430,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CreateUserLikePayload.ClientMutationID(childComplexity), true
 
+	case "DeletePortfolioPayload.clientMutationId":
+		if e.complexity.DeletePortfolioPayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.DeletePortfolioPayload.ClientMutationID(childComplexity), true
+
 	case "DeleteTreasurePayload.clientMutationId":
 		if e.complexity.DeleteTreasurePayload.ClientMutationID == nil {
 			break
@@ -418,6 +450,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DeleteUserLikePayload.ClientMutationID(childComplexity), true
+
+	case "DeleteWorkPayload.clientMutationId":
+		if e.complexity.DeleteWorkPayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.DeleteWorkPayload.ClientMutationID(childComplexity), true
 
 	case "Image.id":
 		if e.complexity.Image.ID == nil {
@@ -480,6 +519,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateComment(childComplexity, args["input"].(ent.CreateCommentInput)), true
 
+	case "Mutation.createPortfolio":
+		if e.complexity.Mutation.CreatePortfolio == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createPortfolio_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreatePortfolio(childComplexity, args["input"].(ent.CreatePortfolioInput)), true
+
 	case "Mutation.createTreasure":
 		if e.complexity.Mutation.CreateTreasure == nil {
 			break
@@ -540,6 +591,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateWork(childComplexity, args["input"].(ent.CreateWorkInput), args["images"].([]*graphql.Upload)), true
 
+	case "Mutation.deletePortfolio":
+		if e.complexity.Mutation.DeletePortfolio == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deletePortfolio_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeletePortfolio(childComplexity, args["input"].(model.DeletePortfolioInput)), true
+
 	case "Mutation.deleteTreasure":
 		if e.complexity.Mutation.DeleteTreasure == nil {
 			break
@@ -563,6 +626,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteUserLike(childComplexity, args["input"].(model.DeleteUserLikeInput)), true
+
+	case "Mutation.deleteWork":
+		if e.complexity.Mutation.DeleteWork == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteWork_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteWork(childComplexity, args["id"].(int)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -1153,6 +1228,7 @@ type Query {
 type Mutation {
   createWork(input: CreateWorkInput!, images: [Upload!]): Work!
   updateWork(id: ID!, input: UpdateWorkInput!): Work!
+  deleteWork(id: ID!): DeleteWorkPayload
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
@@ -1164,6 +1240,8 @@ type Mutation {
   createUserLikeComment(
     input: CreateUserLikeCommentInput!
   ): CreateUserLikeCommentPayload
+  createPortfolio(input: CreatePortfolioInput!): CreatePortfolioPayload
+  deletePortfolio(input: DeletePortfolioInput!): DeletePortfolioPayload
 }
 
 type CreateUserLikePayload {
@@ -1205,6 +1283,11 @@ input CreateUserLikeCommentInput {
 }
 
 input CreateTreasureInput {
+  ownerID: ID!
+  workID: ID!
+}
+
+input CreatePortfolioInput {
   ownerID: ID!
   workID: ID!
 }
@@ -1414,6 +1497,10 @@ input WorkWhereInput {
   """treasures edge predicates"""
   hasTreasures: Boolean
   hasTreasuresWith: [TreasureWhereInput!]
+  
+  """portfolios edge predicates"""
+  hasPortfolios: Boolean
+  hasPortfoliosWith: [PortfolioWhereInput!]
   
   """comments edge predicates"""
   hasComments: Boolean
@@ -1629,6 +1716,10 @@ input UserWhereInput {
   hasTreasures: Boolean
   hasTreasuresWith: [TreasureWhereInput!]
   
+  """portfolios edge predicates"""
+  hasPortfolios: Boolean
+  hasPortfoliosWith: [PortfolioWhereInput!]
+  
   """comments edge predicates"""
   hasComments: Boolean
   hasCommentsWith: [CommentWhereInput!]
@@ -1783,6 +1874,54 @@ input TreasureWhereInput {
   hasWork: Boolean
   hasWorkWith: [WorkWhereInput!]
 }
+
+"""
+PortfolioWhereInput is used for filtering Portfolio objects.
+Input was generated by ent.
+"""
+input PortfolioWhereInput {
+  not: PortfolioWhereInput
+  and: [PortfolioWhereInput!]
+  or: [PortfolioWhereInput!]
+  
+  """create_time field predicates"""
+  createTime: Time
+  createTimeNEQ: Time
+  createTimeIn: [Time!]
+  createTimeNotIn: [Time!]
+  createTimeGT: Time
+  createTimeGTE: Time
+  createTimeLT: Time
+  createTimeLTE: Time
+  
+  """update_time field predicates"""
+  updateTime: Time
+  updateTimeNEQ: Time
+  updateTimeIn: [Time!]
+  updateTimeNotIn: [Time!]
+  updateTimeGT: Time
+  updateTimeGTE: Time
+  updateTimeLT: Time
+  updateTimeLTE: Time
+  
+  """id field predicates"""
+  id: ID
+  idNEQ: ID
+  idIn: [ID!]
+  idNotIn: [ID!]
+  idGT: ID
+  idGTE: ID
+  idLT: ID
+  idLTE: ID
+  
+  """owner edge predicates"""
+  hasOwner: Boolean
+  hasOwnerWith: [UserWhereInput!]
+  
+  """work edge predicates"""
+  hasWork: Boolean
+  hasWorkWith: [WorkWhereInput!]
+}
 `, BuiltIn: false},
 	{Name: "graph/image.graphql", Input: `type Image implements Node {
   id: ID!
@@ -1808,6 +1947,20 @@ enum ImageOrderField {
 input ImageOrder {
   direction: OrderDirection!
   field: ImageOrderField
+}
+`, BuiltIn: false},
+	{Name: "graph/portfolio.graphql", Input: `type CreatePortfolioPayload {
+  clientMutationId: String
+}
+
+input DeletePortfolioInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+type DeletePortfolioPayload {
+  clientMutationId: String
 }
 `, BuiltIn: false},
 	{Name: "graph/tool.graphql", Input: `type Tool {
@@ -1991,6 +2144,10 @@ input CreateWorkInput {
   month: Int!
   toolIDs: [ID]!
 }
+
+type DeleteWorkPayload {
+  clientMutationId: String
+}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -2116,6 +2273,21 @@ func (ec *executionContext) field_Mutation_createComment_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createPortfolio_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 ent.CreatePortfolioInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreatePortfolioInput2artsignᚋentᚐCreatePortfolioInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createTreasure_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2200,6 +2372,21 @@ func (ec *executionContext) field_Mutation_createWork_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deletePortfolio_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.DeletePortfolioInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNDeletePortfolioInput2artsignᚋgraphᚋmodelᚐDeletePortfolioInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteTreasure_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2227,6 +2414,21 @@ func (ec *executionContext) field_Mutation_deleteUserLike_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteWork_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -3392,6 +3594,38 @@ func (ec *executionContext) _CommentEdge_cursor(ctx context.Context, field graph
 	return ec.marshalNCursor2artsignᚋentᚐCursor(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CreatePortfolioPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.CreatePortfolioPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CreatePortfolioPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientMutationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _CreateTreasurePayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.CreateTreasurePayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3488,6 +3722,38 @@ func (ec *executionContext) _CreateUserLikePayload_clientMutationId(ctx context.
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _DeletePortfolioPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.DeletePortfolioPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "DeletePortfolioPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientMutationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _DeleteTreasurePayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.DeleteTreasurePayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3529,6 +3795,38 @@ func (ec *executionContext) _DeleteUserLikePayload_clientMutationId(ctx context.
 	}()
 	fc := &graphql.FieldContext{
 		Object:     "DeleteUserLikePayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientMutationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DeleteWorkPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.DeleteWorkPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "DeleteWorkPayload",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -3873,6 +4171,45 @@ func (ec *executionContext) _Mutation_updateWork(ctx context.Context, field grap
 	res := resTmp.(*ent.Work)
 	fc.Result = res
 	return ec.marshalNWork2ᚖartsignᚋentᚐWork(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteWork(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteWork_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteWork(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DeleteWorkPayload)
+	fc.Result = res
+	return ec.marshalODeleteWorkPayload2ᚖartsignᚋgraphᚋmodelᚐDeleteWorkPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateWorks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4236,6 +4573,84 @@ func (ec *executionContext) _Mutation_createUserLikeComment(ctx context.Context,
 	res := resTmp.(*model.CreateUserLikeCommentPayload)
 	fc.Result = res
 	return ec.marshalOCreateUserLikeCommentPayload2ᚖartsignᚋgraphᚋmodelᚐCreateUserLikeCommentPayload(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createPortfolio(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createPortfolio_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreatePortfolio(rctx, args["input"].(ent.CreatePortfolioInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.CreatePortfolioPayload)
+	fc.Result = res
+	return ec.marshalOCreatePortfolioPayload2ᚖartsignᚋgraphᚋmodelᚐCreatePortfolioPayload(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deletePortfolio(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deletePortfolio_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeletePortfolio(rctx, args["input"].(model.DeletePortfolioInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DeletePortfolioPayload)
+	fc.Result = res
+	return ec.marshalODeletePortfolioPayload2ᚖartsignᚋgraphᚋmodelᚐDeletePortfolioPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *ent.PageInfo) (ret graphql.Marshaler) {
@@ -8077,6 +8492,37 @@ func (ec *executionContext) unmarshalInputCreateCommentInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreatePortfolioInput(ctx context.Context, obj interface{}) (ent.CreatePortfolioInput, error) {
+	var it ent.CreatePortfolioInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "ownerID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
+			it.OwnerID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workID"))
+			it.WorkID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateTreasureInput(ctx context.Context, obj interface{}) (ent.CreateTreasureInput, error) {
 	var it ent.CreateTreasureInput
 	asMap := map[string]interface{}{}
@@ -8303,6 +8749,45 @@ func (ec *executionContext) unmarshalInputCreateWorkInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toolIDs"))
 			it.ToolIDs, err = ec.unmarshalNID2ᚕint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeletePortfolioInput(ctx context.Context, obj interface{}) (model.DeletePortfolioInput, error) {
+	var it model.DeletePortfolioInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "clientMutationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			it.ClientMutationID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workID"))
+			it.WorkID, err = ec.unmarshalNID2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8747,6 +9232,269 @@ func (ec *executionContext) unmarshalInputImageWhereInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
 			it.IDLTE, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasWork":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasWork"))
+			it.HasWork, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasWorkWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasWorkWith"))
+			it.HasWorkWith, err = ec.unmarshalOWorkWhereInput2ᚕᚖartsignᚋentᚐWorkWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPortfolioWhereInput(ctx context.Context, obj interface{}) (ent.PortfolioWhereInput, error) {
+	var it ent.PortfolioWhereInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "not":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			it.Not, err = ec.unmarshalOPortfolioWhereInput2ᚖartsignᚋentᚐPortfolioWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "and":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			it.And, err = ec.unmarshalOPortfolioWhereInput2ᚕᚖartsignᚋentᚐPortfolioWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "or":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			it.Or, err = ec.unmarshalOPortfolioWhereInput2ᚕᚖartsignᚋentᚐPortfolioWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTime":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTime"))
+			it.CreateTime, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeNEQ"))
+			it.CreateTimeNEQ, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeIn"))
+			it.CreateTimeIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeNotIn"))
+			it.CreateTimeNotIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeGT"))
+			it.CreateTimeGT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeGTE"))
+			it.CreateTimeGTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeLT"))
+			it.CreateTimeLT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createTimeLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTimeLTE"))
+			it.CreateTimeLTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTime":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTime"))
+			it.UpdateTime, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeNEQ"))
+			it.UpdateTimeNEQ, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeIn"))
+			it.UpdateTimeIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeNotIn"))
+			it.UpdateTimeNotIn, err = ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeGT"))
+			it.UpdateTimeGT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeGTE"))
+			it.UpdateTimeGTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeLT"))
+			it.UpdateTimeLT, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateTimeLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTimeLTE"))
+			it.UpdateTimeLTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			it.IDNEQ, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			it.IDIn, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			it.IDNotIn, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			it.IDGT, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			it.IDGTE, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			it.IDLT, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			it.IDLTE, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasOwner":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwner"))
+			it.HasOwner, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasOwnerWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnerWith"))
+			it.HasOwnerWith, err = ec.unmarshalOUserWhereInput2ᚕᚖartsignᚋentᚐUserWhereInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9951,6 +10699,22 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
+		case "hasPortfolios":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPortfolios"))
+			it.HasPortfolios, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasPortfoliosWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPortfoliosWith"))
+			it.HasPortfoliosWith, err = ec.unmarshalOPortfolioWhereInput2ᚕᚖartsignᚋentᚐPortfolioWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "hasComments":
 			var err error
 
@@ -10893,6 +11657,22 @@ func (ec *executionContext) unmarshalInputWorkWhereInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
+		case "hasPortfolios":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPortfolios"))
+			it.HasPortfolios, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasPortfoliosWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPortfoliosWith"))
+			it.HasPortfoliosWith, err = ec.unmarshalOPortfolioWhereInput2ᚕᚖartsignᚋentᚐPortfolioWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "hasComments":
 			var err error
 
@@ -11154,6 +11934,30 @@ func (ec *executionContext) _CommentEdge(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var createPortfolioPayloadImplementors = []string{"CreatePortfolioPayload"}
+
+func (ec *executionContext) _CreatePortfolioPayload(ctx context.Context, sel ast.SelectionSet, obj *model.CreatePortfolioPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createPortfolioPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CreatePortfolioPayload")
+		case "clientMutationId":
+			out.Values[i] = ec._CreatePortfolioPayload_clientMutationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var createTreasurePayloadImplementors = []string{"CreateTreasurePayload"}
 
 func (ec *executionContext) _CreateTreasurePayload(ctx context.Context, sel ast.SelectionSet, obj *model.CreateTreasurePayload) graphql.Marshaler {
@@ -11226,6 +12030,30 @@ func (ec *executionContext) _CreateUserLikePayload(ctx context.Context, sel ast.
 	return out
 }
 
+var deletePortfolioPayloadImplementors = []string{"DeletePortfolioPayload"}
+
+func (ec *executionContext) _DeletePortfolioPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeletePortfolioPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deletePortfolioPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeletePortfolioPayload")
+		case "clientMutationId":
+			out.Values[i] = ec._DeletePortfolioPayload_clientMutationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var deleteTreasurePayloadImplementors = []string{"DeleteTreasurePayload"}
 
 func (ec *executionContext) _DeleteTreasurePayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteTreasurePayload) graphql.Marshaler {
@@ -11263,6 +12091,30 @@ func (ec *executionContext) _DeleteUserLikePayload(ctx context.Context, sel ast.
 			out.Values[i] = graphql.MarshalString("DeleteUserLikePayload")
 		case "clientMutationId":
 			out.Values[i] = ec._DeleteUserLikePayload_clientMutationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var deleteWorkPayloadImplementors = []string{"DeleteWorkPayload"}
+
+func (ec *executionContext) _DeleteWorkPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteWorkPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteWorkPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteWorkPayload")
+		case "clientMutationId":
+			out.Values[i] = ec._DeleteWorkPayload_clientMutationId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11394,6 +12246,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "deleteWork":
+			out.Values[i] = ec._Mutation_deleteWork(ctx, field)
 		case "updateWorks":
 			out.Values[i] = ec._Mutation_updateWorks(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -11424,6 +12278,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteTreasure(ctx, field)
 		case "createUserLikeComment":
 			out.Values[i] = ec._Mutation_createUserLikeComment(ctx, field)
+		case "createPortfolio":
+			out.Values[i] = ec._Mutation_createPortfolio(ctx, field)
+		case "deletePortfolio":
+			out.Values[i] = ec._Mutation_deletePortfolio(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12405,6 +13263,11 @@ func (ec *executionContext) unmarshalNCreateCommentInput2artsignᚋentᚐCreateC
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreatePortfolioInput2artsignᚋentᚐCreatePortfolioInput(ctx context.Context, v interface{}) (ent.CreatePortfolioInput, error) {
+	res, err := ec.unmarshalInputCreatePortfolioInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateTreasureInput2artsignᚋentᚐCreateTreasureInput(ctx context.Context, v interface{}) (ent.CreateTreasureInput, error) {
 	res, err := ec.unmarshalInputCreateTreasureInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12438,6 +13301,11 @@ func (ec *executionContext) unmarshalNCursor2artsignᚋentᚐCursor(ctx context.
 
 func (ec *executionContext) marshalNCursor2artsignᚋentᚐCursor(ctx context.Context, sel ast.SelectionSet, v ent.Cursor) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNDeletePortfolioInput2artsignᚋgraphᚋmodelᚐDeletePortfolioInput(ctx context.Context, v interface{}) (model.DeletePortfolioInput, error) {
+	res, err := ec.unmarshalInputDeletePortfolioInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNDeleteTreasureInput2artsignᚋgraphᚋmodelᚐDeleteTreasureInput(ctx context.Context, v interface{}) (model.DeleteTreasureInput, error) {
@@ -12637,6 +13505,11 @@ func (ec *executionContext) marshalNOrderDirection2artsignᚋentᚐOrderDirectio
 
 func (ec *executionContext) marshalNPageInfo2artsignᚋentᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v ent.PageInfo) graphql.Marshaler {
 	return ec._PageInfo(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNPortfolioWhereInput2ᚖartsignᚋentᚐPortfolioWhereInput(ctx context.Context, v interface{}) (*ent.PortfolioWhereInput, error) {
+	res, err := ec.unmarshalInputPortfolioWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -13268,6 +14141,13 @@ func (ec *executionContext) unmarshalOCommentWhereInput2ᚖartsignᚋentᚐComme
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalOCreatePortfolioPayload2ᚖartsignᚋgraphᚋmodelᚐCreatePortfolioPayload(ctx context.Context, sel ast.SelectionSet, v *model.CreatePortfolioPayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CreatePortfolioPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOCreateTreasurePayload2ᚖartsignᚋgraphᚋmodelᚐCreateTreasurePayload(ctx context.Context, sel ast.SelectionSet, v *model.CreateTreasurePayload) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -13305,6 +14185,13 @@ func (ec *executionContext) marshalOCursor2ᚖartsignᚋentᚐCursor(ctx context
 	return v
 }
 
+func (ec *executionContext) marshalODeletePortfolioPayload2ᚖartsignᚋgraphᚋmodelᚐDeletePortfolioPayload(ctx context.Context, sel ast.SelectionSet, v *model.DeletePortfolioPayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DeletePortfolioPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalODeleteTreasurePayload2ᚖartsignᚋgraphᚋmodelᚐDeleteTreasurePayload(ctx context.Context, sel ast.SelectionSet, v *model.DeleteTreasurePayload) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -13317,6 +14204,13 @@ func (ec *executionContext) marshalODeleteUserLikePayload2ᚖartsignᚋgraphᚋm
 		return graphql.Null
 	}
 	return ec._DeleteUserLikePayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODeleteWorkPayload2ᚖartsignᚋgraphᚋmodelᚐDeleteWorkPayload(ctx context.Context, sel ast.SelectionSet, v *model.DeleteWorkPayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DeleteWorkPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFloat2float64(ctx context.Context, v interface{}) (float64, error) {
@@ -13631,6 +14525,38 @@ func (ec *executionContext) marshalONode2artsignᚋentᚐNoder(ctx context.Conte
 		return graphql.Null
 	}
 	return ec._Node(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPortfolioWhereInput2ᚕᚖartsignᚋentᚐPortfolioWhereInputᚄ(ctx context.Context, v interface{}) ([]*ent.PortfolioWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*ent.PortfolioWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPortfolioWhereInput2ᚖartsignᚋentᚐPortfolioWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOPortfolioWhereInput2ᚖartsignᚋentᚐPortfolioWhereInput(ctx context.Context, v interface{}) (*ent.PortfolioWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPortfolioWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

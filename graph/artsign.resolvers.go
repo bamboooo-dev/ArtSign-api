@@ -5,6 +5,7 @@ package graph
 
 import (
 	"artsign/ent"
+	"artsign/ent/portfolio"
 	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -58,6 +59,17 @@ func (r *mutationResolver) CreateWork(ctx context.Context, input ent.CreateWorkI
 
 func (r *mutationResolver) UpdateWork(ctx context.Context, id int, input ent.UpdateWorkInput) (*ent.Work, error) {
 	return ent.FromContext(ctx).Work.UpdateOneID(id).SetInput(input).Save(ctx)
+}
+
+func (r *mutationResolver) DeleteWork(ctx context.Context, id int) (*model.DeleteWorkPayload, error) {
+	err := ent.FromContext(ctx).Work.
+		DeleteOneID(id).
+		Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.DeleteWorkPayload{}, nil
 }
 
 func (r *mutationResolver) UpdateWorks(ctx context.Context, ids []int, input ent.UpdateWorkInput) ([]*ent.Work, error) {
@@ -150,6 +162,35 @@ func (r *mutationResolver) CreateUserLikeComment(ctx context.Context, input mode
 	}
 
 	return &model.CreateUserLikeCommentPayload{}, nil
+}
+
+func (r *mutationResolver) CreatePortfolio(ctx context.Context, input ent.CreatePortfolioInput) (*model.CreatePortfolioPayload, error) {
+	_, err := ent.FromContext(ctx).Portfolio.
+		Create().
+		SetOwnerID(input.OwnerID).
+		SetWorkID(input.WorkID).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.CreatePortfolioPayload{}, nil
+}
+
+func (r *mutationResolver) DeletePortfolio(ctx context.Context, input model.DeletePortfolioInput) (*model.DeletePortfolioPayload, error) {
+	_, err := ent.FromContext(ctx).Portfolio.
+		Delete().
+		Where(
+			portfolio.HasOwnerWith(user.IDEQ(input.UserID)),
+			portfolio.HasWorkWith(work.IDEQ(input.WorkID))).
+		Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.DeletePortfolioPayload{
+		ClientMutationID: input.ClientMutationID,
+	}, nil
 }
 
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error) {

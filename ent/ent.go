@@ -6,6 +6,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/tool"
 	"artsign/ent/treasure"
 	"artsign/ent/user"
@@ -35,13 +36,14 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		category.Table: category.ValidColumn,
-		comment.Table:  comment.ValidColumn,
-		image.Table:    image.ValidColumn,
-		tool.Table:     tool.ValidColumn,
-		treasure.Table: treasure.ValidColumn,
-		user.Table:     user.ValidColumn,
-		work.Table:     work.ValidColumn,
+		category.Table:  category.ValidColumn,
+		comment.Table:   comment.ValidColumn,
+		image.Table:     image.ValidColumn,
+		portfolio.Table: portfolio.ValidColumn,
+		tool.Table:      tool.ValidColumn,
+		treasure.Table:  treasure.ValidColumn,
+		user.Table:      user.ValidColumn,
+		work.Table:      work.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

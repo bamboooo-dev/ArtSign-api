@@ -6,6 +6,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/predicate"
 	"artsign/ent/tool"
 	"artsign/ent/treasure"
@@ -200,6 +201,21 @@ func (wu *WorkUpdate) AddTreasures(t ...*Treasure) *WorkUpdate {
 	return wu.AddTreasureIDs(ids...)
 }
 
+// AddPortfolioIDs adds the "portfolios" edge to the Portfolio entity by IDs.
+func (wu *WorkUpdate) AddPortfolioIDs(ids ...int) *WorkUpdate {
+	wu.mutation.AddPortfolioIDs(ids...)
+	return wu
+}
+
+// AddPortfolios adds the "portfolios" edges to the Portfolio entity.
+func (wu *WorkUpdate) AddPortfolios(p ...*Portfolio) *WorkUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return wu.AddPortfolioIDs(ids...)
+}
+
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
 func (wu *WorkUpdate) AddCommentIDs(ids ...int) *WorkUpdate {
 	wu.mutation.AddCommentIDs(ids...)
@@ -308,6 +324,27 @@ func (wu *WorkUpdate) RemoveTreasures(t ...*Treasure) *WorkUpdate {
 		ids[i] = t[i].ID
 	}
 	return wu.RemoveTreasureIDs(ids...)
+}
+
+// ClearPortfolios clears all "portfolios" edges to the Portfolio entity.
+func (wu *WorkUpdate) ClearPortfolios() *WorkUpdate {
+	wu.mutation.ClearPortfolios()
+	return wu
+}
+
+// RemovePortfolioIDs removes the "portfolios" edge to Portfolio entities by IDs.
+func (wu *WorkUpdate) RemovePortfolioIDs(ids ...int) *WorkUpdate {
+	wu.mutation.RemovePortfolioIDs(ids...)
+	return wu
+}
+
+// RemovePortfolios removes "portfolios" edges to Portfolio entities.
+func (wu *WorkUpdate) RemovePortfolios(p ...*Portfolio) *WorkUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return wu.RemovePortfolioIDs(ids...)
 }
 
 // ClearComments clears all "comments" edges to the Comment entity.
@@ -776,6 +813,60 @@ func (wu *WorkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if wu.mutation.PortfoliosCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.PortfoliosTable,
+			Columns: []string{work.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedPortfoliosIDs(); len(nodes) > 0 && !wu.mutation.PortfoliosCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.PortfoliosTable,
+			Columns: []string{work.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.PortfoliosIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.PortfoliosTable,
+			Columns: []string{work.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if wu.mutation.CommentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1070,6 +1161,21 @@ func (wuo *WorkUpdateOne) AddTreasures(t ...*Treasure) *WorkUpdateOne {
 	return wuo.AddTreasureIDs(ids...)
 }
 
+// AddPortfolioIDs adds the "portfolios" edge to the Portfolio entity by IDs.
+func (wuo *WorkUpdateOne) AddPortfolioIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.AddPortfolioIDs(ids...)
+	return wuo
+}
+
+// AddPortfolios adds the "portfolios" edges to the Portfolio entity.
+func (wuo *WorkUpdateOne) AddPortfolios(p ...*Portfolio) *WorkUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return wuo.AddPortfolioIDs(ids...)
+}
+
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
 func (wuo *WorkUpdateOne) AddCommentIDs(ids ...int) *WorkUpdateOne {
 	wuo.mutation.AddCommentIDs(ids...)
@@ -1178,6 +1284,27 @@ func (wuo *WorkUpdateOne) RemoveTreasures(t ...*Treasure) *WorkUpdateOne {
 		ids[i] = t[i].ID
 	}
 	return wuo.RemoveTreasureIDs(ids...)
+}
+
+// ClearPortfolios clears all "portfolios" edges to the Portfolio entity.
+func (wuo *WorkUpdateOne) ClearPortfolios() *WorkUpdateOne {
+	wuo.mutation.ClearPortfolios()
+	return wuo
+}
+
+// RemovePortfolioIDs removes the "portfolios" edge to Portfolio entities by IDs.
+func (wuo *WorkUpdateOne) RemovePortfolioIDs(ids ...int) *WorkUpdateOne {
+	wuo.mutation.RemovePortfolioIDs(ids...)
+	return wuo
+}
+
+// RemovePortfolios removes "portfolios" edges to Portfolio entities.
+func (wuo *WorkUpdateOne) RemovePortfolios(p ...*Portfolio) *WorkUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return wuo.RemovePortfolioIDs(ids...)
 }
 
 // ClearComments clears all "comments" edges to the Comment entity.
@@ -1662,6 +1789,60 @@ func (wuo *WorkUpdateOne) sqlSave(ctx context.Context) (_node *Work, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: treasure.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.PortfoliosCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.PortfoliosTable,
+			Columns: []string{work.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedPortfoliosIDs(); len(nodes) > 0 && !wuo.mutation.PortfoliosCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.PortfoliosTable,
+			Columns: []string{work.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.PortfoliosIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.PortfoliosTable,
+			Columns: []string{work.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
 				},
 			},
 		}

@@ -39,6 +39,8 @@ const (
 	EdgeLikers = "likers"
 	// EdgeTreasures holds the string denoting the treasures edge name in mutations.
 	EdgeTreasures = "treasures"
+	// EdgePortfolios holds the string denoting the portfolios edge name in mutations.
+	EdgePortfolios = "portfolios"
 	// EdgeComments holds the string denoting the comments edge name in mutations.
 	EdgeComments = "comments"
 	// EdgeImages holds the string denoting the images edge name in mutations.
@@ -76,6 +78,13 @@ const (
 	TreasuresInverseTable = "treasures"
 	// TreasuresColumn is the table column denoting the treasures relation/edge.
 	TreasuresColumn = "work_treasures"
+	// PortfoliosTable is the table that holds the portfolios relation/edge.
+	PortfoliosTable = "portfolios"
+	// PortfoliosInverseTable is the table name for the Portfolio entity.
+	// It exists in this package in order to avoid circular dependency with the "portfolio" package.
+	PortfoliosInverseTable = "portfolios"
+	// PortfoliosColumn is the table column denoting the portfolios relation/edge.
+	PortfoliosColumn = "work_portfolios"
 	// CommentsTable is the table that holds the comments relation/edge.
 	CommentsTable = "comments"
 	// CommentsInverseTable is the table name for the Comment entity.

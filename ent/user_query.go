@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/comment"
+	"artsign/ent/portfolio"
 	"artsign/ent/predicate"
 	"artsign/ent/treasure"
 	"artsign/ent/user"
@@ -32,6 +33,7 @@ type UserQuery struct {
 	withWorks        *WorkQuery
 	withLikes        *WorkQuery
 	withTreasures    *TreasureQuery
+	withPortfolios   *PortfolioQuery
 	withComments     *CommentQuery
 	withLikeComments *CommentQuery
 	// intermediate query (i.e. traversal path).
@@ -129,6 +131,28 @@ func (uq *UserQuery) QueryTreasures() *TreasureQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(treasure.Table, treasure.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.TreasuresTable, user.TreasuresColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPortfolios chains the current query on the "portfolios" edge.
+func (uq *UserQuery) QueryPortfolios() *PortfolioQuery {
+	query := &PortfolioQuery{config: uq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(portfolio.Table, portfolio.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PortfoliosTable, user.PortfoliosColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -364,6 +388,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withWorks:        uq.withWorks.Clone(),
 		withLikes:        uq.withLikes.Clone(),
 		withTreasures:    uq.withTreasures.Clone(),
+		withPortfolios:   uq.withPortfolios.Clone(),
 		withComments:     uq.withComments.Clone(),
 		withLikeComments: uq.withLikeComments.Clone(),
 		// clone intermediate query.
@@ -402,6 +427,17 @@ func (uq *UserQuery) WithTreasures(opts ...func(*TreasureQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withTreasures = query
+	return uq
+}
+
+// WithPortfolios tells the query-builder to eager-load the nodes that are connected to
+// the "portfolios" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithPortfolios(opts ...func(*PortfolioQuery)) *UserQuery {
+	query := &PortfolioQuery{config: uq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withPortfolios = query
 	return uq
 }
 
@@ -492,10 +528,11 @@ func (uq *UserQuery) sqlAll(ctx context.Context) ([]*User, error) {
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			uq.withWorks != nil,
 			uq.withLikes != nil,
 			uq.withTreasures != nil,
+			uq.withPortfolios != nil,
 			uq.withComments != nil,
 			uq.withLikeComments != nil,
 		}
@@ -640,6 +677,35 @@ func (uq *UserQuery) sqlAll(ctx context.Context) ([]*User, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "user_treasures" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Treasures = append(node.Edges.Treasures, n)
+		}
+	}
+
+	if query := uq.withPortfolios; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*User)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Portfolios = []*Portfolio{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Portfolio(func(s *sql.Selector) {
+			s.Where(sql.InValues(user.PortfoliosColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.user_portfolios
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "user_portfolios" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "user_portfolios" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Portfolios = append(node.Edges.Portfolios, n)
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/tool"
 	"artsign/ent/treasure"
 	"artsign/ent/user"
@@ -211,6 +212,53 @@ func (i *Image) Node(ctx context.Context) (node *Node, err error) {
 	return node, nil
 }
 
+func (po *Portfolio) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     po.ID,
+		Type:   "Portfolio",
+		Fields: make([]*Field, 2),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(po.CreateTime); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "create_time",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(po.UpdateTime); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "update_time",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "owner",
+	}
+	err = po.QueryOwner().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "Work",
+		Name: "work",
+	}
+	err = po.QueryWork().
+		Select(work.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
 func (t *Tool) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     t.ID,
@@ -292,7 +340,7 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     u.ID,
 		Type:   "User",
 		Fields: make([]*Field, 4),
-		Edges:  make([]*Edge, 5),
+		Edges:  make([]*Edge, 6),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(u.Name); err != nil {
@@ -358,22 +406,32 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[3] = &Edge{
-		Type: "Comment",
-		Name: "comments",
+		Type: "Portfolio",
+		Name: "portfolios",
 	}
-	err = u.QueryComments().
-		Select(comment.FieldID).
+	err = u.QueryPortfolios().
+		Select(portfolio.FieldID).
 		Scan(ctx, &node.Edges[3].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[4] = &Edge{
 		Type: "Comment",
+		Name: "comments",
+	}
+	err = u.QueryComments().
+		Select(comment.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[5] = &Edge{
+		Type: "Comment",
 		Name: "like_comments",
 	}
 	err = u.QueryLikeComments().
 		Select(comment.FieldID).
-		Scan(ctx, &node.Edges[4].IDs)
+		Scan(ctx, &node.Edges[5].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +443,7 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		ID:     w.ID,
 		Type:   "Work",
 		Fields: make([]*Field, 9),
-		Edges:  make([]*Edge, 7),
+		Edges:  make([]*Edge, 8),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(w.Title); err != nil {
@@ -511,22 +569,32 @@ func (w *Work) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[5] = &Edge{
-		Type: "Comment",
-		Name: "comments",
+		Type: "Portfolio",
+		Name: "portfolios",
 	}
-	err = w.QueryComments().
-		Select(comment.FieldID).
+	err = w.QueryPortfolios().
+		Select(portfolio.FieldID).
 		Scan(ctx, &node.Edges[5].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[6] = &Edge{
+		Type: "Comment",
+		Name: "comments",
+	}
+	err = w.QueryComments().
+		Select(comment.FieldID).
+		Scan(ctx, &node.Edges[6].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[7] = &Edge{
 		Type: "Image",
 		Name: "images",
 	}
 	err = w.QueryImages().
 		Select(image.FieldID).
-		Scan(ctx, &node.Edges[6].IDs)
+		Scan(ctx, &node.Edges[7].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -622,6 +690,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 		n, err := c.Image.Query().
 			Where(image.ID(id)).
 			CollectFields(ctx, "Image").
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case portfolio.Table:
+		n, err := c.Portfolio.Query().
+			Where(portfolio.ID(id)).
+			CollectFields(ctx, "Portfolio").
 			Only(ctx)
 		if err != nil {
 			return nil, err
@@ -766,6 +843,19 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		nodes, err := c.Image.Query().
 			Where(image.IDIn(ids...)).
 			CollectFields(ctx, "Image").
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case portfolio.Table:
+		nodes, err := c.Portfolio.Query().
+			Where(portfolio.IDIn(ids...)).
+			CollectFields(ctx, "Portfolio").
 			All(ctx)
 		if err != nil {
 			return nil, err

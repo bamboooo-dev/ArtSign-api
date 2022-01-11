@@ -6,6 +6,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/tool"
 	"artsign/ent/treasure"
 	"artsign/ent/user"
@@ -177,6 +178,21 @@ func (wc *WorkCreate) AddTreasures(t ...*Treasure) *WorkCreate {
 		ids[i] = t[i].ID
 	}
 	return wc.AddTreasureIDs(ids...)
+}
+
+// AddPortfolioIDs adds the "portfolios" edge to the Portfolio entity by IDs.
+func (wc *WorkCreate) AddPortfolioIDs(ids ...int) *WorkCreate {
+	wc.mutation.AddPortfolioIDs(ids...)
+	return wc
+}
+
+// AddPortfolios adds the "portfolios" edges to the Portfolio entity.
+func (wc *WorkCreate) AddPortfolios(p ...*Portfolio) *WorkCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return wc.AddPortfolioIDs(ids...)
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
@@ -532,6 +548,25 @@ func (wc *WorkCreate) createSpec() (*Work, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: treasure.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.PortfoliosIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   work.PortfoliosTable,
+			Columns: []string{work.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
 				},
 			},
 		}

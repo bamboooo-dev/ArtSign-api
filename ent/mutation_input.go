@@ -220,6 +220,68 @@ func (u *ImageUpdateOne) SetInput(i UpdateImageInput) *ImageUpdateOne {
 	return u
 }
 
+// CreatePortfolioInput represents a mutation input for creating portfolios.
+type CreatePortfolioInput struct {
+	CreateTime *time.Time
+	UpdateTime *time.Time
+	OwnerID    int
+	WorkID     int
+}
+
+// Mutate applies the CreatePortfolioInput on the PortfolioCreate builder.
+func (i *CreatePortfolioInput) Mutate(m *PortfolioCreate) {
+	if v := i.CreateTime; v != nil {
+		m.SetCreateTime(*v)
+	}
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	m.SetOwnerID(i.OwnerID)
+	m.SetWorkID(i.WorkID)
+}
+
+// SetInput applies the change-set in the CreatePortfolioInput on the create builder.
+func (c *PortfolioCreate) SetInput(i CreatePortfolioInput) *PortfolioCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdatePortfolioInput represents a mutation input for updating portfolios.
+type UpdatePortfolioInput struct {
+	OwnerID    *int
+	ClearOwner bool
+	WorkID     *int
+	ClearWork  bool
+}
+
+// Mutate applies the UpdatePortfolioInput on the PortfolioMutation.
+func (i *UpdatePortfolioInput) Mutate(m *PortfolioMutation) {
+	if i.ClearOwner {
+		m.ClearOwner()
+	}
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
+	}
+	if i.ClearWork {
+		m.ClearWork()
+	}
+	if v := i.WorkID; v != nil {
+		m.SetWorkID(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdatePortfolioInput on the update builder.
+func (u *PortfolioUpdate) SetInput(i UpdatePortfolioInput) *PortfolioUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdatePortfolioInput on the update-one builder.
+func (u *PortfolioUpdateOne) SetInput(i UpdatePortfolioInput) *PortfolioUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateToolInput represents a mutation input for creating tools.
 type CreateToolInput struct {
 	Name    string
@@ -343,6 +405,7 @@ type CreateUserInput struct {
 	WorkIDs        []int
 	LikeIDs        []int
 	TreasureIDs    []int
+	PortfolioIDs   []int
 	CommentIDs     []int
 	LikeCommentIDs []int
 }
@@ -361,6 +424,9 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	}
 	if ids := i.TreasureIDs; len(ids) > 0 {
 		m.AddTreasureIDs(ids...)
+	}
+	if ids := i.PortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
 	}
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
@@ -388,6 +454,8 @@ type UpdateUserInput struct {
 	RemoveLikeIDs        []int
 	AddTreasureIDs       []int
 	RemoveTreasureIDs    []int
+	AddPortfolioIDs      []int
+	RemovePortfolioIDs   []int
 	AddCommentIDs        []int
 	RemoveCommentIDs     []int
 	AddLikeCommentIDs    []int
@@ -426,6 +494,12 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	if ids := i.RemoveTreasureIDs; len(ids) > 0 {
 		m.RemoveTreasureIDs(ids...)
 	}
+	if ids := i.AddPortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
+	}
+	if ids := i.RemovePortfolioIDs; len(ids) > 0 {
+		m.RemovePortfolioIDs(ids...)
+	}
 	if ids := i.AddCommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
 	}
@@ -454,22 +528,23 @@ func (u *UserUpdateOne) SetInput(i UpdateUserInput) *UserUpdateOne {
 
 // CreateWorkInput represents a mutation input for creating works.
 type CreateWorkInput struct {
-	Title       string
-	Description string
-	Height      float64
-	Width       float64
-	SizeUnit    string
-	Year        int
-	Month       int
-	CreatedAt   *time.Time
-	UpdatedAt   *time.Time
-	CategoryID  *int
-	ToolIDs     []int
-	OwnerID     *int
-	LikerIDs    []int
-	TreasureIDs []int
-	CommentIDs  []int
-	ImageIDs    []int
+	Title        string
+	Description  string
+	Height       float64
+	Width        float64
+	SizeUnit     string
+	Year         int
+	Month        int
+	CreatedAt    *time.Time
+	UpdatedAt    *time.Time
+	CategoryID   *int
+	ToolIDs      []int
+	OwnerID      *int
+	LikerIDs     []int
+	TreasureIDs  []int
+	PortfolioIDs []int
+	CommentIDs   []int
+	ImageIDs     []int
 }
 
 // Mutate applies the CreateWorkInput on the WorkCreate builder.
@@ -502,6 +577,9 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	if ids := i.TreasureIDs; len(ids) > 0 {
 		m.AddTreasureIDs(ids...)
 	}
+	if ids := i.PortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
+	}
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
 	}
@@ -518,28 +596,30 @@ func (c *WorkCreate) SetInput(i CreateWorkInput) *WorkCreate {
 
 // UpdateWorkInput represents a mutation input for updating works.
 type UpdateWorkInput struct {
-	Title             *string
-	Description       *string
-	Height            *float64
-	Width             *float64
-	SizeUnit          *string
-	Year              *int
-	Month             *int
-	UpdatedAt         *time.Time
-	CategoryID        *int
-	ClearCategory     bool
-	AddToolIDs        []int
-	RemoveToolIDs     []int
-	OwnerID           *int
-	ClearOwner        bool
-	AddLikerIDs       []int
-	RemoveLikerIDs    []int
-	AddTreasureIDs    []int
-	RemoveTreasureIDs []int
-	AddCommentIDs     []int
-	RemoveCommentIDs  []int
-	AddImageIDs       []int
-	RemoveImageIDs    []int
+	Title              *string
+	Description        *string
+	Height             *float64
+	Width              *float64
+	SizeUnit           *string
+	Year               *int
+	Month              *int
+	UpdatedAt          *time.Time
+	CategoryID         *int
+	ClearCategory      bool
+	AddToolIDs         []int
+	RemoveToolIDs      []int
+	OwnerID            *int
+	ClearOwner         bool
+	AddLikerIDs        []int
+	RemoveLikerIDs     []int
+	AddTreasureIDs     []int
+	RemoveTreasureIDs  []int
+	AddPortfolioIDs    []int
+	RemovePortfolioIDs []int
+	AddCommentIDs      []int
+	RemoveCommentIDs   []int
+	AddImageIDs        []int
+	RemoveImageIDs     []int
 }
 
 // Mutate applies the UpdateWorkInput on the WorkMutation.
@@ -597,6 +677,12 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	}
 	if ids := i.RemoveTreasureIDs; len(ids) > 0 {
 		m.RemoveTreasureIDs(ids...)
+	}
+	if ids := i.AddPortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
+	}
+	if ids := i.RemovePortfolioIDs; len(ids) > 0 {
+		m.RemovePortfolioIDs(ids...)
 	}
 	if ids := i.AddCommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)

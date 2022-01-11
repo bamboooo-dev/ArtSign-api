@@ -77,6 +77,34 @@ var (
 			},
 		},
 	}
+	// PortfoliosColumns holds the columns for the "portfolios" table.
+	PortfoliosColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "user_portfolios", Type: field.TypeInt, Nullable: true},
+		{Name: "work_portfolios", Type: field.TypeInt, Nullable: true},
+	}
+	// PortfoliosTable holds the schema information for the "portfolios" table.
+	PortfoliosTable = &schema.Table{
+		Name:       "portfolios",
+		Columns:    PortfoliosColumns,
+		PrimaryKey: []*schema.Column{PortfoliosColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "portfolios_users_portfolios",
+				Columns:    []*schema.Column{PortfoliosColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "portfolios_works_portfolios",
+				Columns:    []*schema.Column{PortfoliosColumns[4]},
+				RefColumns: []*schema.Column{WorksColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// ToolsColumns holds the columns for the "tools" table.
 	ToolsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -245,6 +273,7 @@ var (
 		CategoriesTable,
 		CommentsTable,
 		ImagesTable,
+		PortfoliosTable,
 		ToolsTable,
 		TreasuresTable,
 		UsersTable,
@@ -260,6 +289,8 @@ func init() {
 	CommentsTable.ForeignKeys[1].RefTable = UsersTable
 	CommentsTable.ForeignKeys[2].RefTable = WorksTable
 	ImagesTable.ForeignKeys[0].RefTable = WorksTable
+	PortfoliosTable.ForeignKeys[0].RefTable = UsersTable
+	PortfoliosTable.ForeignKeys[1].RefTable = WorksTable
 	TreasuresTable.ForeignKeys[0].RefTable = UsersTable
 	TreasuresTable.ForeignKeys[1].RefTable = WorksTable
 	WorksTable.ForeignKeys[0].RefTable = CategoriesTable

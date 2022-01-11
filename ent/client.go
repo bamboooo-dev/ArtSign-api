@@ -12,6 +12,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/tool"
 	"artsign/ent/treasure"
 	"artsign/ent/user"
@@ -33,6 +34,8 @@ type Client struct {
 	Comment *CommentClient
 	// Image is the client for interacting with the Image builders.
 	Image *ImageClient
+	// Portfolio is the client for interacting with the Portfolio builders.
+	Portfolio *PortfolioClient
 	// Tool is the client for interacting with the Tool builders.
 	Tool *ToolClient
 	// Treasure is the client for interacting with the Treasure builders.
@@ -59,6 +62,7 @@ func (c *Client) init() {
 	c.Category = NewCategoryClient(c.config)
 	c.Comment = NewCommentClient(c.config)
 	c.Image = NewImageClient(c.config)
+	c.Portfolio = NewPortfolioClient(c.config)
 	c.Tool = NewToolClient(c.config)
 	c.Treasure = NewTreasureClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -94,15 +98,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		Comment:  NewCommentClient(cfg),
-		Image:    NewImageClient(cfg),
-		Tool:     NewToolClient(cfg),
-		Treasure: NewTreasureClient(cfg),
-		User:     NewUserClient(cfg),
-		Work:     NewWorkClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		Category:  NewCategoryClient(cfg),
+		Comment:   NewCommentClient(cfg),
+		Image:     NewImageClient(cfg),
+		Portfolio: NewPortfolioClient(cfg),
+		Tool:      NewToolClient(cfg),
+		Treasure:  NewTreasureClient(cfg),
+		User:      NewUserClient(cfg),
+		Work:      NewWorkClient(cfg),
 	}, nil
 }
 
@@ -120,14 +125,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		Comment:  NewCommentClient(cfg),
-		Image:    NewImageClient(cfg),
-		Tool:     NewToolClient(cfg),
-		Treasure: NewTreasureClient(cfg),
-		User:     NewUserClient(cfg),
-		Work:     NewWorkClient(cfg),
+		config:    cfg,
+		Category:  NewCategoryClient(cfg),
+		Comment:   NewCommentClient(cfg),
+		Image:     NewImageClient(cfg),
+		Portfolio: NewPortfolioClient(cfg),
+		Tool:      NewToolClient(cfg),
+		Treasure:  NewTreasureClient(cfg),
+		User:      NewUserClient(cfg),
+		Work:      NewWorkClient(cfg),
 	}, nil
 }
 
@@ -160,6 +166,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Category.Use(hooks...)
 	c.Comment.Use(hooks...)
 	c.Image.Use(hooks...)
+	c.Portfolio.Use(hooks...)
 	c.Tool.Use(hooks...)
 	c.Treasure.Use(hooks...)
 	c.User.Use(hooks...)
@@ -548,6 +555,128 @@ func (c *ImageClient) Hooks() []Hook {
 	return c.hooks.Image
 }
 
+// PortfolioClient is a client for the Portfolio schema.
+type PortfolioClient struct {
+	config
+}
+
+// NewPortfolioClient returns a client for the Portfolio from the given config.
+func NewPortfolioClient(c config) *PortfolioClient {
+	return &PortfolioClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `portfolio.Hooks(f(g(h())))`.
+func (c *PortfolioClient) Use(hooks ...Hook) {
+	c.hooks.Portfolio = append(c.hooks.Portfolio, hooks...)
+}
+
+// Create returns a create builder for Portfolio.
+func (c *PortfolioClient) Create() *PortfolioCreate {
+	mutation := newPortfolioMutation(c.config, OpCreate)
+	return &PortfolioCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Portfolio entities.
+func (c *PortfolioClient) CreateBulk(builders ...*PortfolioCreate) *PortfolioCreateBulk {
+	return &PortfolioCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Portfolio.
+func (c *PortfolioClient) Update() *PortfolioUpdate {
+	mutation := newPortfolioMutation(c.config, OpUpdate)
+	return &PortfolioUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PortfolioClient) UpdateOne(po *Portfolio) *PortfolioUpdateOne {
+	mutation := newPortfolioMutation(c.config, OpUpdateOne, withPortfolio(po))
+	return &PortfolioUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PortfolioClient) UpdateOneID(id int) *PortfolioUpdateOne {
+	mutation := newPortfolioMutation(c.config, OpUpdateOne, withPortfolioID(id))
+	return &PortfolioUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Portfolio.
+func (c *PortfolioClient) Delete() *PortfolioDelete {
+	mutation := newPortfolioMutation(c.config, OpDelete)
+	return &PortfolioDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *PortfolioClient) DeleteOne(po *Portfolio) *PortfolioDeleteOne {
+	return c.DeleteOneID(po.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *PortfolioClient) DeleteOneID(id int) *PortfolioDeleteOne {
+	builder := c.Delete().Where(portfolio.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PortfolioDeleteOne{builder}
+}
+
+// Query returns a query builder for Portfolio.
+func (c *PortfolioClient) Query() *PortfolioQuery {
+	return &PortfolioQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Portfolio entity by its id.
+func (c *PortfolioClient) Get(ctx context.Context, id int) (*Portfolio, error) {
+	return c.Query().Where(portfolio.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PortfolioClient) GetX(ctx context.Context, id int) *Portfolio {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a Portfolio.
+func (c *PortfolioClient) QueryOwner(po *Portfolio) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := po.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(portfolio.Table, portfolio.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, portfolio.OwnerTable, portfolio.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWork queries the work edge of a Portfolio.
+func (c *PortfolioClient) QueryWork(po *Portfolio) *WorkQuery {
+	query := &WorkQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := po.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(portfolio.Table, portfolio.FieldID, id),
+			sqlgraph.To(work.Table, work.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, portfolio.WorkTable, portfolio.WorkColumn),
+		)
+		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PortfolioClient) Hooks() []Hook {
+	return c.hooks.Portfolio
+}
+
 // ToolClient is a client for the Tool schema.
 type ToolClient struct {
 	config
@@ -909,6 +1038,22 @@ func (c *UserClient) QueryTreasures(u *User) *TreasureQuery {
 	return query
 }
 
+// QueryPortfolios queries the portfolios edge of a User.
+func (c *UserClient) QueryPortfolios(u *User) *PortfolioQuery {
+	query := &PortfolioQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(portfolio.Table, portfolio.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PortfoliosTable, user.PortfoliosColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryComments queries the comments edge of a User.
 func (c *UserClient) QueryComments(u *User) *CommentQuery {
 	query := &CommentQuery{config: c.config}
@@ -1104,6 +1249,22 @@ func (c *WorkClient) QueryTreasures(w *Work) *TreasureQuery {
 			sqlgraph.From(work.Table, work.FieldID, id),
 			sqlgraph.To(treasure.Table, treasure.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, work.TreasuresTable, work.TreasuresColumn),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPortfolios queries the portfolios edge of a Work.
+func (c *WorkClient) QueryPortfolios(w *Work) *PortfolioQuery {
+	query := &PortfolioQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, id),
+			sqlgraph.To(portfolio.Table, portfolio.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, work.PortfoliosTable, work.PortfoliosColumn),
 		)
 		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
 		return fromV, nil

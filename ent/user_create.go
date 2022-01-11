@@ -4,6 +4,7 @@ package ent
 
 import (
 	"artsign/ent/comment"
+	"artsign/ent/portfolio"
 	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
@@ -89,6 +90,21 @@ func (uc *UserCreate) AddTreasures(t ...*Treasure) *UserCreate {
 		ids[i] = t[i].ID
 	}
 	return uc.AddTreasureIDs(ids...)
+}
+
+// AddPortfolioIDs adds the "portfolios" edge to the Portfolio entity by IDs.
+func (uc *UserCreate) AddPortfolioIDs(ids ...int) *UserCreate {
+	uc.mutation.AddPortfolioIDs(ids...)
+	return uc
+}
+
+// AddPortfolios adds the "portfolios" edges to the Portfolio entity.
+func (uc *UserCreate) AddPortfolios(p ...*Portfolio) *UserCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uc.AddPortfolioIDs(ids...)
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
@@ -321,6 +337,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: treasure.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.PortfoliosIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PortfoliosTable,
+			Columns: []string{user.PortfoliosColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: portfolio.FieldID,
 				},
 			},
 		}

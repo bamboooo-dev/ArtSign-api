@@ -1,0 +1,13 @@
+type CreatePortfolioPayload {
+  clientMutationId: String
+}
+
+input DeletePortfolioInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+type DeletePortfolioPayload {
+  clientMutationId: String
+}

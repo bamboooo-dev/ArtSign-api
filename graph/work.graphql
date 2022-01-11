@@ -87,3 +87,7 @@ input CreateWorkInput {
   month: Int!
   toolIDs: [ID]!
 }
+
+type DeleteWorkPayload {
+  clientMutationId: String
+}

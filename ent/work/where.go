@@ -1085,6 +1085,34 @@ func HasTreasuresWith(preds ...predicate.Treasure) predicate.Work {
 	})
 }
 
+// HasPortfolios applies the HasEdge predicate on the "portfolios" edge.
+func HasPortfolios() predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PortfoliosTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PortfoliosTable, PortfoliosColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPortfoliosWith applies the HasEdge predicate on the "portfolios" edge with a given conditions (other predicates).
+func HasPortfoliosWith(preds ...predicate.Portfolio) predicate.Work {
+	return predicate.Work(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PortfoliosInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PortfoliosTable, PortfoliosColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasComments applies the HasEdge predicate on the "comments" edge.
 func HasComments() predicate.Work {
 	return predicate.Work(func(s *sql.Selector) {

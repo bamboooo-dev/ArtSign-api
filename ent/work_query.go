@@ -6,6 +6,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/predicate"
 	"artsign/ent/tool"
 	"artsign/ent/treasure"
@@ -32,14 +33,15 @@ type WorkQuery struct {
 	fields     []string
 	predicates []predicate.Work
 	// eager-loading edges.
-	withCategory  *CategoryQuery
-	withTools     *ToolQuery
-	withOwner     *UserQuery
-	withLikers    *UserQuery
-	withTreasures *TreasureQuery
-	withComments  *CommentQuery
-	withImages    *ImageQuery
-	withFKs       bool
+	withCategory   *CategoryQuery
+	withTools      *ToolQuery
+	withOwner      *UserQuery
+	withLikers     *UserQuery
+	withTreasures  *TreasureQuery
+	withPortfolios *PortfolioQuery
+	withComments   *CommentQuery
+	withImages     *ImageQuery
+	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -179,6 +181,28 @@ func (wq *WorkQuery) QueryTreasures() *TreasureQuery {
 			sqlgraph.From(work.Table, work.FieldID, selector),
 			sqlgraph.To(treasure.Table, treasure.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, work.TreasuresTable, work.TreasuresColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPortfolios chains the current query on the "portfolios" edge.
+func (wq *WorkQuery) QueryPortfolios() *PortfolioQuery {
+	query := &PortfolioQuery{config: wq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(work.Table, work.FieldID, selector),
+			sqlgraph.To(portfolio.Table, portfolio.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, work.PortfoliosTable, work.PortfoliosColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -406,18 +430,19 @@ func (wq *WorkQuery) Clone() *WorkQuery {
 		return nil
 	}
 	return &WorkQuery{
-		config:        wq.config,
-		limit:         wq.limit,
-		offset:        wq.offset,
-		order:         append([]OrderFunc{}, wq.order...),
-		predicates:    append([]predicate.Work{}, wq.predicates...),
-		withCategory:  wq.withCategory.Clone(),
-		withTools:     wq.withTools.Clone(),
-		withOwner:     wq.withOwner.Clone(),
-		withLikers:    wq.withLikers.Clone(),
-		withTreasures: wq.withTreasures.Clone(),
-		withComments:  wq.withComments.Clone(),
-		withImages:    wq.withImages.Clone(),
+		config:         wq.config,
+		limit:          wq.limit,
+		offset:         wq.offset,
+		order:          append([]OrderFunc{}, wq.order...),
+		predicates:     append([]predicate.Work{}, wq.predicates...),
+		withCategory:   wq.withCategory.Clone(),
+		withTools:      wq.withTools.Clone(),
+		withOwner:      wq.withOwner.Clone(),
+		withLikers:     wq.withLikers.Clone(),
+		withTreasures:  wq.withTreasures.Clone(),
+		withPortfolios: wq.withPortfolios.Clone(),
+		withComments:   wq.withComments.Clone(),
+		withImages:     wq.withImages.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
 		path: wq.path,
@@ -476,6 +501,17 @@ func (wq *WorkQuery) WithTreasures(opts ...func(*TreasureQuery)) *WorkQuery {
 		opt(query)
 	}
 	wq.withTreasures = query
+	return wq
+}
+
+// WithPortfolios tells the query-builder to eager-load the nodes that are connected to
+// the "portfolios" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkQuery) WithPortfolios(opts ...func(*PortfolioQuery)) *WorkQuery {
+	query := &PortfolioQuery{config: wq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withPortfolios = query
 	return wq
 }
 
@@ -567,12 +603,13 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 		nodes       = []*Work{}
 		withFKs     = wq.withFKs
 		_spec       = wq.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			wq.withCategory != nil,
 			wq.withTools != nil,
 			wq.withOwner != nil,
 			wq.withLikers != nil,
 			wq.withTreasures != nil,
+			wq.withPortfolios != nil,
 			wq.withComments != nil,
 			wq.withImages != nil,
 		}
@@ -817,6 +854,35 @@ func (wq *WorkQuery) sqlAll(ctx context.Context) ([]*Work, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "work_treasures" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Treasures = append(node.Edges.Treasures, n)
+		}
+	}
+
+	if query := wq.withPortfolios; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Work)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Portfolios = []*Portfolio{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Portfolio(func(s *sql.Selector) {
+			s.Where(sql.InValues(work.PortfoliosColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.work_portfolios
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "work_portfolios" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "work_portfolios" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Portfolios = append(node.Edges.Portfolios, n)
 		}
 	}
 

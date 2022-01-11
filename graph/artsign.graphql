@@ -47,6 +47,7 @@ type Query {
 type Mutation {
   createWork(input: CreateWorkInput!, images: [Upload!]): Work!
   updateWork(id: ID!, input: UpdateWorkInput!): Work!
+  deleteWork(id: ID!): DeleteWorkPayload
   updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
@@ -58,6 +59,8 @@ type Mutation {
   createUserLikeComment(
     input: CreateUserLikeCommentInput!
   ): CreateUserLikeCommentPayload
+  createPortfolio(input: CreatePortfolioInput!): CreatePortfolioPayload
+  deletePortfolio(input: DeletePortfolioInput!): DeletePortfolioPayload
 }
 
 type CreateUserLikePayload {
@@ -99,6 +102,11 @@ input CreateUserLikeCommentInput {
 }
 
 input CreateTreasureInput {
+  ownerID: ID!
+  workID: ID!
+}
+
+input CreatePortfolioInput {
   ownerID: ID!
   workID: ID!
 }

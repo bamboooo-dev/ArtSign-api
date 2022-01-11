@@ -59,6 +59,7 @@ func (Work) Edges() []ent.Edge {
 		edge.From("likers", User.Type).
 			Ref("likes"),
 		edge.To("treasures", Treasure.Type),
+		edge.To("portfolios", Portfolio.Type),
 		edge.To("comments", Comment.Type),
 		edge.To("images", Image.Type),
 	}

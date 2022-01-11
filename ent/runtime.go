@@ -6,6 +6,7 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/schema"
 	"artsign/ent/tool"
 	"artsign/ent/treasure"
@@ -66,6 +67,23 @@ func init() {
 	imageDescURL := imageFields[0].Descriptor()
 	// image.URLValidator is a validator for the "url" field. It is called by the builders before save.
 	image.URLValidator = imageDescURL.Validators[0].(func(string) error)
+	portfolioMixin := schema.Portfolio{}.Mixin()
+	portfolioMixinFields0 := portfolioMixin[0].Fields()
+	_ = portfolioMixinFields0
+	portfolioMixinFields1 := portfolioMixin[1].Fields()
+	_ = portfolioMixinFields1
+	portfolioFields := schema.Portfolio{}.Fields()
+	_ = portfolioFields
+	// portfolioDescCreateTime is the schema descriptor for create_time field.
+	portfolioDescCreateTime := portfolioMixinFields0[0].Descriptor()
+	// portfolio.DefaultCreateTime holds the default value on creation for the create_time field.
+	portfolio.DefaultCreateTime = portfolioDescCreateTime.Default.(func() time.Time)
+	// portfolioDescUpdateTime is the schema descriptor for update_time field.
+	portfolioDescUpdateTime := portfolioMixinFields1[0].Descriptor()
+	// portfolio.DefaultUpdateTime holds the default value on creation for the update_time field.
+	portfolio.DefaultUpdateTime = portfolioDescUpdateTime.Default.(func() time.Time)
+	// portfolio.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	portfolio.UpdateDefaultUpdateTime = portfolioDescUpdateTime.UpdateDefault.(func() time.Time)
 	toolFields := schema.Tool{}.Fields()
 	_ = toolFields
 	// toolDescName is the schema descriptor for name field.

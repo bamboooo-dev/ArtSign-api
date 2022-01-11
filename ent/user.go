@@ -36,13 +36,15 @@ type UserEdges struct {
 	Likes []*Work `json:"likes,omitempty"`
 	// Treasures holds the value of the treasures edge.
 	Treasures []*Treasure `json:"treasures,omitempty"`
+	// Portfolios holds the value of the portfolios edge.
+	Portfolios []*Portfolio `json:"portfolios,omitempty"`
 	// Comments holds the value of the comments edge.
 	Comments []*Comment `json:"comments,omitempty"`
 	// LikeComments holds the value of the like_comments edge.
 	LikeComments []*Comment `json:"like_comments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // WorksOrErr returns the Works value or an error if the edge
@@ -72,10 +74,19 @@ func (e UserEdges) TreasuresOrErr() ([]*Treasure, error) {
 	return nil, &NotLoadedError{edge: "treasures"}
 }
 
+// PortfoliosOrErr returns the Portfolios value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PortfoliosOrErr() ([]*Portfolio, error) {
+	if e.loadedTypes[3] {
+		return e.Portfolios, nil
+	}
+	return nil, &NotLoadedError{edge: "portfolios"}
+}
+
 // CommentsOrErr returns the Comments value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) CommentsOrErr() ([]*Comment, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.Comments, nil
 	}
 	return nil, &NotLoadedError{edge: "comments"}
@@ -84,7 +95,7 @@ func (e UserEdges) CommentsOrErr() ([]*Comment, error) {
 // LikeCommentsOrErr returns the LikeComments value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) LikeCommentsOrErr() ([]*Comment, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.LikeComments, nil
 	}
 	return nil, &NotLoadedError{edge: "like_comments"}
@@ -162,6 +173,11 @@ func (u *User) QueryLikes() *WorkQuery {
 // QueryTreasures queries the "treasures" edge of the User entity.
 func (u *User) QueryTreasures() *TreasureQuery {
 	return (&UserClient{config: u.config}).QueryTreasures(u)
+}
+
+// QueryPortfolios queries the "portfolios" edge of the User entity.
+func (u *User) QueryPortfolios() *PortfolioQuery {
+	return (&UserClient{config: u.config}).QueryPortfolios(u)
 }
 
 // QueryComments queries the "comments" edge of the User entity.

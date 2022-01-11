@@ -18,6 +18,8 @@ type Tx struct {
 	Comment *CommentClient
 	// Image is the client for interacting with the Image builders.
 	Image *ImageClient
+	// Portfolio is the client for interacting with the Portfolio builders.
+	Portfolio *PortfolioClient
 	// Tool is the client for interacting with the Tool builders.
 	Tool *ToolClient
 	// Treasure is the client for interacting with the Treasure builders.
@@ -164,6 +166,7 @@ func (tx *Tx) init() {
 	tx.Category = NewCategoryClient(tx.config)
 	tx.Comment = NewCommentClient(tx.config)
 	tx.Image = NewImageClient(tx.config)
+	tx.Portfolio = NewPortfolioClient(tx.config)
 	tx.Tool = NewToolClient(tx.config)
 	tx.Treasure = NewTreasureClient(tx.config)
 	tx.User = NewUserClient(tx.config)
