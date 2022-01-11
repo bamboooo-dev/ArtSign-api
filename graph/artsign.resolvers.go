@@ -5,6 +5,8 @@ package graph
 
 import (
 	"artsign/ent"
+	"artsign/ent/treasure"
+	"artsign/ent/user"
 	"artsign/ent/work"
 	"artsign/graph/generated"
 	"artsign/graph/model"
@@ -109,32 +111,31 @@ func (r *mutationResolver) CreateComment(ctx context.Context, input ent.CreateCo
 	return ent.FromContext(ctx).Comment.Create().SetInput(input).Save(ctx)
 }
 
-func (r *mutationResolver) CreateUserTreasure(ctx context.Context, input model.CreateUserTreasureInput) (*model.CreateUserTreasurePayload, error) {
-	user, err := ent.FromContext(ctx).User.Get(ctx, input.UserID)
+func (r *mutationResolver) CreateTreasure(ctx context.Context, input ent.CreateTreasureInput) (*model.CreateTreasurePayload, error) {
+	_, err := ent.FromContext(ctx).Treasure.
+		Create().
+		SetOwnerID(input.OwnerID).
+		SetWorkID(input.WorkID).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = user.Update().AddTreasureIDs(input.WorkID).Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.CreateUserTreasurePayload{}, nil
+	return &model.CreateTreasurePayload{}, nil
 }
 
-func (r *mutationResolver) DeleteUserTreasure(ctx context.Context, input model.DeleteUserTreasureInput) (*model.DeleteUserTreasurePayload, error) {
-	user, err := ent.FromContext(ctx).User.Get(ctx, input.UserID)
+func (r *mutationResolver) DeleteTreasure(ctx context.Context, input model.DeleteTreasureInput) (*model.DeleteTreasurePayload, error) {
+	_, err := ent.FromContext(ctx).Treasure.
+		Delete().
+		Where(
+			treasure.HasOwnerWith(user.IDEQ(input.UserID)),
+			treasure.HasWorkWith(work.IDEQ(input.WorkID))).
+		Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = user.Update().RemoveTreasureIDs(input.WorkID).Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.DeleteUserTreasurePayload{}, nil
+	return &model.DeleteTreasurePayload{}, nil
 }
 
 func (r *mutationResolver) CreateUserLikeComment(ctx context.Context, input model.CreateUserLikeCommentInput) (*model.CreateUserLikeCommentPayload, error) {

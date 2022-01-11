@@ -2,6 +2,10 @@
 
 package model
 
+type CreateTreasurePayload struct {
+	ClientMutationID *string `json:"clientMutationId"`
+}
+
 type CreateUserLikeCommentInput struct {
 	ClientMutationID *string `json:"clientMutationId"`
 	UserID           int     `json:"userID"`
@@ -22,13 +26,13 @@ type CreateUserLikePayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
 
-type CreateUserTreasureInput struct {
+type DeleteTreasureInput struct {
 	ClientMutationID *string `json:"clientMutationId"`
 	UserID           int     `json:"userID"`
 	WorkID           int     `json:"workID"`
 }
 
-type CreateUserTreasurePayload struct {
+type DeleteTreasurePayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
 
@@ -39,15 +43,5 @@ type DeleteUserLikeInput struct {
 }
 
 type DeleteUserLikePayload struct {
-	ClientMutationID *string `json:"clientMutationId"`
-}
-
-type DeleteUserTreasureInput struct {
-	ClientMutationID *string `json:"clientMutationId"`
-	UserID           int     `json:"userID"`
-	WorkID           int     `json:"workID"`
-}
-
-type DeleteUserTreasurePayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }

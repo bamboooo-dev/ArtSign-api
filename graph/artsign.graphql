@@ -53,8 +53,8 @@ type Mutation {
   createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
   deleteUserLike(input: DeleteUserLikeInput!): DeleteUserLikePayload
   createComment(input: CreateCommentInput!): Comment!
-  createUserTreasure(input: CreateUserTreasureInput!): CreateUserTreasurePayload
-  deleteUserTreasure(input: DeleteUserTreasureInput!): DeleteUserTreasurePayload
+  createTreasure(input: CreateTreasureInput!): CreateTreasurePayload
+  deleteTreasure(input: DeleteTreasureInput!): DeleteTreasurePayload
   createUserLikeComment(
     input: CreateUserLikeCommentInput!
   ): CreateUserLikeCommentPayload
@@ -80,11 +80,11 @@ input DeleteUserLikeInput {
   workID: ID!
 }
 
-type CreateUserTreasurePayload {
+type CreateTreasurePayload {
   clientMutationId: String
 }
 
-type DeleteUserTreasurePayload {
+type DeleteTreasurePayload {
   clientMutationId: String
 }
 
@@ -98,13 +98,12 @@ input CreateUserLikeCommentInput {
   commentID: ID!
 }
 
-input CreateUserTreasureInput {
-  clientMutationId: String
-  userID: ID!
+input CreateTreasureInput {
+  ownerID: ID!
   workID: ID!
 }
 
-input DeleteUserTreasureInput {
+input DeleteTreasureInput {
   clientMutationId: String
   userID: ID!
   workID: ID!
