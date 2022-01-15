@@ -3,7 +3,7 @@ name: Build and Push ArtSign api to dev cluser
 on:
   push:
     branches:
-      - yamagai/update-github-actions
+      - main
 
 jobs:
   build-and-push-image:
