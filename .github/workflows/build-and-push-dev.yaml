@@ -11,6 +11,8 @@ jobs:
       contents: read
       id-token: write
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -47,6 +49,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  deploy-to-dev-cluster:
+    needs: build-and-push-image
+    name: Deploy Art Sign api to dev
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Set up GCloud
         uses: google-github-actions/setup-gcloud@master
         with:
@@ -61,18 +69,12 @@ jobs:
           workload_identity_provider: projects/636847387149/locations/global/workloadIdentityPools/github-actions-2/providers/github-actions-provider
           service_account: 'github-actions@artsign-dev.iam.gserviceaccount.com'
 
-  deploy-to-dev-cluster:
-    needs: build-and-push-image
-    name: Deploy Art Sign api to dev
-    runs-on: ubuntu-latest
-
-    steps:
       - name: Login with gcloud
         run: |-
-          gcloud auth login --brief --cred-file="${{ needs.build-and-push-image.auth.outputs.credentials_file_path }}"
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
           gcloud container clusters get-credentials "artsign-dev-cluster" --zone "asia-east1-a"
 
       - name: Deploy
         run: |
-          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=${{ needs.build-and-push-image.meta.outputs.tags }}
+          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=${{ needs.build-and-push-image.outputs.image }}
           kubectl rollout status -n artsign-api deployment/artsign-api
