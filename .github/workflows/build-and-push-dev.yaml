@@ -3,18 +3,15 @@ name: Build and Push ArtSign api to dev cluser
 on:
   push:
     branches:
-      - main
+      - yamagai/update-github-actions
 
 jobs:
-  build-and-push-image:
-    name: Build and push docker image
+  build-and-push-to-gcr:
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
-
     steps:
-      - name: Set commit hash
-        run: echo "::set-output name=COMMIT_HASH::${GITHUB_SHA}"
-        id: set-commit-hash
-
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -30,14 +27,39 @@ jobs:
           username: ${{ secrets.YAMAGAI_DOCKER_USER }}
           password: ${{ secrets.YAMAGAI_DOCKER_PASSWORD }}
 
-      - name: Build and push
+      - name: Docker meta for ArtSign-api
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: bamboooo/artsign-api
+          flavor: |
+            latest=true
+          tags: |
+            type=sha
+
+      - name: Build and push ArtSign-api
         uses: docker/build-push-action@v2
         with:
           context: .
-          platforms: linux/arm64,linux/amd64
+          platforms: linux/amd64
           push: true
-          tags: |
-            bamboooo/artsign-api:${{ steps.set-commit-hash.outputs.COMMIT_HASH }}
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set up GCloud
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: 'artsign-dev'
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v0.4.4
+        with:
+          create_credentials_file: true
+          access_token_lifetime: 900s
+          workload_identity_provider: projects/636847387149/locations/global/workloadIdentityPools/github-actions-2/providers/github-actions-provider
+          service_account: 'github-actions@artsign-dev.iam.gserviceaccount.com'
 
   deploy-to-dev-cluster:
     needs: build-and-push-image
@@ -45,15 +67,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: google-github-actions/setup-gcloud@v0.2.0
-        with:
-          service_account_key: ${{ secrets.GKE_SA_KEY_DEV }}
-          project_id: ${{ secrets.GKE_PROJECT_DEV }}
-
-      - run: |-
+      - name: Login with gcloud
+        run: |-
+          gcloud auth login --brief --cred-file="${{ needs.build-and-push-image.auth.outputs.credentials_file_path }}"
           gcloud container clusters get-credentials "artsign-dev-cluster" --zone "asia-east1-a"
 
       - name: Deploy
         run: |
-          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=bamboooo/artsign-api:$GITHUB_SHA
+          kubectl set image -n artsign-api --record deployment/artsign-api artsign-api=${{ needs.build-and-push-image.meta.outputs.tags }}
           kubectl rollout status -n artsign-api deployment/artsign-api
