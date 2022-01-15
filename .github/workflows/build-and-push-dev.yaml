@@ -6,7 +6,7 @@ on:
       - yamagai/update-github-actions
 
 jobs:
-  build-and-push-to-gcr:
+  build-and-push-image:
     permissions:
       contents: read
       id-token: write
