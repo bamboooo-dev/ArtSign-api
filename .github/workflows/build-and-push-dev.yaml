@@ -7,9 +7,6 @@ on:
 
 jobs:
   build-and-push-image:
-    permissions:
-      contents: read
-      id-token: write
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.meta.outputs.tags }}
@@ -50,6 +47,9 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-to-dev-cluster:
+    permissions:
+      contents: read
+      id-token: write
     needs: build-and-push-image
     name: Deploy Art Sign api to dev
     runs-on: ubuntu-latest
