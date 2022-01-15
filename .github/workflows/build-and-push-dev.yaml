@@ -72,7 +72,7 @@ jobs:
       - name: Login with gcloud
         run: |-
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
-          gcloud container clusters get-credentials artsign
+          gcloud container clusters get-credentials artsign --region asia-east1
 
       - name: Deploy
         run: |
