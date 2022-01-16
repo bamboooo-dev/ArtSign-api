@@ -12,6 +12,8 @@ import (
 	"artsign/graph/generated"
 	"artsign/graph/model"
 	"context"
+	"math/rand"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -193,6 +195,39 @@ func (r *mutationResolver) DeletePortfolio(ctx context.Context, input model.Dele
 	}, nil
 }
 
+func (r *mutationResolver) PostMessage(ctx context.Context, content string, userID int, roomID int) (*model.Message, error) {
+	r.mu.Lock()
+	room := r.rooms[roomID]
+	if room == nil {
+		room = &model.Room{
+			ID: roomID,
+			Observers: map[int]struct {
+				UserID  int
+				Message chan *model.Message
+			}{},
+		}
+		r.rooms[roomID] = room
+	}
+	r.mu.Unlock()
+
+	message := model.Message{
+		ID:         rand.Intn(100000000000),
+		CreateTime: time.Now(),
+		Content:    content,
+		CreatedBy:  userID,
+	}
+
+	room.Messages = append(room.Messages, message)
+	r.mu.Lock()
+	for _, observer := range room.Observers {
+		if observer.UserID == 0 || observer.UserID == message.CreatedBy {
+			observer.Message <- &message
+		}
+	}
+	r.mu.Unlock()
+	return &message, nil
+}
+
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,
@@ -221,11 +256,68 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []int) ([]ent.Noder, erro
 	return r.client.Noders(ctx, ids)
 }
 
+func (r *queryResolver) Room(ctx context.Context, id int) (*model.Room, error) {
+	r.mu.Lock()
+	room := r.rooms[id]
+	if room == nil {
+		room = &model.Room{
+			ID: id,
+			Observers: map[int]struct {
+				UserID  int
+				Message chan *model.Message
+			}{},
+		}
+		r.rooms[id] = room
+	}
+	r.mu.Unlock()
+
+	return room, nil
+}
+
+func (r *subscriptionResolver) MessageAdded(ctx context.Context, roomID int) (<-chan *model.Message, error) {
+	r.mu.Lock()
+	room := r.rooms[roomID]
+	if room == nil {
+		room = &model.Room{
+			ID: roomID,
+			Observers: map[int]struct {
+				UserID  int
+				Message chan *model.Message
+			}{},
+		}
+		r.rooms[roomID] = room
+	}
+	r.mu.Unlock()
+
+	id := rand.Intn(100000000000)
+	events := make(chan *model.Message, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(room.Observers, id)
+		r.mu.Unlock()
+	}()
+
+	r.mu.Lock()
+	room.Observers[id] = struct {
+		UserID  int
+		Message chan *model.Message
+	}{Message: events}
+	r.mu.Unlock()
+
+	return events, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Subscription returns generated.SubscriptionResolver implementation.
+func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }

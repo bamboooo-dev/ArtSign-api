@@ -1,0 +1,6 @@
+type Message {
+  id: ID!
+  content: String!
+  createdBy: ID!
+  createTime: Time!
+}

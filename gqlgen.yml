@@ -36,3 +36,5 @@ models:
   Node:
     model:
       - artsign/ent.Noder
+  Room:
+    model: artsign/graph/model.Room

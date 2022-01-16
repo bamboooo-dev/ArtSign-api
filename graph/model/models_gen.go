@@ -2,6 +2,10 @@
 
 package model
 
+import (
+	"time"
+)
+
 type CreatePortfolioPayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
@@ -62,4 +66,11 @@ type DeleteUserLikePayload struct {
 
 type DeleteWorkPayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
+}
+
+type Message struct {
+	ID         int       `json:"id"`
+	Content    string    `json:"content"`
+	CreatedBy  int       `json:"createdBy"`
+	CreateTime time.Time `json:"createTime"`
 }
