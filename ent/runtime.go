@@ -6,8 +6,10 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/schema"
 	"artsign/ent/tool"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"time"
@@ -65,12 +67,46 @@ func init() {
 	imageDescURL := imageFields[0].Descriptor()
 	// image.URLValidator is a validator for the "url" field. It is called by the builders before save.
 	image.URLValidator = imageDescURL.Validators[0].(func(string) error)
+	portfolioMixin := schema.Portfolio{}.Mixin()
+	portfolioMixinFields0 := portfolioMixin[0].Fields()
+	_ = portfolioMixinFields0
+	portfolioMixinFields1 := portfolioMixin[1].Fields()
+	_ = portfolioMixinFields1
+	portfolioFields := schema.Portfolio{}.Fields()
+	_ = portfolioFields
+	// portfolioDescCreateTime is the schema descriptor for create_time field.
+	portfolioDescCreateTime := portfolioMixinFields0[0].Descriptor()
+	// portfolio.DefaultCreateTime holds the default value on creation for the create_time field.
+	portfolio.DefaultCreateTime = portfolioDescCreateTime.Default.(func() time.Time)
+	// portfolioDescUpdateTime is the schema descriptor for update_time field.
+	portfolioDescUpdateTime := portfolioMixinFields1[0].Descriptor()
+	// portfolio.DefaultUpdateTime holds the default value on creation for the update_time field.
+	portfolio.DefaultUpdateTime = portfolioDescUpdateTime.Default.(func() time.Time)
+	// portfolio.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	portfolio.UpdateDefaultUpdateTime = portfolioDescUpdateTime.UpdateDefault.(func() time.Time)
 	toolFields := schema.Tool{}.Fields()
 	_ = toolFields
 	// toolDescName is the schema descriptor for name field.
 	toolDescName := toolFields[0].Descriptor()
 	// tool.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	tool.NameValidator = toolDescName.Validators[0].(func(string) error)
+	treasureMixin := schema.Treasure{}.Mixin()
+	treasureMixinFields0 := treasureMixin[0].Fields()
+	_ = treasureMixinFields0
+	treasureMixinFields1 := treasureMixin[1].Fields()
+	_ = treasureMixinFields1
+	treasureFields := schema.Treasure{}.Fields()
+	_ = treasureFields
+	// treasureDescCreateTime is the schema descriptor for create_time field.
+	treasureDescCreateTime := treasureMixinFields0[0].Descriptor()
+	// treasure.DefaultCreateTime holds the default value on creation for the create_time field.
+	treasure.DefaultCreateTime = treasureDescCreateTime.Default.(func() time.Time)
+	// treasureDescUpdateTime is the schema descriptor for update_time field.
+	treasureDescUpdateTime := treasureMixinFields1[0].Descriptor()
+	// treasure.DefaultUpdateTime holds the default value on creation for the update_time field.
+	treasure.DefaultUpdateTime = treasureDescUpdateTime.Default.(func() time.Time)
+	// treasure.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	treasure.UpdateDefaultUpdateTime = treasureDescUpdateTime.UpdateDefault.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescName is the schema descriptor for name field.

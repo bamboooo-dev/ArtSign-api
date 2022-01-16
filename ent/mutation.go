@@ -6,8 +6,10 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/predicate"
 	"artsign/ent/tool"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -27,12 +29,14 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCategory = "Category"
-	TypeComment  = "Comment"
-	TypeImage    = "Image"
-	TypeTool     = "Tool"
-	TypeUser     = "User"
-	TypeWork     = "Work"
+	TypeCategory  = "Category"
+	TypeComment   = "Comment"
+	TypeImage     = "Image"
+	TypePortfolio = "Portfolio"
+	TypeTool      = "Tool"
+	TypeTreasure  = "Treasure"
+	TypeUser      = "User"
+	TypeWork      = "Work"
 )
 
 // CategoryMutation represents an operation that mutates the Category nodes in the graph.
@@ -1642,6 +1646,480 @@ func (m *ImageMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Image edge %s", name)
 }
 
+// PortfolioMutation represents an operation that mutates the Portfolio nodes in the graph.
+type PortfolioMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	create_time   *time.Time
+	update_time   *time.Time
+	clearedFields map[string]struct{}
+	owner         *int
+	clearedowner  bool
+	work          *int
+	clearedwork   bool
+	done          bool
+	oldValue      func(context.Context) (*Portfolio, error)
+	predicates    []predicate.Portfolio
+}
+
+var _ ent.Mutation = (*PortfolioMutation)(nil)
+
+// portfolioOption allows management of the mutation configuration using functional options.
+type portfolioOption func(*PortfolioMutation)
+
+// newPortfolioMutation creates new mutation for the Portfolio entity.
+func newPortfolioMutation(c config, op Op, opts ...portfolioOption) *PortfolioMutation {
+	m := &PortfolioMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePortfolio,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPortfolioID sets the ID field of the mutation.
+func withPortfolioID(id int) portfolioOption {
+	return func(m *PortfolioMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Portfolio
+		)
+		m.oldValue = func(ctx context.Context) (*Portfolio, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Portfolio.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPortfolio sets the old Portfolio of the mutation.
+func withPortfolio(node *Portfolio) portfolioOption {
+	return func(m *PortfolioMutation) {
+		m.oldValue = func(context.Context) (*Portfolio, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PortfolioMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PortfolioMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PortfolioMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *PortfolioMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *PortfolioMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the Portfolio entity.
+// If the Portfolio object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PortfolioMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *PortfolioMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *PortfolioMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *PortfolioMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the Portfolio entity.
+// If the Portfolio object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PortfolioMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *PortfolioMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by id.
+func (m *PortfolioMutation) SetOwnerID(id int) {
+	m.owner = &id
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *PortfolioMutation) ClearOwner() {
+	m.clearedowner = true
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *PortfolioMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerID returns the "owner" edge ID in the mutation.
+func (m *PortfolioMutation) OwnerID() (id int, exists bool) {
+	if m.owner != nil {
+		return *m.owner, true
+	}
+	return
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *PortfolioMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *PortfolioMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// SetWorkID sets the "work" edge to the Work entity by id.
+func (m *PortfolioMutation) SetWorkID(id int) {
+	m.work = &id
+}
+
+// ClearWork clears the "work" edge to the Work entity.
+func (m *PortfolioMutation) ClearWork() {
+	m.clearedwork = true
+}
+
+// WorkCleared reports if the "work" edge to the Work entity was cleared.
+func (m *PortfolioMutation) WorkCleared() bool {
+	return m.clearedwork
+}
+
+// WorkID returns the "work" edge ID in the mutation.
+func (m *PortfolioMutation) WorkID() (id int, exists bool) {
+	if m.work != nil {
+		return *m.work, true
+	}
+	return
+}
+
+// WorkIDs returns the "work" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// WorkID instead. It exists only for internal usage by the builders.
+func (m *PortfolioMutation) WorkIDs() (ids []int) {
+	if id := m.work; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetWork resets all changes to the "work" edge.
+func (m *PortfolioMutation) ResetWork() {
+	m.work = nil
+	m.clearedwork = false
+}
+
+// Where appends a list predicates to the PortfolioMutation builder.
+func (m *PortfolioMutation) Where(ps ...predicate.Portfolio) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *PortfolioMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Portfolio).
+func (m *PortfolioMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PortfolioMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.create_time != nil {
+		fields = append(fields, portfolio.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, portfolio.FieldUpdateTime)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PortfolioMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case portfolio.FieldCreateTime:
+		return m.CreateTime()
+	case portfolio.FieldUpdateTime:
+		return m.UpdateTime()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PortfolioMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case portfolio.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case portfolio.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	}
+	return nil, fmt.Errorf("unknown Portfolio field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PortfolioMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case portfolio.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case portfolio.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Portfolio field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PortfolioMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PortfolioMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PortfolioMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Portfolio numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PortfolioMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PortfolioMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PortfolioMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Portfolio nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PortfolioMutation) ResetField(name string) error {
+	switch name {
+	case portfolio.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case portfolio.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	}
+	return fmt.Errorf("unknown Portfolio field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PortfolioMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.owner != nil {
+		edges = append(edges, portfolio.EdgeOwner)
+	}
+	if m.work != nil {
+		edges = append(edges, portfolio.EdgeWork)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PortfolioMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case portfolio.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
+	case portfolio.EdgeWork:
+		if id := m.work; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PortfolioMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PortfolioMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PortfolioMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedowner {
+		edges = append(edges, portfolio.EdgeOwner)
+	}
+	if m.clearedwork {
+		edges = append(edges, portfolio.EdgeWork)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PortfolioMutation) EdgeCleared(name string) bool {
+	switch name {
+	case portfolio.EdgeOwner:
+		return m.clearedowner
+	case portfolio.EdgeWork:
+		return m.clearedwork
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PortfolioMutation) ClearEdge(name string) error {
+	switch name {
+	case portfolio.EdgeOwner:
+		m.ClearOwner()
+		return nil
+	case portfolio.EdgeWork:
+		m.ClearWork()
+		return nil
+	}
+	return fmt.Errorf("unknown Portfolio unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PortfolioMutation) ResetEdge(name string) error {
+	switch name {
+	case portfolio.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	case portfolio.EdgeWork:
+		m.ResetWork()
+		return nil
+	}
+	return fmt.Errorf("unknown Portfolio edge %s", name)
+}
+
 // ToolMutation represents an operation that mutates the Tool nodes in the graph.
 type ToolMutation struct {
 	config
@@ -2027,6 +2505,480 @@ func (m *ToolMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Tool edge %s", name)
 }
 
+// TreasureMutation represents an operation that mutates the Treasure nodes in the graph.
+type TreasureMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	create_time   *time.Time
+	update_time   *time.Time
+	clearedFields map[string]struct{}
+	owner         *int
+	clearedowner  bool
+	work          *int
+	clearedwork   bool
+	done          bool
+	oldValue      func(context.Context) (*Treasure, error)
+	predicates    []predicate.Treasure
+}
+
+var _ ent.Mutation = (*TreasureMutation)(nil)
+
+// treasureOption allows management of the mutation configuration using functional options.
+type treasureOption func(*TreasureMutation)
+
+// newTreasureMutation creates new mutation for the Treasure entity.
+func newTreasureMutation(c config, op Op, opts ...treasureOption) *TreasureMutation {
+	m := &TreasureMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTreasure,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTreasureID sets the ID field of the mutation.
+func withTreasureID(id int) treasureOption {
+	return func(m *TreasureMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Treasure
+		)
+		m.oldValue = func(ctx context.Context) (*Treasure, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Treasure.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTreasure sets the old Treasure of the mutation.
+func withTreasure(node *Treasure) treasureOption {
+	return func(m *TreasureMutation) {
+		m.oldValue = func(context.Context) (*Treasure, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TreasureMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TreasureMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TreasureMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *TreasureMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *TreasureMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the Treasure entity.
+// If the Treasure object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TreasureMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *TreasureMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *TreasureMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *TreasureMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the Treasure entity.
+// If the Treasure object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TreasureMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *TreasureMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by id.
+func (m *TreasureMutation) SetOwnerID(id int) {
+	m.owner = &id
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *TreasureMutation) ClearOwner() {
+	m.clearedowner = true
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *TreasureMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerID returns the "owner" edge ID in the mutation.
+func (m *TreasureMutation) OwnerID() (id int, exists bool) {
+	if m.owner != nil {
+		return *m.owner, true
+	}
+	return
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *TreasureMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *TreasureMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// SetWorkID sets the "work" edge to the Work entity by id.
+func (m *TreasureMutation) SetWorkID(id int) {
+	m.work = &id
+}
+
+// ClearWork clears the "work" edge to the Work entity.
+func (m *TreasureMutation) ClearWork() {
+	m.clearedwork = true
+}
+
+// WorkCleared reports if the "work" edge to the Work entity was cleared.
+func (m *TreasureMutation) WorkCleared() bool {
+	return m.clearedwork
+}
+
+// WorkID returns the "work" edge ID in the mutation.
+func (m *TreasureMutation) WorkID() (id int, exists bool) {
+	if m.work != nil {
+		return *m.work, true
+	}
+	return
+}
+
+// WorkIDs returns the "work" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// WorkID instead. It exists only for internal usage by the builders.
+func (m *TreasureMutation) WorkIDs() (ids []int) {
+	if id := m.work; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetWork resets all changes to the "work" edge.
+func (m *TreasureMutation) ResetWork() {
+	m.work = nil
+	m.clearedwork = false
+}
+
+// Where appends a list predicates to the TreasureMutation builder.
+func (m *TreasureMutation) Where(ps ...predicate.Treasure) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *TreasureMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Treasure).
+func (m *TreasureMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TreasureMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.create_time != nil {
+		fields = append(fields, treasure.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, treasure.FieldUpdateTime)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TreasureMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case treasure.FieldCreateTime:
+		return m.CreateTime()
+	case treasure.FieldUpdateTime:
+		return m.UpdateTime()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TreasureMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case treasure.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case treasure.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	}
+	return nil, fmt.Errorf("unknown Treasure field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TreasureMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case treasure.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case treasure.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Treasure field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TreasureMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TreasureMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TreasureMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Treasure numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TreasureMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TreasureMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TreasureMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Treasure nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TreasureMutation) ResetField(name string) error {
+	switch name {
+	case treasure.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case treasure.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	}
+	return fmt.Errorf("unknown Treasure field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TreasureMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.owner != nil {
+		edges = append(edges, treasure.EdgeOwner)
+	}
+	if m.work != nil {
+		edges = append(edges, treasure.EdgeWork)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TreasureMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case treasure.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
+	case treasure.EdgeWork:
+		if id := m.work; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TreasureMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TreasureMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TreasureMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedowner {
+		edges = append(edges, treasure.EdgeOwner)
+	}
+	if m.clearedwork {
+		edges = append(edges, treasure.EdgeWork)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TreasureMutation) EdgeCleared(name string) bool {
+	switch name {
+	case treasure.EdgeOwner:
+		return m.clearedowner
+	case treasure.EdgeWork:
+		return m.clearedwork
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TreasureMutation) ClearEdge(name string) error {
+	switch name {
+	case treasure.EdgeOwner:
+		m.ClearOwner()
+		return nil
+	case treasure.EdgeWork:
+		m.ClearWork()
+		return nil
+	}
+	return fmt.Errorf("unknown Treasure unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TreasureMutation) ResetEdge(name string) error {
+	switch name {
+	case treasure.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	case treasure.EdgeWork:
+		m.ResetWork()
+		return nil
+	}
+	return fmt.Errorf("unknown Treasure edge %s", name)
+}
+
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
@@ -2047,6 +2999,9 @@ type UserMutation struct {
 	treasures            map[int]struct{}
 	removedtreasures     map[int]struct{}
 	clearedtreasures     bool
+	portfolios           map[int]struct{}
+	removedportfolios    map[int]struct{}
+	clearedportfolios    bool
 	comments             map[int]struct{}
 	removedcomments      map[int]struct{}
 	clearedcomments      bool
@@ -2389,7 +3344,7 @@ func (m *UserMutation) ResetLikes() {
 	m.removedlikes = nil
 }
 
-// AddTreasureIDs adds the "treasures" edge to the Work entity by ids.
+// AddTreasureIDs adds the "treasures" edge to the Treasure entity by ids.
 func (m *UserMutation) AddTreasureIDs(ids ...int) {
 	if m.treasures == nil {
 		m.treasures = make(map[int]struct{})
@@ -2399,17 +3354,17 @@ func (m *UserMutation) AddTreasureIDs(ids ...int) {
 	}
 }
 
-// ClearTreasures clears the "treasures" edge to the Work entity.
+// ClearTreasures clears the "treasures" edge to the Treasure entity.
 func (m *UserMutation) ClearTreasures() {
 	m.clearedtreasures = true
 }
 
-// TreasuresCleared reports if the "treasures" edge to the Work entity was cleared.
+// TreasuresCleared reports if the "treasures" edge to the Treasure entity was cleared.
 func (m *UserMutation) TreasuresCleared() bool {
 	return m.clearedtreasures
 }
 
-// RemoveTreasureIDs removes the "treasures" edge to the Work entity by IDs.
+// RemoveTreasureIDs removes the "treasures" edge to the Treasure entity by IDs.
 func (m *UserMutation) RemoveTreasureIDs(ids ...int) {
 	if m.removedtreasures == nil {
 		m.removedtreasures = make(map[int]struct{})
@@ -2420,7 +3375,7 @@ func (m *UserMutation) RemoveTreasureIDs(ids ...int) {
 	}
 }
 
-// RemovedTreasures returns the removed IDs of the "treasures" edge to the Work entity.
+// RemovedTreasures returns the removed IDs of the "treasures" edge to the Treasure entity.
 func (m *UserMutation) RemovedTreasuresIDs() (ids []int) {
 	for id := range m.removedtreasures {
 		ids = append(ids, id)
@@ -2441,6 +3396,60 @@ func (m *UserMutation) ResetTreasures() {
 	m.treasures = nil
 	m.clearedtreasures = false
 	m.removedtreasures = nil
+}
+
+// AddPortfolioIDs adds the "portfolios" edge to the Portfolio entity by ids.
+func (m *UserMutation) AddPortfolioIDs(ids ...int) {
+	if m.portfolios == nil {
+		m.portfolios = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.portfolios[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPortfolios clears the "portfolios" edge to the Portfolio entity.
+func (m *UserMutation) ClearPortfolios() {
+	m.clearedportfolios = true
+}
+
+// PortfoliosCleared reports if the "portfolios" edge to the Portfolio entity was cleared.
+func (m *UserMutation) PortfoliosCleared() bool {
+	return m.clearedportfolios
+}
+
+// RemovePortfolioIDs removes the "portfolios" edge to the Portfolio entity by IDs.
+func (m *UserMutation) RemovePortfolioIDs(ids ...int) {
+	if m.removedportfolios == nil {
+		m.removedportfolios = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.portfolios, ids[i])
+		m.removedportfolios[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPortfolios returns the removed IDs of the "portfolios" edge to the Portfolio entity.
+func (m *UserMutation) RemovedPortfoliosIDs() (ids []int) {
+	for id := range m.removedportfolios {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PortfoliosIDs returns the "portfolios" edge IDs in the mutation.
+func (m *UserMutation) PortfoliosIDs() (ids []int) {
+	for id := range m.portfolios {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPortfolios resets all changes to the "portfolios" edge.
+func (m *UserMutation) ResetPortfolios() {
+	m.portfolios = nil
+	m.clearedportfolios = false
+	m.removedportfolios = nil
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by ids.
@@ -2720,7 +3729,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.works != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -2729,6 +3738,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.treasures != nil {
 		edges = append(edges, user.EdgeTreasures)
+	}
+	if m.portfolios != nil {
+		edges = append(edges, user.EdgePortfolios)
 	}
 	if m.comments != nil {
 		edges = append(edges, user.EdgeComments)
@@ -2761,6 +3773,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePortfolios:
+		ids := make([]ent.Value, 0, len(m.portfolios))
+		for id := range m.portfolios {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.comments))
 		for id := range m.comments {
@@ -2779,7 +3797,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedworks != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -2788,6 +3806,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedtreasures != nil {
 		edges = append(edges, user.EdgeTreasures)
+	}
+	if m.removedportfolios != nil {
+		edges = append(edges, user.EdgePortfolios)
 	}
 	if m.removedcomments != nil {
 		edges = append(edges, user.EdgeComments)
@@ -2820,6 +3841,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePortfolios:
+		ids := make([]ent.Value, 0, len(m.removedportfolios))
+		for id := range m.removedportfolios {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.removedcomments))
 		for id := range m.removedcomments {
@@ -2838,7 +3865,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedworks {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -2847,6 +3874,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedtreasures {
 		edges = append(edges, user.EdgeTreasures)
+	}
+	if m.clearedportfolios {
+		edges = append(edges, user.EdgePortfolios)
 	}
 	if m.clearedcomments {
 		edges = append(edges, user.EdgeComments)
@@ -2867,6 +3897,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedlikes
 	case user.EdgeTreasures:
 		return m.clearedtreasures
+	case user.EdgePortfolios:
+		return m.clearedportfolios
 	case user.EdgeComments:
 		return m.clearedcomments
 	case user.EdgeLikeComments:
@@ -2895,6 +3927,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeTreasures:
 		m.ResetTreasures()
+		return nil
+	case user.EdgePortfolios:
+		m.ResetPortfolios()
 		return nil
 	case user.EdgeComments:
 		m.ResetComments()
@@ -2936,9 +3971,12 @@ type WorkMutation struct {
 	likers            map[int]struct{}
 	removedlikers     map[int]struct{}
 	clearedlikers     bool
-	treasurers        map[int]struct{}
-	removedtreasurers map[int]struct{}
-	clearedtreasurers bool
+	treasures         map[int]struct{}
+	removedtreasures  map[int]struct{}
+	clearedtreasures  bool
+	portfolios        map[int]struct{}
+	removedportfolios map[int]struct{}
+	clearedportfolios bool
 	comments          map[int]struct{}
 	removedcomments   map[int]struct{}
 	clearedcomments   bool
@@ -3619,58 +4657,112 @@ func (m *WorkMutation) ResetLikers() {
 	m.removedlikers = nil
 }
 
-// AddTreasurerIDs adds the "treasurers" edge to the User entity by ids.
-func (m *WorkMutation) AddTreasurerIDs(ids ...int) {
-	if m.treasurers == nil {
-		m.treasurers = make(map[int]struct{})
+// AddTreasureIDs adds the "treasures" edge to the Treasure entity by ids.
+func (m *WorkMutation) AddTreasureIDs(ids ...int) {
+	if m.treasures == nil {
+		m.treasures = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.treasurers[ids[i]] = struct{}{}
+		m.treasures[ids[i]] = struct{}{}
 	}
 }
 
-// ClearTreasurers clears the "treasurers" edge to the User entity.
-func (m *WorkMutation) ClearTreasurers() {
-	m.clearedtreasurers = true
+// ClearTreasures clears the "treasures" edge to the Treasure entity.
+func (m *WorkMutation) ClearTreasures() {
+	m.clearedtreasures = true
 }
 
-// TreasurersCleared reports if the "treasurers" edge to the User entity was cleared.
-func (m *WorkMutation) TreasurersCleared() bool {
-	return m.clearedtreasurers
+// TreasuresCleared reports if the "treasures" edge to the Treasure entity was cleared.
+func (m *WorkMutation) TreasuresCleared() bool {
+	return m.clearedtreasures
 }
 
-// RemoveTreasurerIDs removes the "treasurers" edge to the User entity by IDs.
-func (m *WorkMutation) RemoveTreasurerIDs(ids ...int) {
-	if m.removedtreasurers == nil {
-		m.removedtreasurers = make(map[int]struct{})
+// RemoveTreasureIDs removes the "treasures" edge to the Treasure entity by IDs.
+func (m *WorkMutation) RemoveTreasureIDs(ids ...int) {
+	if m.removedtreasures == nil {
+		m.removedtreasures = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.treasurers, ids[i])
-		m.removedtreasurers[ids[i]] = struct{}{}
+		delete(m.treasures, ids[i])
+		m.removedtreasures[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedTreasurers returns the removed IDs of the "treasurers" edge to the User entity.
-func (m *WorkMutation) RemovedTreasurersIDs() (ids []int) {
-	for id := range m.removedtreasurers {
+// RemovedTreasures returns the removed IDs of the "treasures" edge to the Treasure entity.
+func (m *WorkMutation) RemovedTreasuresIDs() (ids []int) {
+	for id := range m.removedtreasures {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// TreasurersIDs returns the "treasurers" edge IDs in the mutation.
-func (m *WorkMutation) TreasurersIDs() (ids []int) {
-	for id := range m.treasurers {
+// TreasuresIDs returns the "treasures" edge IDs in the mutation.
+func (m *WorkMutation) TreasuresIDs() (ids []int) {
+	for id := range m.treasures {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetTreasurers resets all changes to the "treasurers" edge.
-func (m *WorkMutation) ResetTreasurers() {
-	m.treasurers = nil
-	m.clearedtreasurers = false
-	m.removedtreasurers = nil
+// ResetTreasures resets all changes to the "treasures" edge.
+func (m *WorkMutation) ResetTreasures() {
+	m.treasures = nil
+	m.clearedtreasures = false
+	m.removedtreasures = nil
+}
+
+// AddPortfolioIDs adds the "portfolios" edge to the Portfolio entity by ids.
+func (m *WorkMutation) AddPortfolioIDs(ids ...int) {
+	if m.portfolios == nil {
+		m.portfolios = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.portfolios[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPortfolios clears the "portfolios" edge to the Portfolio entity.
+func (m *WorkMutation) ClearPortfolios() {
+	m.clearedportfolios = true
+}
+
+// PortfoliosCleared reports if the "portfolios" edge to the Portfolio entity was cleared.
+func (m *WorkMutation) PortfoliosCleared() bool {
+	return m.clearedportfolios
+}
+
+// RemovePortfolioIDs removes the "portfolios" edge to the Portfolio entity by IDs.
+func (m *WorkMutation) RemovePortfolioIDs(ids ...int) {
+	if m.removedportfolios == nil {
+		m.removedportfolios = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.portfolios, ids[i])
+		m.removedportfolios[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPortfolios returns the removed IDs of the "portfolios" edge to the Portfolio entity.
+func (m *WorkMutation) RemovedPortfoliosIDs() (ids []int) {
+	for id := range m.removedportfolios {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PortfoliosIDs returns the "portfolios" edge IDs in the mutation.
+func (m *WorkMutation) PortfoliosIDs() (ids []int) {
+	for id := range m.portfolios {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPortfolios resets all changes to the "portfolios" edge.
+func (m *WorkMutation) ResetPortfolios() {
+	m.portfolios = nil
+	m.clearedportfolios = false
+	m.removedportfolios = nil
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by ids.
@@ -4086,7 +5178,7 @@ func (m *WorkMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.category != nil {
 		edges = append(edges, work.EdgeCategory)
 	}
@@ -4099,8 +5191,11 @@ func (m *WorkMutation) AddedEdges() []string {
 	if m.likers != nil {
 		edges = append(edges, work.EdgeLikers)
 	}
-	if m.treasurers != nil {
-		edges = append(edges, work.EdgeTreasurers)
+	if m.treasures != nil {
+		edges = append(edges, work.EdgeTreasures)
+	}
+	if m.portfolios != nil {
+		edges = append(edges, work.EdgePortfolios)
 	}
 	if m.comments != nil {
 		edges = append(edges, work.EdgeComments)
@@ -4135,9 +5230,15 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case work.EdgeTreasurers:
-		ids := make([]ent.Value, 0, len(m.treasurers))
-		for id := range m.treasurers {
+	case work.EdgeTreasures:
+		ids := make([]ent.Value, 0, len(m.treasures))
+		for id := range m.treasures {
+			ids = append(ids, id)
+		}
+		return ids
+	case work.EdgePortfolios:
+		ids := make([]ent.Value, 0, len(m.portfolios))
+		for id := range m.portfolios {
 			ids = append(ids, id)
 		}
 		return ids
@@ -4159,15 +5260,18 @@ func (m *WorkMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.removedtools != nil {
 		edges = append(edges, work.EdgeTools)
 	}
 	if m.removedlikers != nil {
 		edges = append(edges, work.EdgeLikers)
 	}
-	if m.removedtreasurers != nil {
-		edges = append(edges, work.EdgeTreasurers)
+	if m.removedtreasures != nil {
+		edges = append(edges, work.EdgeTreasures)
+	}
+	if m.removedportfolios != nil {
+		edges = append(edges, work.EdgePortfolios)
 	}
 	if m.removedcomments != nil {
 		edges = append(edges, work.EdgeComments)
@@ -4194,9 +5298,15 @@ func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case work.EdgeTreasurers:
-		ids := make([]ent.Value, 0, len(m.removedtreasurers))
-		for id := range m.removedtreasurers {
+	case work.EdgeTreasures:
+		ids := make([]ent.Value, 0, len(m.removedtreasures))
+		for id := range m.removedtreasures {
+			ids = append(ids, id)
+		}
+		return ids
+	case work.EdgePortfolios:
+		ids := make([]ent.Value, 0, len(m.removedportfolios))
+		for id := range m.removedportfolios {
 			ids = append(ids, id)
 		}
 		return ids
@@ -4218,7 +5328,7 @@ func (m *WorkMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.clearedcategory {
 		edges = append(edges, work.EdgeCategory)
 	}
@@ -4231,8 +5341,11 @@ func (m *WorkMutation) ClearedEdges() []string {
 	if m.clearedlikers {
 		edges = append(edges, work.EdgeLikers)
 	}
-	if m.clearedtreasurers {
-		edges = append(edges, work.EdgeTreasurers)
+	if m.clearedtreasures {
+		edges = append(edges, work.EdgeTreasures)
+	}
+	if m.clearedportfolios {
+		edges = append(edges, work.EdgePortfolios)
 	}
 	if m.clearedcomments {
 		edges = append(edges, work.EdgeComments)
@@ -4255,8 +5368,10 @@ func (m *WorkMutation) EdgeCleared(name string) bool {
 		return m.clearedowner
 	case work.EdgeLikers:
 		return m.clearedlikers
-	case work.EdgeTreasurers:
-		return m.clearedtreasurers
+	case work.EdgeTreasures:
+		return m.clearedtreasures
+	case work.EdgePortfolios:
+		return m.clearedportfolios
 	case work.EdgeComments:
 		return m.clearedcomments
 	case work.EdgeImages:
@@ -4295,8 +5410,11 @@ func (m *WorkMutation) ResetEdge(name string) error {
 	case work.EdgeLikers:
 		m.ResetLikers()
 		return nil
-	case work.EdgeTreasurers:
-		m.ResetTreasurers()
+	case work.EdgeTreasures:
+		m.ResetTreasures()
+		return nil
+	case work.EdgePortfolios:
+		m.ResetPortfolios()
 		return nil
 	case work.EdgeComments:
 		m.ResetComments()

@@ -1,0 +1,50 @@
+type Comment implements Node {
+  id: ID!
+  content: String!
+  createTime: Time!
+  updateTime: Time!
+  parent: Comment
+  owner: User
+  childrenConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: CommentOrder
+  ): CommentConnection
+  likerConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
+}
+
+type CommentConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [CommentEdge]
+}
+
+type CommentEdge {
+  node: Comment
+  cursor: Cursor!
+}
+
+enum CommentOrderField {
+  CREATE_TIME
+  UPDATE_TIME
+}
+
+input CommentOrder {
+  direction: OrderDirection!
+  field: CommentOrderField
+}
+
+input CreateCommentInput {
+  content: String!
+  ownerID: ID!
+  workID: ID!
+  parentID: ID
+}

@@ -6,7 +6,9 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/tool"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"context"
@@ -1075,6 +1077,290 @@ func (i *Image) ToEdge(order *ImageOrder) *ImageEdge {
 	}
 }
 
+// PortfolioEdge is the edge representation of Portfolio.
+type PortfolioEdge struct {
+	Node   *Portfolio `json:"node"`
+	Cursor Cursor     `json:"cursor"`
+}
+
+// PortfolioConnection is the connection containing edges to Portfolio.
+type PortfolioConnection struct {
+	Edges      []*PortfolioEdge `json:"edges"`
+	PageInfo   PageInfo         `json:"pageInfo"`
+	TotalCount int              `json:"totalCount"`
+}
+
+// PortfolioPaginateOption enables pagination customization.
+type PortfolioPaginateOption func(*portfolioPager) error
+
+// WithPortfolioOrder configures pagination ordering.
+func WithPortfolioOrder(order *PortfolioOrder) PortfolioPaginateOption {
+	if order == nil {
+		order = DefaultPortfolioOrder
+	}
+	o := *order
+	return func(pager *portfolioPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultPortfolioOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithPortfolioFilter configures pagination filter.
+func WithPortfolioFilter(filter func(*PortfolioQuery) (*PortfolioQuery, error)) PortfolioPaginateOption {
+	return func(pager *portfolioPager) error {
+		if filter == nil {
+			return errors.New("PortfolioQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type portfolioPager struct {
+	order  *PortfolioOrder
+	filter func(*PortfolioQuery) (*PortfolioQuery, error)
+}
+
+func newPortfolioPager(opts []PortfolioPaginateOption) (*portfolioPager, error) {
+	pager := &portfolioPager{}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultPortfolioOrder
+	}
+	return pager, nil
+}
+
+func (p *portfolioPager) applyFilter(query *PortfolioQuery) (*PortfolioQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *portfolioPager) toCursor(po *Portfolio) Cursor {
+	return p.order.Field.toCursor(po)
+}
+
+func (p *portfolioPager) applyCursors(query *PortfolioQuery, after, before *Cursor) *PortfolioQuery {
+	for _, predicate := range cursorsToPredicates(
+		p.order.Direction, after, before,
+		p.order.Field.field, DefaultPortfolioOrder.Field.field,
+	) {
+		query = query.Where(predicate)
+	}
+	return query
+}
+
+func (p *portfolioPager) applyOrder(query *PortfolioQuery, reverse bool) *PortfolioQuery {
+	direction := p.order.Direction
+	if reverse {
+		direction = direction.reverse()
+	}
+	query = query.Order(direction.orderFunc(p.order.Field.field))
+	if p.order.Field != DefaultPortfolioOrder.Field {
+		query = query.Order(direction.orderFunc(DefaultPortfolioOrder.Field.field))
+	}
+	return query
+}
+
+// Paginate executes the query and returns a relay based cursor connection to Portfolio.
+func (po *PortfolioQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...PortfolioPaginateOption,
+) (*PortfolioConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newPortfolioPager(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if po, err = pager.applyFilter(po); err != nil {
+		return nil, err
+	}
+
+	conn := &PortfolioConnection{Edges: []*PortfolioEdge{}}
+	if !hasCollectedField(ctx, edgesField) || first != nil && *first == 0 || last != nil && *last == 0 {
+		if hasCollectedField(ctx, totalCountField) ||
+			hasCollectedField(ctx, pageInfoField) {
+			count, err := po.Count(ctx)
+			if err != nil {
+				return nil, err
+			}
+			conn.TotalCount = count
+			conn.PageInfo.HasNextPage = first != nil && count > 0
+			conn.PageInfo.HasPreviousPage = last != nil && count > 0
+		}
+		return conn, nil
+	}
+
+	if (after != nil || first != nil || before != nil || last != nil) && hasCollectedField(ctx, totalCountField) {
+		count, err := po.Clone().Count(ctx)
+		if err != nil {
+			return nil, err
+		}
+		conn.TotalCount = count
+	}
+
+	po = pager.applyCursors(po, after, before)
+	po = pager.applyOrder(po, last != nil)
+	var limit int
+	if first != nil {
+		limit = *first + 1
+	} else if last != nil {
+		limit = *last + 1
+	}
+	if limit > 0 {
+		po = po.Limit(limit)
+	}
+
+	if field := getCollectedField(ctx, edgesField, nodeField); field != nil {
+		po = po.collectField(graphql.GetOperationContext(ctx), *field)
+	}
+
+	nodes, err := po.All(ctx)
+	if err != nil || len(nodes) == 0 {
+		return conn, err
+	}
+
+	if len(nodes) == limit {
+		conn.PageInfo.HasNextPage = first != nil
+		conn.PageInfo.HasPreviousPage = last != nil
+		nodes = nodes[:len(nodes)-1]
+	}
+
+	var nodeAt func(int) *Portfolio
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *Portfolio {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *Portfolio {
+			return nodes[i]
+		}
+	}
+
+	conn.Edges = make([]*PortfolioEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		conn.Edges[i] = &PortfolioEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+
+	conn.PageInfo.StartCursor = &conn.Edges[0].Cursor
+	conn.PageInfo.EndCursor = &conn.Edges[len(conn.Edges)-1].Cursor
+	if conn.TotalCount == 0 {
+		conn.TotalCount = len(nodes)
+	}
+
+	return conn, nil
+}
+
+var (
+	// PortfolioOrderFieldCreateTime orders Portfolio by create_time.
+	PortfolioOrderFieldCreateTime = &PortfolioOrderField{
+		field: portfolio.FieldCreateTime,
+		toCursor: func(po *Portfolio) Cursor {
+			return Cursor{
+				ID:    po.ID,
+				Value: po.CreateTime,
+			}
+		},
+	}
+	// PortfolioOrderFieldUpdateTime orders Portfolio by update_time.
+	PortfolioOrderFieldUpdateTime = &PortfolioOrderField{
+		field: portfolio.FieldUpdateTime,
+		toCursor: func(po *Portfolio) Cursor {
+			return Cursor{
+				ID:    po.ID,
+				Value: po.UpdateTime,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PortfolioOrderField) String() string {
+	var str string
+	switch f.field {
+	case portfolio.FieldCreateTime:
+		str = "CREATE_TIME"
+	case portfolio.FieldUpdateTime:
+		str = "UPDATE_TIME"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PortfolioOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PortfolioOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PortfolioOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATE_TIME":
+		*f = *PortfolioOrderFieldCreateTime
+	case "UPDATE_TIME":
+		*f = *PortfolioOrderFieldUpdateTime
+	default:
+		return fmt.Errorf("%s is not a valid PortfolioOrderField", str)
+	}
+	return nil
+}
+
+// PortfolioOrderField defines the ordering field of Portfolio.
+type PortfolioOrderField struct {
+	field    string
+	toCursor func(*Portfolio) Cursor
+}
+
+// PortfolioOrder defines the ordering of Portfolio.
+type PortfolioOrder struct {
+	Direction OrderDirection       `json:"direction"`
+	Field     *PortfolioOrderField `json:"field"`
+}
+
+// DefaultPortfolioOrder is the default ordering of Portfolio.
+var DefaultPortfolioOrder = &PortfolioOrder{
+	Direction: OrderDirectionAsc,
+	Field: &PortfolioOrderField{
+		field: portfolio.FieldID,
+		toCursor: func(po *Portfolio) Cursor {
+			return Cursor{ID: po.ID}
+		},
+	},
+}
+
+// ToEdge converts Portfolio into PortfolioEdge.
+func (po *Portfolio) ToEdge(order *PortfolioOrder) *PortfolioEdge {
+	if order == nil {
+		order = DefaultPortfolioOrder
+	}
+	return &PortfolioEdge{
+		Node:   po,
+		Cursor: order.Field.toCursor(po),
+	}
+}
+
 // ToolEdge is the edge representation of Tool.
 type ToolEdge struct {
 	Node   *Tool  `json:"node"`
@@ -1340,6 +1626,290 @@ func (t *Tool) ToEdge(order *ToolOrder) *ToolEdge {
 		order = DefaultToolOrder
 	}
 	return &ToolEdge{
+		Node:   t,
+		Cursor: order.Field.toCursor(t),
+	}
+}
+
+// TreasureEdge is the edge representation of Treasure.
+type TreasureEdge struct {
+	Node   *Treasure `json:"node"`
+	Cursor Cursor    `json:"cursor"`
+}
+
+// TreasureConnection is the connection containing edges to Treasure.
+type TreasureConnection struct {
+	Edges      []*TreasureEdge `json:"edges"`
+	PageInfo   PageInfo        `json:"pageInfo"`
+	TotalCount int             `json:"totalCount"`
+}
+
+// TreasurePaginateOption enables pagination customization.
+type TreasurePaginateOption func(*treasurePager) error
+
+// WithTreasureOrder configures pagination ordering.
+func WithTreasureOrder(order *TreasureOrder) TreasurePaginateOption {
+	if order == nil {
+		order = DefaultTreasureOrder
+	}
+	o := *order
+	return func(pager *treasurePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultTreasureOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithTreasureFilter configures pagination filter.
+func WithTreasureFilter(filter func(*TreasureQuery) (*TreasureQuery, error)) TreasurePaginateOption {
+	return func(pager *treasurePager) error {
+		if filter == nil {
+			return errors.New("TreasureQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type treasurePager struct {
+	order  *TreasureOrder
+	filter func(*TreasureQuery) (*TreasureQuery, error)
+}
+
+func newTreasurePager(opts []TreasurePaginateOption) (*treasurePager, error) {
+	pager := &treasurePager{}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultTreasureOrder
+	}
+	return pager, nil
+}
+
+func (p *treasurePager) applyFilter(query *TreasureQuery) (*TreasureQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *treasurePager) toCursor(t *Treasure) Cursor {
+	return p.order.Field.toCursor(t)
+}
+
+func (p *treasurePager) applyCursors(query *TreasureQuery, after, before *Cursor) *TreasureQuery {
+	for _, predicate := range cursorsToPredicates(
+		p.order.Direction, after, before,
+		p.order.Field.field, DefaultTreasureOrder.Field.field,
+	) {
+		query = query.Where(predicate)
+	}
+	return query
+}
+
+func (p *treasurePager) applyOrder(query *TreasureQuery, reverse bool) *TreasureQuery {
+	direction := p.order.Direction
+	if reverse {
+		direction = direction.reverse()
+	}
+	query = query.Order(direction.orderFunc(p.order.Field.field))
+	if p.order.Field != DefaultTreasureOrder.Field {
+		query = query.Order(direction.orderFunc(DefaultTreasureOrder.Field.field))
+	}
+	return query
+}
+
+// Paginate executes the query and returns a relay based cursor connection to Treasure.
+func (t *TreasureQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...TreasurePaginateOption,
+) (*TreasureConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newTreasurePager(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if t, err = pager.applyFilter(t); err != nil {
+		return nil, err
+	}
+
+	conn := &TreasureConnection{Edges: []*TreasureEdge{}}
+	if !hasCollectedField(ctx, edgesField) || first != nil && *first == 0 || last != nil && *last == 0 {
+		if hasCollectedField(ctx, totalCountField) ||
+			hasCollectedField(ctx, pageInfoField) {
+			count, err := t.Count(ctx)
+			if err != nil {
+				return nil, err
+			}
+			conn.TotalCount = count
+			conn.PageInfo.HasNextPage = first != nil && count > 0
+			conn.PageInfo.HasPreviousPage = last != nil && count > 0
+		}
+		return conn, nil
+	}
+
+	if (after != nil || first != nil || before != nil || last != nil) && hasCollectedField(ctx, totalCountField) {
+		count, err := t.Clone().Count(ctx)
+		if err != nil {
+			return nil, err
+		}
+		conn.TotalCount = count
+	}
+
+	t = pager.applyCursors(t, after, before)
+	t = pager.applyOrder(t, last != nil)
+	var limit int
+	if first != nil {
+		limit = *first + 1
+	} else if last != nil {
+		limit = *last + 1
+	}
+	if limit > 0 {
+		t = t.Limit(limit)
+	}
+
+	if field := getCollectedField(ctx, edgesField, nodeField); field != nil {
+		t = t.collectField(graphql.GetOperationContext(ctx), *field)
+	}
+
+	nodes, err := t.All(ctx)
+	if err != nil || len(nodes) == 0 {
+		return conn, err
+	}
+
+	if len(nodes) == limit {
+		conn.PageInfo.HasNextPage = first != nil
+		conn.PageInfo.HasPreviousPage = last != nil
+		nodes = nodes[:len(nodes)-1]
+	}
+
+	var nodeAt func(int) *Treasure
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *Treasure {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *Treasure {
+			return nodes[i]
+		}
+	}
+
+	conn.Edges = make([]*TreasureEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		conn.Edges[i] = &TreasureEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+
+	conn.PageInfo.StartCursor = &conn.Edges[0].Cursor
+	conn.PageInfo.EndCursor = &conn.Edges[len(conn.Edges)-1].Cursor
+	if conn.TotalCount == 0 {
+		conn.TotalCount = len(nodes)
+	}
+
+	return conn, nil
+}
+
+var (
+	// TreasureOrderFieldCreateTime orders Treasure by create_time.
+	TreasureOrderFieldCreateTime = &TreasureOrderField{
+		field: treasure.FieldCreateTime,
+		toCursor: func(t *Treasure) Cursor {
+			return Cursor{
+				ID:    t.ID,
+				Value: t.CreateTime,
+			}
+		},
+	}
+	// TreasureOrderFieldUpdateTime orders Treasure by update_time.
+	TreasureOrderFieldUpdateTime = &TreasureOrderField{
+		field: treasure.FieldUpdateTime,
+		toCursor: func(t *Treasure) Cursor {
+			return Cursor{
+				ID:    t.ID,
+				Value: t.UpdateTime,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f TreasureOrderField) String() string {
+	var str string
+	switch f.field {
+	case treasure.FieldCreateTime:
+		str = "CREATE_TIME"
+	case treasure.FieldUpdateTime:
+		str = "UPDATE_TIME"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f TreasureOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *TreasureOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("TreasureOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATE_TIME":
+		*f = *TreasureOrderFieldCreateTime
+	case "UPDATE_TIME":
+		*f = *TreasureOrderFieldUpdateTime
+	default:
+		return fmt.Errorf("%s is not a valid TreasureOrderField", str)
+	}
+	return nil
+}
+
+// TreasureOrderField defines the ordering field of Treasure.
+type TreasureOrderField struct {
+	field    string
+	toCursor func(*Treasure) Cursor
+}
+
+// TreasureOrder defines the ordering of Treasure.
+type TreasureOrder struct {
+	Direction OrderDirection      `json:"direction"`
+	Field     *TreasureOrderField `json:"field"`
+}
+
+// DefaultTreasureOrder is the default ordering of Treasure.
+var DefaultTreasureOrder = &TreasureOrder{
+	Direction: OrderDirectionAsc,
+	Field: &TreasureOrderField{
+		field: treasure.FieldID,
+		toCursor: func(t *Treasure) Cursor {
+			return Cursor{ID: t.ID}
+		},
+	},
+}
+
+// ToEdge converts Treasure into TreasureEdge.
+func (t *Treasure) ToEdge(order *TreasureOrder) *TreasureEdge {
+	if order == nil {
+		order = DefaultTreasureOrder
+	}
+	return &TreasureEdge{
 		Node:   t,
 		Cursor: order.Field.toCursor(t),
 	}

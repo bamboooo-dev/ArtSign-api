@@ -47,6 +47,19 @@ func (f ImageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return f(ctx, mv)
 }
 
+// The PortfolioFunc type is an adapter to allow the use of ordinary
+// function as Portfolio mutator.
+type PortfolioFunc func(context.Context, *ent.PortfolioMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PortfolioFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.PortfolioMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PortfolioMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The ToolFunc type is an adapter to allow the use of ordinary
 // function as Tool mutator.
 type ToolFunc func(context.Context, *ent.ToolMutation) (ent.Value, error)
@@ -56,6 +69,19 @@ func (f ToolFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	mv, ok := m.(*ent.ToolMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ToolMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The TreasureFunc type is an adapter to allow the use of ordinary
+// function as Treasure mutator.
+type TreasureFunc func(context.Context, *ent.TreasureMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TreasureFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.TreasureMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TreasureMutation", m)
 	}
 	return f(ctx, mv)
 }

@@ -21,6 +21,8 @@ const (
 	EdgeLikes = "likes"
 	// EdgeTreasures holds the string denoting the treasures edge name in mutations.
 	EdgeTreasures = "treasures"
+	// EdgePortfolios holds the string denoting the portfolios edge name in mutations.
+	EdgePortfolios = "portfolios"
 	// EdgeComments holds the string denoting the comments edge name in mutations.
 	EdgeComments = "comments"
 	// EdgeLikeComments holds the string denoting the like_comments edge name in mutations.
@@ -39,11 +41,20 @@ const (
 	// LikesInverseTable is the table name for the Work entity.
 	// It exists in this package in order to avoid circular dependency with the "work" package.
 	LikesInverseTable = "works"
-	// TreasuresTable is the table that holds the treasures relation/edge. The primary key declared below.
-	TreasuresTable = "user_treasures"
-	// TreasuresInverseTable is the table name for the Work entity.
-	// It exists in this package in order to avoid circular dependency with the "work" package.
-	TreasuresInverseTable = "works"
+	// TreasuresTable is the table that holds the treasures relation/edge.
+	TreasuresTable = "treasures"
+	// TreasuresInverseTable is the table name for the Treasure entity.
+	// It exists in this package in order to avoid circular dependency with the "treasure" package.
+	TreasuresInverseTable = "treasures"
+	// TreasuresColumn is the table column denoting the treasures relation/edge.
+	TreasuresColumn = "user_treasures"
+	// PortfoliosTable is the table that holds the portfolios relation/edge.
+	PortfoliosTable = "portfolios"
+	// PortfoliosInverseTable is the table name for the Portfolio entity.
+	// It exists in this package in order to avoid circular dependency with the "portfolio" package.
+	PortfoliosInverseTable = "portfolios"
+	// PortfoliosColumn is the table column denoting the portfolios relation/edge.
+	PortfoliosColumn = "user_portfolios"
 	// CommentsTable is the table that holds the comments relation/edge.
 	CommentsTable = "comments"
 	// CommentsInverseTable is the table name for the Comment entity.
@@ -71,9 +82,6 @@ var (
 	// LikesPrimaryKey and LikesColumn2 are the table columns denoting the
 	// primary key for the likes relation (M2M).
 	LikesPrimaryKey = []string{"user_id", "work_id"}
-	// TreasuresPrimaryKey and TreasuresColumn2 are the table columns denoting the
-	// primary key for the treasures relation (M2M).
-	TreasuresPrimaryKey = []string{"user_id", "work_id"}
 	// LikeCommentsPrimaryKey and LikeCommentsColumn2 are the table columns denoting the
 	// primary key for the like_comments relation (M2M).
 	LikeCommentsPrimaryKey = []string{"user_id", "comment_id"}

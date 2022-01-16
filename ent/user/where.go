@@ -626,19 +626,47 @@ func HasTreasures() predicate.User {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(TreasuresTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, TreasuresTable, TreasuresPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, TreasuresTable, TreasuresColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
 // HasTreasuresWith applies the HasEdge predicate on the "treasures" edge with a given conditions (other predicates).
-func HasTreasuresWith(preds ...predicate.Work) predicate.User {
+func HasTreasuresWith(preds ...predicate.Treasure) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(TreasuresInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, TreasuresTable, TreasuresPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, TreasuresTable, TreasuresColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPortfolios applies the HasEdge predicate on the "portfolios" edge.
+func HasPortfolios() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PortfoliosTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PortfoliosTable, PortfoliosColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPortfoliosWith applies the HasEdge predicate on the "portfolios" edge with a given conditions (other predicates).
+func HasPortfoliosWith(preds ...predicate.Portfolio) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PortfoliosInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PortfoliosTable, PortfoliosColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

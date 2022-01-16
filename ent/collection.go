@@ -45,6 +45,18 @@ func (i *ImageQuery) collectField(ctx *graphql.OperationContext, field graphql.C
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (po *PortfolioQuery) CollectFields(ctx context.Context, satisfies ...string) *PortfolioQuery {
+	if fc := graphql.GetFieldContext(ctx); fc != nil {
+		po = po.collectField(graphql.GetOperationContext(ctx), fc.Field, satisfies...)
+	}
+	return po
+}
+
+func (po *PortfolioQuery) collectField(ctx *graphql.OperationContext, field graphql.CollectedField, satisfies ...string) *PortfolioQuery {
+	return po
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (t *ToolQuery) CollectFields(ctx context.Context, satisfies ...string) *ToolQuery {
 	if fc := graphql.GetFieldContext(ctx); fc != nil {
 		t = t.collectField(graphql.GetOperationContext(ctx), fc.Field, satisfies...)
@@ -53,6 +65,18 @@ func (t *ToolQuery) CollectFields(ctx context.Context, satisfies ...string) *Too
 }
 
 func (t *ToolQuery) collectField(ctx *graphql.OperationContext, field graphql.CollectedField, satisfies ...string) *ToolQuery {
+	return t
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (t *TreasureQuery) CollectFields(ctx context.Context, satisfies ...string) *TreasureQuery {
+	if fc := graphql.GetFieldContext(ctx); fc != nil {
+		t = t.collectField(graphql.GetOperationContext(ctx), fc.Field, satisfies...)
+	}
+	return t
+}
+
+func (t *TreasureQuery) collectField(ctx *graphql.OperationContext, field graphql.CollectedField, satisfies ...string) *TreasureQuery {
 	return t
 }
 

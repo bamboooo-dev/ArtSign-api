@@ -6,8 +6,10 @@ import (
 	"artsign/ent/category"
 	"artsign/ent/comment"
 	"artsign/ent/image"
+	"artsign/ent/portfolio"
 	"artsign/ent/predicate"
 	"artsign/ent/tool"
+	"artsign/ent/treasure"
 	"artsign/ent/user"
 	"artsign/ent/work"
 	"fmt"
@@ -799,6 +801,229 @@ func (i *ImageWhereInput) P() (predicate.Image, error) {
 	}
 }
 
+// PortfolioWhereInput represents a where input for filtering Portfolio queries.
+type PortfolioWhereInput struct {
+	Not *PortfolioWhereInput   `json:"not,omitempty"`
+	Or  []*PortfolioWhereInput `json:"or,omitempty"`
+	And []*PortfolioWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "create_time" field predicates.
+	CreateTime      *time.Time  `json:"createTime,omitempty"`
+	CreateTimeNEQ   *time.Time  `json:"createTimeNEQ,omitempty"`
+	CreateTimeIn    []time.Time `json:"createTimeIn,omitempty"`
+	CreateTimeNotIn []time.Time `json:"createTimeNotIn,omitempty"`
+	CreateTimeGT    *time.Time  `json:"createTimeGT,omitempty"`
+	CreateTimeGTE   *time.Time  `json:"createTimeGTE,omitempty"`
+	CreateTimeLT    *time.Time  `json:"createTimeLT,omitempty"`
+	CreateTimeLTE   *time.Time  `json:"createTimeLTE,omitempty"`
+
+	// "update_time" field predicates.
+	UpdateTime      *time.Time  `json:"updateTime,omitempty"`
+	UpdateTimeNEQ   *time.Time  `json:"updateTimeNEQ,omitempty"`
+	UpdateTimeIn    []time.Time `json:"updateTimeIn,omitempty"`
+	UpdateTimeNotIn []time.Time `json:"updateTimeNotIn,omitempty"`
+	UpdateTimeGT    *time.Time  `json:"updateTimeGT,omitempty"`
+	UpdateTimeGTE   *time.Time  `json:"updateTimeGTE,omitempty"`
+	UpdateTimeLT    *time.Time  `json:"updateTimeLT,omitempty"`
+	UpdateTimeLTE   *time.Time  `json:"updateTimeLTE,omitempty"`
+
+	// "owner" edge predicates.
+	HasOwner     *bool             `json:"hasOwner,omitempty"`
+	HasOwnerWith []*UserWhereInput `json:"hasOwnerWith,omitempty"`
+
+	// "work" edge predicates.
+	HasWork     *bool             `json:"hasWork,omitempty"`
+	HasWorkWith []*WorkWhereInput `json:"hasWorkWith,omitempty"`
+}
+
+// Filter applies the PortfolioWhereInput filter on the PortfolioQuery builder.
+func (i *PortfolioWhereInput) Filter(q *PortfolioQuery) (*PortfolioQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// P returns a predicate for filtering portfolios.
+// An error is returned if the input is empty or invalid.
+func (i *PortfolioWhereInput) P() (predicate.Portfolio, error) {
+	var predicates []predicate.Portfolio
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, portfolio.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.Portfolio, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, portfolio.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.Portfolio, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, portfolio.And(and...))
+	}
+	if i.ID != nil {
+		predicates = append(predicates, portfolio.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, portfolio.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, portfolio.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, portfolio.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, portfolio.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, portfolio.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, portfolio.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, portfolio.IDLTE(*i.IDLTE))
+	}
+	if i.CreateTime != nil {
+		predicates = append(predicates, portfolio.CreateTimeEQ(*i.CreateTime))
+	}
+	if i.CreateTimeNEQ != nil {
+		predicates = append(predicates, portfolio.CreateTimeNEQ(*i.CreateTimeNEQ))
+	}
+	if len(i.CreateTimeIn) > 0 {
+		predicates = append(predicates, portfolio.CreateTimeIn(i.CreateTimeIn...))
+	}
+	if len(i.CreateTimeNotIn) > 0 {
+		predicates = append(predicates, portfolio.CreateTimeNotIn(i.CreateTimeNotIn...))
+	}
+	if i.CreateTimeGT != nil {
+		predicates = append(predicates, portfolio.CreateTimeGT(*i.CreateTimeGT))
+	}
+	if i.CreateTimeGTE != nil {
+		predicates = append(predicates, portfolio.CreateTimeGTE(*i.CreateTimeGTE))
+	}
+	if i.CreateTimeLT != nil {
+		predicates = append(predicates, portfolio.CreateTimeLT(*i.CreateTimeLT))
+	}
+	if i.CreateTimeLTE != nil {
+		predicates = append(predicates, portfolio.CreateTimeLTE(*i.CreateTimeLTE))
+	}
+	if i.UpdateTime != nil {
+		predicates = append(predicates, portfolio.UpdateTimeEQ(*i.UpdateTime))
+	}
+	if i.UpdateTimeNEQ != nil {
+		predicates = append(predicates, portfolio.UpdateTimeNEQ(*i.UpdateTimeNEQ))
+	}
+	if len(i.UpdateTimeIn) > 0 {
+		predicates = append(predicates, portfolio.UpdateTimeIn(i.UpdateTimeIn...))
+	}
+	if len(i.UpdateTimeNotIn) > 0 {
+		predicates = append(predicates, portfolio.UpdateTimeNotIn(i.UpdateTimeNotIn...))
+	}
+	if i.UpdateTimeGT != nil {
+		predicates = append(predicates, portfolio.UpdateTimeGT(*i.UpdateTimeGT))
+	}
+	if i.UpdateTimeGTE != nil {
+		predicates = append(predicates, portfolio.UpdateTimeGTE(*i.UpdateTimeGTE))
+	}
+	if i.UpdateTimeLT != nil {
+		predicates = append(predicates, portfolio.UpdateTimeLT(*i.UpdateTimeLT))
+	}
+	if i.UpdateTimeLTE != nil {
+		predicates = append(predicates, portfolio.UpdateTimeLTE(*i.UpdateTimeLTE))
+	}
+
+	if i.HasOwner != nil {
+		p := portfolio.HasOwner()
+		if !*i.HasOwner {
+			p = portfolio.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasOwnerWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasOwnerWith))
+		for _, w := range i.HasOwnerWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, portfolio.HasOwnerWith(with...))
+	}
+	if i.HasWork != nil {
+		p := portfolio.HasWork()
+		if !*i.HasWork {
+			p = portfolio.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasWorkWith) > 0 {
+		with := make([]predicate.Work, 0, len(i.HasWorkWith))
+		for _, w := range i.HasWorkWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, portfolio.HasWorkWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, fmt.Errorf("artsign/ent: empty predicate PortfolioWhereInput")
+	case 1:
+		return predicates[0], nil
+	default:
+		return portfolio.And(predicates...), nil
+	}
+}
+
 // ToolWhereInput represents a where input for filtering Tool queries.
 type ToolWhereInput struct {
 	Not *ToolWhereInput   `json:"not,omitempty"`
@@ -986,6 +1211,229 @@ func (i *ToolWhereInput) P() (predicate.Tool, error) {
 	}
 }
 
+// TreasureWhereInput represents a where input for filtering Treasure queries.
+type TreasureWhereInput struct {
+	Not *TreasureWhereInput   `json:"not,omitempty"`
+	Or  []*TreasureWhereInput `json:"or,omitempty"`
+	And []*TreasureWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "create_time" field predicates.
+	CreateTime      *time.Time  `json:"createTime,omitempty"`
+	CreateTimeNEQ   *time.Time  `json:"createTimeNEQ,omitempty"`
+	CreateTimeIn    []time.Time `json:"createTimeIn,omitempty"`
+	CreateTimeNotIn []time.Time `json:"createTimeNotIn,omitempty"`
+	CreateTimeGT    *time.Time  `json:"createTimeGT,omitempty"`
+	CreateTimeGTE   *time.Time  `json:"createTimeGTE,omitempty"`
+	CreateTimeLT    *time.Time  `json:"createTimeLT,omitempty"`
+	CreateTimeLTE   *time.Time  `json:"createTimeLTE,omitempty"`
+
+	// "update_time" field predicates.
+	UpdateTime      *time.Time  `json:"updateTime,omitempty"`
+	UpdateTimeNEQ   *time.Time  `json:"updateTimeNEQ,omitempty"`
+	UpdateTimeIn    []time.Time `json:"updateTimeIn,omitempty"`
+	UpdateTimeNotIn []time.Time `json:"updateTimeNotIn,omitempty"`
+	UpdateTimeGT    *time.Time  `json:"updateTimeGT,omitempty"`
+	UpdateTimeGTE   *time.Time  `json:"updateTimeGTE,omitempty"`
+	UpdateTimeLT    *time.Time  `json:"updateTimeLT,omitempty"`
+	UpdateTimeLTE   *time.Time  `json:"updateTimeLTE,omitempty"`
+
+	// "owner" edge predicates.
+	HasOwner     *bool             `json:"hasOwner,omitempty"`
+	HasOwnerWith []*UserWhereInput `json:"hasOwnerWith,omitempty"`
+
+	// "work" edge predicates.
+	HasWork     *bool             `json:"hasWork,omitempty"`
+	HasWorkWith []*WorkWhereInput `json:"hasWorkWith,omitempty"`
+}
+
+// Filter applies the TreasureWhereInput filter on the TreasureQuery builder.
+func (i *TreasureWhereInput) Filter(q *TreasureQuery) (*TreasureQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// P returns a predicate for filtering treasures.
+// An error is returned if the input is empty or invalid.
+func (i *TreasureWhereInput) P() (predicate.Treasure, error) {
+	var predicates []predicate.Treasure
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, treasure.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.Treasure, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, treasure.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, err
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.Treasure, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, treasure.And(and...))
+	}
+	if i.ID != nil {
+		predicates = append(predicates, treasure.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, treasure.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, treasure.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, treasure.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, treasure.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, treasure.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, treasure.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, treasure.IDLTE(*i.IDLTE))
+	}
+	if i.CreateTime != nil {
+		predicates = append(predicates, treasure.CreateTimeEQ(*i.CreateTime))
+	}
+	if i.CreateTimeNEQ != nil {
+		predicates = append(predicates, treasure.CreateTimeNEQ(*i.CreateTimeNEQ))
+	}
+	if len(i.CreateTimeIn) > 0 {
+		predicates = append(predicates, treasure.CreateTimeIn(i.CreateTimeIn...))
+	}
+	if len(i.CreateTimeNotIn) > 0 {
+		predicates = append(predicates, treasure.CreateTimeNotIn(i.CreateTimeNotIn...))
+	}
+	if i.CreateTimeGT != nil {
+		predicates = append(predicates, treasure.CreateTimeGT(*i.CreateTimeGT))
+	}
+	if i.CreateTimeGTE != nil {
+		predicates = append(predicates, treasure.CreateTimeGTE(*i.CreateTimeGTE))
+	}
+	if i.CreateTimeLT != nil {
+		predicates = append(predicates, treasure.CreateTimeLT(*i.CreateTimeLT))
+	}
+	if i.CreateTimeLTE != nil {
+		predicates = append(predicates, treasure.CreateTimeLTE(*i.CreateTimeLTE))
+	}
+	if i.UpdateTime != nil {
+		predicates = append(predicates, treasure.UpdateTimeEQ(*i.UpdateTime))
+	}
+	if i.UpdateTimeNEQ != nil {
+		predicates = append(predicates, treasure.UpdateTimeNEQ(*i.UpdateTimeNEQ))
+	}
+	if len(i.UpdateTimeIn) > 0 {
+		predicates = append(predicates, treasure.UpdateTimeIn(i.UpdateTimeIn...))
+	}
+	if len(i.UpdateTimeNotIn) > 0 {
+		predicates = append(predicates, treasure.UpdateTimeNotIn(i.UpdateTimeNotIn...))
+	}
+	if i.UpdateTimeGT != nil {
+		predicates = append(predicates, treasure.UpdateTimeGT(*i.UpdateTimeGT))
+	}
+	if i.UpdateTimeGTE != nil {
+		predicates = append(predicates, treasure.UpdateTimeGTE(*i.UpdateTimeGTE))
+	}
+	if i.UpdateTimeLT != nil {
+		predicates = append(predicates, treasure.UpdateTimeLT(*i.UpdateTimeLT))
+	}
+	if i.UpdateTimeLTE != nil {
+		predicates = append(predicates, treasure.UpdateTimeLTE(*i.UpdateTimeLTE))
+	}
+
+	if i.HasOwner != nil {
+		p := treasure.HasOwner()
+		if !*i.HasOwner {
+			p = treasure.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasOwnerWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasOwnerWith))
+		for _, w := range i.HasOwnerWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, treasure.HasOwnerWith(with...))
+	}
+	if i.HasWork != nil {
+		p := treasure.HasWork()
+		if !*i.HasWork {
+			p = treasure.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasWorkWith) > 0 {
+		with := make([]predicate.Work, 0, len(i.HasWorkWith))
+		for _, w := range i.HasWorkWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, treasure.HasWorkWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, fmt.Errorf("artsign/ent: empty predicate TreasureWhereInput")
+	case 1:
+		return predicates[0], nil
+	default:
+		return treasure.And(predicates...), nil
+	}
+}
+
 // UserWhereInput represents a where input for filtering User queries.
 type UserWhereInput struct {
 	Not *UserWhereInput   `json:"not,omitempty"`
@@ -1071,8 +1519,12 @@ type UserWhereInput struct {
 	HasLikesWith []*WorkWhereInput `json:"hasLikesWith,omitempty"`
 
 	// "treasures" edge predicates.
-	HasTreasures     *bool             `json:"hasTreasures,omitempty"`
-	HasTreasuresWith []*WorkWhereInput `json:"hasTreasuresWith,omitempty"`
+	HasTreasures     *bool                 `json:"hasTreasures,omitempty"`
+	HasTreasuresWith []*TreasureWhereInput `json:"hasTreasuresWith,omitempty"`
+
+	// "portfolios" edge predicates.
+	HasPortfolios     *bool                  `json:"hasPortfolios,omitempty"`
+	HasPortfoliosWith []*PortfolioWhereInput `json:"hasPortfoliosWith,omitempty"`
 
 	// "comments" edge predicates.
 	HasComments     *bool                `json:"hasComments,omitempty"`
@@ -1367,7 +1819,7 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 		predicates = append(predicates, p)
 	}
 	if len(i.HasTreasuresWith) > 0 {
-		with := make([]predicate.Work, 0, len(i.HasTreasuresWith))
+		with := make([]predicate.Treasure, 0, len(i.HasTreasuresWith))
 		for _, w := range i.HasTreasuresWith {
 			p, err := w.P()
 			if err != nil {
@@ -1376,6 +1828,24 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasTreasuresWith(with...))
+	}
+	if i.HasPortfolios != nil {
+		p := user.HasPortfolios()
+		if !*i.HasPortfolios {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPortfoliosWith) > 0 {
+		with := make([]predicate.Portfolio, 0, len(i.HasPortfoliosWith))
+		for _, w := range i.HasPortfoliosWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasPortfoliosWith(with...))
 	}
 	if i.HasComments != nil {
 		p := user.HasComments()
@@ -1560,9 +2030,13 @@ type WorkWhereInput struct {
 	HasLikers     *bool             `json:"hasLikers,omitempty"`
 	HasLikersWith []*UserWhereInput `json:"hasLikersWith,omitempty"`
 
-	// "treasurers" edge predicates.
-	HasTreasurers     *bool             `json:"hasTreasurers,omitempty"`
-	HasTreasurersWith []*UserWhereInput `json:"hasTreasurersWith,omitempty"`
+	// "treasures" edge predicates.
+	HasTreasures     *bool                 `json:"hasTreasures,omitempty"`
+	HasTreasuresWith []*TreasureWhereInput `json:"hasTreasuresWith,omitempty"`
+
+	// "portfolios" edge predicates.
+	HasPortfolios     *bool                  `json:"hasPortfolios,omitempty"`
+	HasPortfoliosWith []*PortfolioWhereInput `json:"hasPortfoliosWith,omitempty"`
 
 	// "comments" edge predicates.
 	HasComments     *bool                `json:"hasComments,omitempty"`
@@ -1990,23 +2464,41 @@ func (i *WorkWhereInput) P() (predicate.Work, error) {
 		}
 		predicates = append(predicates, work.HasLikersWith(with...))
 	}
-	if i.HasTreasurers != nil {
-		p := work.HasTreasurers()
-		if !*i.HasTreasurers {
+	if i.HasTreasures != nil {
+		p := work.HasTreasures()
+		if !*i.HasTreasures {
 			p = work.Not(p)
 		}
 		predicates = append(predicates, p)
 	}
-	if len(i.HasTreasurersWith) > 0 {
-		with := make([]predicate.User, 0, len(i.HasTreasurersWith))
-		for _, w := range i.HasTreasurersWith {
+	if len(i.HasTreasuresWith) > 0 {
+		with := make([]predicate.Treasure, 0, len(i.HasTreasuresWith))
+		for _, w := range i.HasTreasuresWith {
 			p, err := w.P()
 			if err != nil {
 				return nil, err
 			}
 			with = append(with, p)
 		}
-		predicates = append(predicates, work.HasTreasurersWith(with...))
+		predicates = append(predicates, work.HasTreasuresWith(with...))
+	}
+	if i.HasPortfolios != nil {
+		p := work.HasPortfolios()
+		if !*i.HasPortfolios {
+			p = work.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPortfoliosWith) > 0 {
+		with := make([]predicate.Portfolio, 0, len(i.HasPortfoliosWith))
+		for _, w := range i.HasPortfoliosWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, work.HasPortfoliosWith(with...))
 	}
 	if i.HasComments != nil {
 		p := work.HasComments()

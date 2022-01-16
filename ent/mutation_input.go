@@ -220,6 +220,68 @@ func (u *ImageUpdateOne) SetInput(i UpdateImageInput) *ImageUpdateOne {
 	return u
 }
 
+// CreatePortfolioInput represents a mutation input for creating portfolios.
+type CreatePortfolioInput struct {
+	CreateTime *time.Time
+	UpdateTime *time.Time
+	OwnerID    int
+	WorkID     int
+}
+
+// Mutate applies the CreatePortfolioInput on the PortfolioCreate builder.
+func (i *CreatePortfolioInput) Mutate(m *PortfolioCreate) {
+	if v := i.CreateTime; v != nil {
+		m.SetCreateTime(*v)
+	}
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	m.SetOwnerID(i.OwnerID)
+	m.SetWorkID(i.WorkID)
+}
+
+// SetInput applies the change-set in the CreatePortfolioInput on the create builder.
+func (c *PortfolioCreate) SetInput(i CreatePortfolioInput) *PortfolioCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdatePortfolioInput represents a mutation input for updating portfolios.
+type UpdatePortfolioInput struct {
+	OwnerID    *int
+	ClearOwner bool
+	WorkID     *int
+	ClearWork  bool
+}
+
+// Mutate applies the UpdatePortfolioInput on the PortfolioMutation.
+func (i *UpdatePortfolioInput) Mutate(m *PortfolioMutation) {
+	if i.ClearOwner {
+		m.ClearOwner()
+	}
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
+	}
+	if i.ClearWork {
+		m.ClearWork()
+	}
+	if v := i.WorkID; v != nil {
+		m.SetWorkID(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdatePortfolioInput on the update builder.
+func (u *PortfolioUpdate) SetInput(i UpdatePortfolioInput) *PortfolioUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdatePortfolioInput on the update-one builder.
+func (u *PortfolioUpdateOne) SetInput(i UpdatePortfolioInput) *PortfolioUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateToolInput represents a mutation input for creating tools.
 type CreateToolInput struct {
 	Name    string
@@ -272,6 +334,68 @@ func (u *ToolUpdateOne) SetInput(i UpdateToolInput) *ToolUpdateOne {
 	return u
 }
 
+// CreateTreasureInput represents a mutation input for creating treasures.
+type CreateTreasureInput struct {
+	CreateTime *time.Time
+	UpdateTime *time.Time
+	OwnerID    int
+	WorkID     int
+}
+
+// Mutate applies the CreateTreasureInput on the TreasureCreate builder.
+func (i *CreateTreasureInput) Mutate(m *TreasureCreate) {
+	if v := i.CreateTime; v != nil {
+		m.SetCreateTime(*v)
+	}
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	m.SetOwnerID(i.OwnerID)
+	m.SetWorkID(i.WorkID)
+}
+
+// SetInput applies the change-set in the CreateTreasureInput on the create builder.
+func (c *TreasureCreate) SetInput(i CreateTreasureInput) *TreasureCreate {
+	i.Mutate(c)
+	return c
+}
+
+// UpdateTreasureInput represents a mutation input for updating treasures.
+type UpdateTreasureInput struct {
+	OwnerID    *int
+	ClearOwner bool
+	WorkID     *int
+	ClearWork  bool
+}
+
+// Mutate applies the UpdateTreasureInput on the TreasureMutation.
+func (i *UpdateTreasureInput) Mutate(m *TreasureMutation) {
+	if i.ClearOwner {
+		m.ClearOwner()
+	}
+	if v := i.OwnerID; v != nil {
+		m.SetOwnerID(*v)
+	}
+	if i.ClearWork {
+		m.ClearWork()
+	}
+	if v := i.WorkID; v != nil {
+		m.SetWorkID(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdateTreasureInput on the update builder.
+func (u *TreasureUpdate) SetInput(i UpdateTreasureInput) *TreasureUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UpdateTreasureInput on the update-one builder.
+func (u *TreasureUpdateOne) SetInput(i UpdateTreasureInput) *TreasureUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
 	Name           string
@@ -281,6 +405,7 @@ type CreateUserInput struct {
 	WorkIDs        []int
 	LikeIDs        []int
 	TreasureIDs    []int
+	PortfolioIDs   []int
 	CommentIDs     []int
 	LikeCommentIDs []int
 }
@@ -299,6 +424,9 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	}
 	if ids := i.TreasureIDs; len(ids) > 0 {
 		m.AddTreasureIDs(ids...)
+	}
+	if ids := i.PortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
 	}
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
@@ -326,6 +454,8 @@ type UpdateUserInput struct {
 	RemoveLikeIDs        []int
 	AddTreasureIDs       []int
 	RemoveTreasureIDs    []int
+	AddPortfolioIDs      []int
+	RemovePortfolioIDs   []int
 	AddCommentIDs        []int
 	RemoveCommentIDs     []int
 	AddLikeCommentIDs    []int
@@ -363,6 +493,12 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if ids := i.RemoveTreasureIDs; len(ids) > 0 {
 		m.RemoveTreasureIDs(ids...)
+	}
+	if ids := i.AddPortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
+	}
+	if ids := i.RemovePortfolioIDs; len(ids) > 0 {
+		m.RemovePortfolioIDs(ids...)
 	}
 	if ids := i.AddCommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
@@ -405,7 +541,8 @@ type CreateWorkInput struct {
 	ToolIDs      []int
 	OwnerID      *int
 	LikerIDs     []int
-	TreasurerIDs []int
+	TreasureIDs  []int
+	PortfolioIDs []int
 	CommentIDs   []int
 	ImageIDs     []int
 }
@@ -437,8 +574,11 @@ func (i *CreateWorkInput) Mutate(m *WorkCreate) {
 	if ids := i.LikerIDs; len(ids) > 0 {
 		m.AddLikerIDs(ids...)
 	}
-	if ids := i.TreasurerIDs; len(ids) > 0 {
-		m.AddTreasurerIDs(ids...)
+	if ids := i.TreasureIDs; len(ids) > 0 {
+		m.AddTreasureIDs(ids...)
+	}
+	if ids := i.PortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
 	}
 	if ids := i.CommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)
@@ -472,8 +612,10 @@ type UpdateWorkInput struct {
 	ClearOwner         bool
 	AddLikerIDs        []int
 	RemoveLikerIDs     []int
-	AddTreasurerIDs    []int
-	RemoveTreasurerIDs []int
+	AddTreasureIDs     []int
+	RemoveTreasureIDs  []int
+	AddPortfolioIDs    []int
+	RemovePortfolioIDs []int
 	AddCommentIDs      []int
 	RemoveCommentIDs   []int
 	AddImageIDs        []int
@@ -530,11 +672,17 @@ func (i *UpdateWorkInput) Mutate(m *WorkMutation) {
 	if ids := i.RemoveLikerIDs; len(ids) > 0 {
 		m.RemoveLikerIDs(ids...)
 	}
-	if ids := i.AddTreasurerIDs; len(ids) > 0 {
-		m.AddTreasurerIDs(ids...)
+	if ids := i.AddTreasureIDs; len(ids) > 0 {
+		m.AddTreasureIDs(ids...)
 	}
-	if ids := i.RemoveTreasurerIDs; len(ids) > 0 {
-		m.RemoveTreasurerIDs(ids...)
+	if ids := i.RemoveTreasureIDs; len(ids) > 0 {
+		m.RemoveTreasureIDs(ids...)
+	}
+	if ids := i.AddPortfolioIDs; len(ids) > 0 {
+		m.AddPortfolioIDs(ids...)
+	}
+	if ids := i.RemovePortfolioIDs; len(ids) > 0 {
+		m.RemovePortfolioIDs(ids...)
 	}
 	if ids := i.AddCommentIDs; len(ids) > 0 {
 		m.AddCommentIDs(ids...)

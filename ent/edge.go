@@ -60,10 +60,42 @@ func (i *Image) Work(ctx context.Context) (*Work, error) {
 	return result, err
 }
 
+func (po *Portfolio) Owner(ctx context.Context) (*User, error) {
+	result, err := po.Edges.OwnerOrErr()
+	if IsNotLoaded(err) {
+		result, err = po.QueryOwner().Only(ctx)
+	}
+	return result, err
+}
+
+func (po *Portfolio) Work(ctx context.Context) (*Work, error) {
+	result, err := po.Edges.WorkOrErr()
+	if IsNotLoaded(err) {
+		result, err = po.QueryWork().Only(ctx)
+	}
+	return result, err
+}
+
 func (t *Tool) Works(ctx context.Context) ([]*Work, error) {
 	result, err := t.Edges.WorksOrErr()
 	if IsNotLoaded(err) {
 		result, err = t.QueryWorks().All(ctx)
+	}
+	return result, err
+}
+
+func (t *Treasure) Owner(ctx context.Context) (*User, error) {
+	result, err := t.Edges.OwnerOrErr()
+	if IsNotLoaded(err) {
+		result, err = t.QueryOwner().Only(ctx)
+	}
+	return result, err
+}
+
+func (t *Treasure) Work(ctx context.Context) (*Work, error) {
+	result, err := t.Edges.WorkOrErr()
+	if IsNotLoaded(err) {
+		result, err = t.QueryWork().Only(ctx)
 	}
 	return result, err
 }
@@ -84,10 +116,18 @@ func (u *User) Likes(ctx context.Context) ([]*Work, error) {
 	return result, err
 }
 
-func (u *User) Treasures(ctx context.Context) ([]*Work, error) {
+func (u *User) Treasures(ctx context.Context) ([]*Treasure, error) {
 	result, err := u.Edges.TreasuresOrErr()
 	if IsNotLoaded(err) {
 		result, err = u.QueryTreasures().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) Portfolios(ctx context.Context) ([]*Portfolio, error) {
+	result, err := u.Edges.PortfoliosOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryPortfolios().All(ctx)
 	}
 	return result, err
 }
@@ -140,10 +180,18 @@ func (w *Work) Likers(ctx context.Context) ([]*User, error) {
 	return result, err
 }
 
-func (w *Work) Treasurers(ctx context.Context) ([]*User, error) {
-	result, err := w.Edges.TreasurersOrErr()
+func (w *Work) Treasures(ctx context.Context) ([]*Treasure, error) {
+	result, err := w.Edges.TreasuresOrErr()
 	if IsNotLoaded(err) {
-		result, err = w.QueryTreasurers().All(ctx)
+		result, err = w.QueryTreasures().All(ctx)
+	}
+	return result, err
+}
+
+func (w *Work) Portfolios(ctx context.Context) ([]*Portfolio, error) {
+	result, err := w.Edges.PortfoliosOrErr()
+	if IsNotLoaded(err) {
+		result, err = w.QueryPortfolios().All(ctx)
 	}
 	return result, err
 }

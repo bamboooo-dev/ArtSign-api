@@ -53,15 +53,17 @@ type WorkEdges struct {
 	Owner *User `json:"owner,omitempty"`
 	// Likers holds the value of the likers edge.
 	Likers []*User `json:"likers,omitempty"`
-	// Treasurers holds the value of the treasurers edge.
-	Treasurers []*User `json:"treasurers,omitempty"`
+	// Treasures holds the value of the treasures edge.
+	Treasures []*Treasure `json:"treasures,omitempty"`
+	// Portfolios holds the value of the portfolios edge.
+	Portfolios []*Portfolio `json:"portfolios,omitempty"`
 	// Comments holds the value of the comments edge.
 	Comments []*Comment `json:"comments,omitempty"`
 	// Images holds the value of the images edge.
 	Images []*Image `json:"images,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 }
 
 // CategoryOrErr returns the Category value or an error if the edge
@@ -110,19 +112,28 @@ func (e WorkEdges) LikersOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "likers"}
 }
 
-// TreasurersOrErr returns the Treasurers value or an error if the edge
+// TreasuresOrErr returns the Treasures value or an error if the edge
 // was not loaded in eager-loading.
-func (e WorkEdges) TreasurersOrErr() ([]*User, error) {
+func (e WorkEdges) TreasuresOrErr() ([]*Treasure, error) {
 	if e.loadedTypes[4] {
-		return e.Treasurers, nil
+		return e.Treasures, nil
 	}
-	return nil, &NotLoadedError{edge: "treasurers"}
+	return nil, &NotLoadedError{edge: "treasures"}
+}
+
+// PortfoliosOrErr returns the Portfolios value or an error if the edge
+// was not loaded in eager-loading.
+func (e WorkEdges) PortfoliosOrErr() ([]*Portfolio, error) {
+	if e.loadedTypes[5] {
+		return e.Portfolios, nil
+	}
+	return nil, &NotLoadedError{edge: "portfolios"}
 }
 
 // CommentsOrErr returns the Comments value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkEdges) CommentsOrErr() ([]*Comment, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.Comments, nil
 	}
 	return nil, &NotLoadedError{edge: "comments"}
@@ -131,7 +142,7 @@ func (e WorkEdges) CommentsOrErr() ([]*Comment, error) {
 // ImagesOrErr returns the Images value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkEdges) ImagesOrErr() ([]*Image, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[7] {
 		return e.Images, nil
 	}
 	return nil, &NotLoadedError{edge: "images"}
@@ -268,9 +279,14 @@ func (w *Work) QueryLikers() *UserQuery {
 	return (&WorkClient{config: w.config}).QueryLikers(w)
 }
 
-// QueryTreasurers queries the "treasurers" edge of the Work entity.
-func (w *Work) QueryTreasurers() *UserQuery {
-	return (&WorkClient{config: w.config}).QueryTreasurers(w)
+// QueryTreasures queries the "treasures" edge of the Work entity.
+func (w *Work) QueryTreasures() *TreasureQuery {
+	return (&WorkClient{config: w.config}).QueryTreasures(w)
+}
+
+// QueryPortfolios queries the "portfolios" edge of the Work entity.
+func (w *Work) QueryPortfolios() *PortfolioQuery {
+	return (&WorkClient{config: w.config}).QueryPortfolios(w)
 }
 
 // QueryComments queries the "comments" edge of the Work entity.

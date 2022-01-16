@@ -1,0 +1,27 @@
+type Treasure {
+  owner: User!
+  work: Work!
+  createTime: Time!
+  updateTime: Time!
+}
+
+enum TreasureOrderField {
+  CREATE_TIME
+  UPDATE_TIME
+}
+
+input TreasureOrder {
+  direction: OrderDirection!
+  field: TreasureOrderField
+}
+
+type TreasureConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [TreasureEdge]
+}
+
+type TreasureEdge {
+  node: Treasure
+  cursor: Cursor!
+}

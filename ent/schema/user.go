@@ -35,7 +35,8 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("works", Work.Type),
 		edge.To("likes", Work.Type),
-		edge.To("treasures", Work.Type),
+		edge.To("treasures", Treasure.Type),
+		edge.To("portfolios", Portfolio.Type),
 		edge.To("comments", Comment.Type),
 		edge.To("like_comments", Comment.Type),
 	}

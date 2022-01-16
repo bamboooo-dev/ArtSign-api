@@ -1,0 +1,124 @@
+# Maps a Time GraphQL scalar to a Go time.Time struct.
+scalar Time
+
+"The `Upload` scalar type represents a multipart file upload."
+scalar Upload
+
+scalar Cursor
+
+interface Node {
+  id: ID!
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: Cursor
+  endCursor: Cursor
+}
+
+type Query {
+  works(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: WorkOrder
+    where: WorkWhereInput
+  ): WorkConnection
+  users(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+    where: UserWhereInput
+  ): UserConnection
+  categories: [Category]!
+  node(id: ID!): Node
+  nodes(ids: [ID!]!): [Node]!
+  room(id: ID!): Room
+}
+
+type Mutation {
+  createWork(input: CreateWorkInput!, images: [Upload!]): Work!
+  updateWork(id: ID!, input: UpdateWorkInput!): Work!
+  deleteWork(id: ID!): DeleteWorkPayload
+  updateWorks(ids: [ID!]!, input: UpdateWorkInput!): [Work!]!
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  createUserLike(input: CreateUserLikeInput!): CreateUserLikePayload
+  deleteUserLike(input: DeleteUserLikeInput!): DeleteUserLikePayload
+  createComment(input: CreateCommentInput!): Comment!
+  createTreasure(input: CreateTreasureInput!): CreateTreasurePayload
+  deleteTreasure(input: DeleteTreasureInput!): DeleteTreasurePayload
+  createUserLikeComment(
+    input: CreateUserLikeCommentInput!
+  ): CreateUserLikeCommentPayload
+  createPortfolio(input: CreatePortfolioInput!): CreatePortfolioPayload
+  deletePortfolio(input: DeletePortfolioInput!): DeletePortfolioPayload
+  postMessage(content: String!, userID: ID!, roomID: ID!): Message!
+}
+
+type Subscription {
+  messageAdded(roomID: ID!): Message!
+}
+
+type CreateUserLikePayload {
+  clientMutationId: String
+}
+
+input CreateUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+type DeleteUserLikePayload {
+  clientMutationId: String
+}
+
+input DeleteUserLikeInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
+
+type CreateTreasurePayload {
+  clientMutationId: String
+}
+
+type DeleteTreasurePayload {
+  clientMutationId: String
+}
+
+type CreateUserLikeCommentPayload {
+  clientMutationId: String
+}
+
+input CreateUserLikeCommentInput {
+  clientMutationId: String
+  userID: ID!
+  commentID: ID!
+}
+
+input CreateTreasureInput {
+  ownerID: ID!
+  workID: ID!
+}
+
+input CreatePortfolioInput {
+  ownerID: ID!
+  workID: ID!
+}
+
+input DeleteTreasureInput {
+  clientMutationId: String
+  userID: ID!
+  workID: ID!
+}
