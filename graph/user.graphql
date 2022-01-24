@@ -4,6 +4,8 @@ type User implements Node {
   username: String!
   profile: String
   avatarURL: String
+  followers: [User]!
+  viewerIsFollowing: Boolean!
   workConnection(
     after: Cursor
     first: Int

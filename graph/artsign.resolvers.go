@@ -239,7 +239,12 @@ func (r *mutationResolver) Follow(ctx context.Context, input model.FollowInput) 
 		return nil, err
 	}
 
-	return &model.FollowPayload{}, nil
+	followee, err := ent.FromContext(ctx).User.Get(ctx, input.FolloweeID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.FollowPayload{User: followee}, nil
 }
 
 func (r *mutationResolver) Unfollow(ctx context.Context, input model.UnfollowInput) (*model.UnfollowPayload, error) {
@@ -253,7 +258,12 @@ func (r *mutationResolver) Unfollow(ctx context.Context, input model.UnfollowInp
 		return nil, err
 	}
 
-	return &model.UnfollowPayload{}, nil
+	followee, err := ent.FromContext(ctx).User.Get(ctx, input.FolloweeID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UnfollowPayload{User: followee}, nil
 }
 
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error) {

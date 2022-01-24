@@ -127,10 +127,14 @@ input DeleteTreasureInput {
 
 type FollowPayload {
   clientMutationId: String
+
+  user: User
 }
 
 type UnfollowPayload {
   clientMutationId: String
+
+  user: User
 }
 
 input FollowInput {

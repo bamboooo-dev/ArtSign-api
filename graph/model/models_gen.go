@@ -3,6 +3,7 @@
 package model
 
 import (
+	"artsign/ent"
 	"time"
 )
 
@@ -74,7 +75,8 @@ type FollowInput struct {
 }
 
 type FollowPayload struct {
-	ClientMutationID *string `json:"clientMutationId"`
+	ClientMutationID *string   `json:"clientMutationId"`
+	User             *ent.User `json:"user"`
 }
 
 type Message struct {
@@ -90,5 +92,6 @@ type UnfollowInput struct {
 }
 
 type UnfollowPayload struct {
-	ClientMutationID *string `json:"clientMutationId"`
+	ClientMutationID *string   `json:"clientMutationId"`
+	User             *ent.User `json:"user"`
 }

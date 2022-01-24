@@ -5,9 +5,17 @@ package graph
 
 import (
 	"artsign/ent"
+	"artsign/ent/user"
 	"artsign/graph/generated"
 	"context"
 )
+
+func (r *userResolver) ViewerIsFollowing(ctx context.Context, obj *ent.User) (bool, error) {
+	return obj.
+		QueryFollowers().
+		Where(user.ID(17179869184)).
+		Exist(ctx)
+}
 
 func (r *userResolver) WorkConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error) {
 	return obj.QueryWorks().

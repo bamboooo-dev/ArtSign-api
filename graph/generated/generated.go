@@ -112,6 +112,7 @@ type ComplexityRoot struct {
 
 	FollowPayload struct {
 		ClientMutationID func(childComplexity int) int
+		User             func(childComplexity int) int
 	}
 
 	Image struct {
@@ -207,16 +208,19 @@ type ComplexityRoot struct {
 
 	UnfollowPayload struct {
 		ClientMutationID func(childComplexity int) int
+		User             func(childComplexity int) int
 	}
 
 	User struct {
 		AvatarURL          func(childComplexity int) int
+		Followers          func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		LikeConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) int
 		Name               func(childComplexity int) int
 		Profile            func(childComplexity int) int
 		TreasureConnection func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) int
 		Username           func(childComplexity int) int
+		ViewerIsFollowing  func(childComplexity int) int
 		WorkConnection     func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) int
 	}
 
@@ -298,6 +302,7 @@ type SubscriptionResolver interface {
 	MessageAdded(ctx context.Context, roomID int) (<-chan *model.Message, error)
 }
 type UserResolver interface {
+	ViewerIsFollowing(ctx context.Context, obj *ent.User) (bool, error)
 	WorkConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
 	LikeConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder) (*ent.WorkConnection, error)
 	TreasureConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TreasureOrder) (*ent.TreasureConnection, error)
@@ -501,6 +506,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FollowPayload.ClientMutationID(childComplexity), true
+
+	case "FollowPayload.user":
+		if e.complexity.FollowPayload.User == nil {
+			break
+		}
+
+		return e.complexity.FollowPayload.User(childComplexity), true
 
 	case "Image.id":
 		if e.complexity.Image.ID == nil {
@@ -988,12 +1000,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UnfollowPayload.ClientMutationID(childComplexity), true
 
+	case "UnfollowPayload.user":
+		if e.complexity.UnfollowPayload.User == nil {
+			break
+		}
+
+		return e.complexity.UnfollowPayload.User(childComplexity), true
+
 	case "User.avatarURL":
 		if e.complexity.User.AvatarURL == nil {
 			break
 		}
 
 		return e.complexity.User.AvatarURL(childComplexity), true
+
+	case "User.followers":
+		if e.complexity.User.Followers == nil {
+			break
+		}
+
+		return e.complexity.User.Followers(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -1046,6 +1072,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Username(childComplexity), true
+
+	case "User.viewerIsFollowing":
+		if e.complexity.User.ViewerIsFollowing == nil {
+			break
+		}
+
+		return e.complexity.User.ViewerIsFollowing(childComplexity), true
 
 	case "User.workConnection":
 		if e.complexity.User.WorkConnection == nil {
@@ -1478,10 +1511,14 @@ input DeleteTreasureInput {
 
 type FollowPayload {
   clientMutationId: String
+
+  user: User
 }
 
 type UnfollowPayload {
   clientMutationId: String
+
+  user: User
 }
 
 input FollowInput {
@@ -2218,6 +2255,8 @@ type TreasureEdge {
   username: String!
   profile: String
   avatarURL: String
+  followers: [User]!
+  viewerIsFollowing: Boolean!
   workConnection(
     after: Cursor
     first: Int
@@ -4189,6 +4228,38 @@ func (ec *executionContext) _FollowPayload_clientMutationId(ctx context.Context,
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FollowPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.FollowPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FollowPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.User, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Image_id(ctx context.Context, field graphql.CollectedField, obj *ent.Image) (ret graphql.Marshaler) {
@@ -6225,6 +6296,38 @@ func (ec *executionContext) _UnfollowPayload_clientMutationId(ctx context.Contex
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _UnfollowPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.UnfollowPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UnfollowPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.User, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6392,6 +6495,76 @@ func (ec *executionContext) _User_avatarURL(ctx context.Context, field graphql.C
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_followers(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Followers(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖartsignᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_viewerIsFollowing(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().ViewerIsFollowing(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_workConnection(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
@@ -13027,6 +13200,8 @@ func (ec *executionContext) _FollowPayload(ctx context.Context, sel ast.Selectio
 			out.Values[i] = graphql.MarshalString("FollowPayload")
 		case "clientMutationId":
 			out.Values[i] = ec._FollowPayload_clientMutationId(ctx, field, obj)
+		case "user":
+			out.Values[i] = ec._FollowPayload_user(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13614,6 +13789,8 @@ func (ec *executionContext) _UnfollowPayload(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("UnfollowPayload")
 		case "clientMutationId":
 			out.Values[i] = ec._UnfollowPayload_clientMutationId(ctx, field, obj)
+		case "user":
+			out.Values[i] = ec._UnfollowPayload_user(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13655,6 +13832,34 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_profile(ctx, field, obj)
 		case "avatarURL":
 			out.Values[i] = ec._User_avatarURL(ctx, field, obj)
+		case "followers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_followers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "viewerIsFollowing":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_viewerIsFollowing(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "workConnection":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -14741,6 +14946,44 @@ func (ec *executionContext) marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 
 func (ec *executionContext) marshalNUser2artsignᚋentᚐUser(ctx context.Context, sel ast.SelectionSet, v ent.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUser2ᚕᚖartsignᚋentᚐUser(ctx context.Context, sel ast.SelectionSet, v []*ent.User) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOUser2ᚖartsignᚋentᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalNUser2ᚖartsignᚋentᚐUser(ctx context.Context, sel ast.SelectionSet, v *ent.User) graphql.Marshaler {
