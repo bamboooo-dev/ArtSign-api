@@ -408,6 +408,8 @@ type CreateUserInput struct {
 	PortfolioIDs   []int
 	CommentIDs     []int
 	LikeCommentIDs []int
+	FollowerIDs    []int
+	FolloweeIDs    []int
 }
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
@@ -433,6 +435,12 @@ func (i *CreateUserInput) Mutate(m *UserCreate) {
 	}
 	if ids := i.LikeCommentIDs; len(ids) > 0 {
 		m.AddLikeCommentIDs(ids...)
+	}
+	if ids := i.FollowerIDs; len(ids) > 0 {
+		m.AddFollowerIDs(ids...)
+	}
+	if ids := i.FolloweeIDs; len(ids) > 0 {
+		m.AddFolloweeIDs(ids...)
 	}
 }
 
@@ -460,6 +468,10 @@ type UpdateUserInput struct {
 	RemoveCommentIDs     []int
 	AddLikeCommentIDs    []int
 	RemoveLikeCommentIDs []int
+	AddFollowerIDs       []int
+	RemoveFollowerIDs    []int
+	AddFolloweeIDs       []int
+	RemoveFolloweeIDs    []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation.
@@ -511,6 +523,18 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if ids := i.RemoveLikeCommentIDs; len(ids) > 0 {
 		m.RemoveLikeCommentIDs(ids...)
+	}
+	if ids := i.AddFollowerIDs; len(ids) > 0 {
+		m.AddFollowerIDs(ids...)
+	}
+	if ids := i.RemoveFollowerIDs; len(ids) > 0 {
+		m.RemoveFollowerIDs(ids...)
+	}
+	if ids := i.AddFolloweeIDs; len(ids) > 0 {
+		m.AddFolloweeIDs(ids...)
+	}
+	if ids := i.RemoveFolloweeIDs; len(ids) > 0 {
+		m.RemoveFolloweeIDs(ids...)
 	}
 }
 

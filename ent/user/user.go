@@ -27,6 +27,10 @@ const (
 	EdgeComments = "comments"
 	// EdgeLikeComments holds the string denoting the like_comments edge name in mutations.
 	EdgeLikeComments = "like_comments"
+	// EdgeFollowers holds the string denoting the followers edge name in mutations.
+	EdgeFollowers = "followers"
+	// EdgeFollowees holds the string denoting the followees edge name in mutations.
+	EdgeFollowees = "followees"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// WorksTable is the table that holds the works relation/edge.
@@ -67,6 +71,10 @@ const (
 	// LikeCommentsInverseTable is the table name for the Comment entity.
 	// It exists in this package in order to avoid circular dependency with the "comment" package.
 	LikeCommentsInverseTable = "comments"
+	// FollowersTable is the table that holds the followers relation/edge. The primary key declared below.
+	FollowersTable = "user_followees"
+	// FolloweesTable is the table that holds the followees relation/edge. The primary key declared below.
+	FolloweesTable = "user_followees"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -85,6 +93,12 @@ var (
 	// LikeCommentsPrimaryKey and LikeCommentsColumn2 are the table columns denoting the
 	// primary key for the like_comments relation (M2M).
 	LikeCommentsPrimaryKey = []string{"user_id", "comment_id"}
+	// FollowersPrimaryKey and FollowersColumn2 are the table columns denoting the
+	// primary key for the followers relation (M2M).
+	FollowersPrimaryKey = []string{"user_id", "follower_id"}
+	// FolloweesPrimaryKey and FolloweesColumn2 are the table columns denoting the
+	// primary key for the followees relation (M2M).
+	FolloweesPrimaryKey = []string{"user_id", "follower_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

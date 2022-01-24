@@ -3008,6 +3008,12 @@ type UserMutation struct {
 	like_comments        map[int]struct{}
 	removedlike_comments map[int]struct{}
 	clearedlike_comments bool
+	followers            map[int]struct{}
+	removedfollowers     map[int]struct{}
+	clearedfollowers     bool
+	followees            map[int]struct{}
+	removedfollowees     map[int]struct{}
+	clearedfollowees     bool
 	done                 bool
 	oldValue             func(context.Context) (*User, error)
 	predicates           []predicate.User
@@ -3560,6 +3566,114 @@ func (m *UserMutation) ResetLikeComments() {
 	m.removedlike_comments = nil
 }
 
+// AddFollowerIDs adds the "followers" edge to the User entity by ids.
+func (m *UserMutation) AddFollowerIDs(ids ...int) {
+	if m.followers == nil {
+		m.followers = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.followers[ids[i]] = struct{}{}
+	}
+}
+
+// ClearFollowers clears the "followers" edge to the User entity.
+func (m *UserMutation) ClearFollowers() {
+	m.clearedfollowers = true
+}
+
+// FollowersCleared reports if the "followers" edge to the User entity was cleared.
+func (m *UserMutation) FollowersCleared() bool {
+	return m.clearedfollowers
+}
+
+// RemoveFollowerIDs removes the "followers" edge to the User entity by IDs.
+func (m *UserMutation) RemoveFollowerIDs(ids ...int) {
+	if m.removedfollowers == nil {
+		m.removedfollowers = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.followers, ids[i])
+		m.removedfollowers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedFollowers returns the removed IDs of the "followers" edge to the User entity.
+func (m *UserMutation) RemovedFollowersIDs() (ids []int) {
+	for id := range m.removedfollowers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// FollowersIDs returns the "followers" edge IDs in the mutation.
+func (m *UserMutation) FollowersIDs() (ids []int) {
+	for id := range m.followers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetFollowers resets all changes to the "followers" edge.
+func (m *UserMutation) ResetFollowers() {
+	m.followers = nil
+	m.clearedfollowers = false
+	m.removedfollowers = nil
+}
+
+// AddFolloweeIDs adds the "followees" edge to the User entity by ids.
+func (m *UserMutation) AddFolloweeIDs(ids ...int) {
+	if m.followees == nil {
+		m.followees = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.followees[ids[i]] = struct{}{}
+	}
+}
+
+// ClearFollowees clears the "followees" edge to the User entity.
+func (m *UserMutation) ClearFollowees() {
+	m.clearedfollowees = true
+}
+
+// FolloweesCleared reports if the "followees" edge to the User entity was cleared.
+func (m *UserMutation) FolloweesCleared() bool {
+	return m.clearedfollowees
+}
+
+// RemoveFolloweeIDs removes the "followees" edge to the User entity by IDs.
+func (m *UserMutation) RemoveFolloweeIDs(ids ...int) {
+	if m.removedfollowees == nil {
+		m.removedfollowees = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.followees, ids[i])
+		m.removedfollowees[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedFollowees returns the removed IDs of the "followees" edge to the User entity.
+func (m *UserMutation) RemovedFolloweesIDs() (ids []int) {
+	for id := range m.removedfollowees {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// FolloweesIDs returns the "followees" edge IDs in the mutation.
+func (m *UserMutation) FolloweesIDs() (ids []int) {
+	for id := range m.followees {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetFollowees resets all changes to the "followees" edge.
+func (m *UserMutation) ResetFollowees() {
+	m.followees = nil
+	m.clearedfollowees = false
+	m.removedfollowees = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -3729,7 +3843,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.works != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -3747,6 +3861,12 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.like_comments != nil {
 		edges = append(edges, user.EdgeLikeComments)
+	}
+	if m.followers != nil {
+		edges = append(edges, user.EdgeFollowers)
+	}
+	if m.followees != nil {
+		edges = append(edges, user.EdgeFollowees)
 	}
 	return edges
 }
@@ -3791,13 +3911,25 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeFollowers:
+		ids := make([]ent.Value, 0, len(m.followers))
+		for id := range m.followers {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeFollowees:
+		ids := make([]ent.Value, 0, len(m.followees))
+		for id := range m.followees {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.removedworks != nil {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -3815,6 +3947,12 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedlike_comments != nil {
 		edges = append(edges, user.EdgeLikeComments)
+	}
+	if m.removedfollowers != nil {
+		edges = append(edges, user.EdgeFollowers)
+	}
+	if m.removedfollowees != nil {
+		edges = append(edges, user.EdgeFollowees)
 	}
 	return edges
 }
@@ -3859,13 +3997,25 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeFollowers:
+		ids := make([]ent.Value, 0, len(m.removedfollowers))
+		for id := range m.removedfollowers {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeFollowees:
+		ids := make([]ent.Value, 0, len(m.removedfollowees))
+		for id := range m.removedfollowees {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.clearedworks {
 		edges = append(edges, user.EdgeWorks)
 	}
@@ -3883,6 +4033,12 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedlike_comments {
 		edges = append(edges, user.EdgeLikeComments)
+	}
+	if m.clearedfollowers {
+		edges = append(edges, user.EdgeFollowers)
+	}
+	if m.clearedfollowees {
+		edges = append(edges, user.EdgeFollowees)
 	}
 	return edges
 }
@@ -3903,6 +4059,10 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedcomments
 	case user.EdgeLikeComments:
 		return m.clearedlike_comments
+	case user.EdgeFollowers:
+		return m.clearedfollowers
+	case user.EdgeFollowees:
+		return m.clearedfollowees
 	}
 	return false
 }
@@ -3936,6 +4096,12 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeLikeComments:
 		m.ResetLikeComments()
+		return nil
+	case user.EdgeFollowers:
+		m.ResetFollowers()
+		return nil
+	case user.EdgeFollowees:
+		m.ResetFollowees()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

@@ -340,7 +340,7 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     u.ID,
 		Type:   "User",
 		Fields: make([]*Field, 4),
-		Edges:  make([]*Edge, 6),
+		Edges:  make([]*Edge, 8),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(u.Name); err != nil {
@@ -432,6 +432,26 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 	err = u.QueryLikeComments().
 		Select(comment.FieldID).
 		Scan(ctx, &node.Edges[5].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[6] = &Edge{
+		Type: "User",
+		Name: "followers",
+	}
+	err = u.QueryFollowers().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[6].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[7] = &Edge{
+		Type: "User",
+		Name: "followees",
+	}
+	err = u.QueryFollowees().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[7].IDs)
 	if err != nil {
 		return nil, err
 	}

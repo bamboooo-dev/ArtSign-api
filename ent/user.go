@@ -42,9 +42,13 @@ type UserEdges struct {
 	Comments []*Comment `json:"comments,omitempty"`
 	// LikeComments holds the value of the like_comments edge.
 	LikeComments []*Comment `json:"like_comments,omitempty"`
+	// Followers holds the value of the followers edge.
+	Followers []*User `json:"followers,omitempty"`
+	// Followees holds the value of the followees edge.
+	Followees []*User `json:"followees,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 }
 
 // WorksOrErr returns the Works value or an error if the edge
@@ -99,6 +103,24 @@ func (e UserEdges) LikeCommentsOrErr() ([]*Comment, error) {
 		return e.LikeComments, nil
 	}
 	return nil, &NotLoadedError{edge: "like_comments"}
+}
+
+// FollowersOrErr returns the Followers value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) FollowersOrErr() ([]*User, error) {
+	if e.loadedTypes[6] {
+		return e.Followers, nil
+	}
+	return nil, &NotLoadedError{edge: "followers"}
+}
+
+// FolloweesOrErr returns the Followees value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) FolloweesOrErr() ([]*User, error) {
+	if e.loadedTypes[7] {
+		return e.Followees, nil
+	}
+	return nil, &NotLoadedError{edge: "followees"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -188,6 +210,16 @@ func (u *User) QueryComments() *CommentQuery {
 // QueryLikeComments queries the "like_comments" edge of the User entity.
 func (u *User) QueryLikeComments() *CommentQuery {
 	return (&UserClient{config: u.config}).QueryLikeComments(u)
+}
+
+// QueryFollowers queries the "followers" edge of the User entity.
+func (u *User) QueryFollowers() *UserQuery {
+	return (&UserClient{config: u.config}).QueryFollowers(u)
+}
+
+// QueryFollowees queries the "followees" edge of the User entity.
+func (u *User) QueryFollowees() *UserQuery {
+	return (&UserClient{config: u.config}).QueryFollowees(u)
 }
 
 // Update returns a builder for updating this User.

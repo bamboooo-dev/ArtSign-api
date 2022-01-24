@@ -268,6 +268,31 @@ var (
 			},
 		},
 	}
+	// UserFolloweesColumns holds the columns for the "user_followees" table.
+	UserFolloweesColumns = []*schema.Column{
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "follower_id", Type: field.TypeInt},
+	}
+	// UserFolloweesTable holds the schema information for the "user_followees" table.
+	UserFolloweesTable = &schema.Table{
+		Name:       "user_followees",
+		Columns:    UserFolloweesColumns,
+		PrimaryKey: []*schema.Column{UserFolloweesColumns[0], UserFolloweesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_followees_user_id",
+				Columns:    []*schema.Column{UserFolloweesColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_followees_follower_id",
+				Columns:    []*schema.Column{UserFolloweesColumns[1]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
@@ -281,6 +306,7 @@ var (
 		ToolWorksTable,
 		UserLikesTable,
 		UserLikeCommentsTable,
+		UserFolloweesTable,
 	}
 )
 
@@ -301,4 +327,6 @@ func init() {
 	UserLikesTable.ForeignKeys[1].RefTable = WorksTable
 	UserLikeCommentsTable.ForeignKeys[0].RefTable = UsersTable
 	UserLikeCommentsTable.ForeignKeys[1].RefTable = CommentsTable
+	UserFolloweesTable.ForeignKeys[0].RefTable = UsersTable
+	UserFolloweesTable.ForeignKeys[1].RefTable = UsersTable
 }

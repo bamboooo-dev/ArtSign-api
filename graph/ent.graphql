@@ -371,6 +371,14 @@ input UserWhereInput {
   """like_comments edge predicates"""
   hasLikeComments: Boolean
   hasLikeCommentsWith: [CommentWhereInput!]
+  
+  """followers edge predicates"""
+  hasFollowers: Boolean
+  hasFollowersWith: [UserWhereInput!]
+  
+  """followees edge predicates"""
+  hasFollowees: Boolean
+  hasFolloweesWith: [UserWhereInput!]
 }
 
 """

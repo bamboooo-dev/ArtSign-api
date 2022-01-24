@@ -228,6 +228,34 @@ func (r *mutationResolver) PostMessage(ctx context.Context, content string, user
 	return &message, nil
 }
 
+func (r *mutationResolver) Follow(ctx context.Context, input model.FollowInput) (*model.FollowPayload, error) {
+	user, err := ent.FromContext(ctx).User.Get(ctx, input.MyID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = user.Update().AddFolloweeIDs(input.FolloweeID).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.FollowPayload{}, nil
+}
+
+func (r *mutationResolver) Unfollow(ctx context.Context, input model.UnfollowInput) (*model.UnfollowPayload, error) {
+	user, err := ent.FromContext(ctx).User.Get(ctx, input.MyID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = user.Update().RemoveFolloweeIDs(input.FolloweeID).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UnfollowPayload{}, nil
+}
+
 func (r *queryResolver) Works(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.WorkOrder, where *ent.WorkWhereInput) (*ent.WorkConnection, error) {
 	return r.client.Work.Query().
 		Paginate(ctx, after, first, before, last,

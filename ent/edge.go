@@ -148,6 +148,22 @@ func (u *User) LikeComments(ctx context.Context) ([]*Comment, error) {
 	return result, err
 }
 
+func (u *User) Followers(ctx context.Context) ([]*User, error) {
+	result, err := u.Edges.FollowersOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryFollowers().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) Followees(ctx context.Context) ([]*User, error) {
+	result, err := u.Edges.FolloweesOrErr()
+	if IsNotLoaded(err) {
+		result, err = u.QueryFollowees().All(ctx)
+	}
+	return result, err
+}
+
 func (w *Work) Category(ctx context.Context) (*Category, error) {
 	result, err := w.Edges.CategoryOrErr()
 	if IsNotLoaded(err) {
