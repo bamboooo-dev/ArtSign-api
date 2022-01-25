@@ -27,6 +27,13 @@ type User implements Node {
     last: Int
     orderBy: TreasureOrder
   ): TreasureConnection
+  followeeConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
 }
 
 type UserConnection {

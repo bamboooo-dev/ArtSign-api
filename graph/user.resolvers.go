@@ -38,6 +38,13 @@ func (r *userResolver) TreasureConnection(ctx context.Context, obj *ent.User, af
 		)
 }
 
+func (r *userResolver) FolloweeConnection(ctx context.Context, obj *ent.User, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
+	return obj.QueryFollowees().
+		Paginate(ctx, after, first, before, last,
+			ent.WithUserOrder(orderBy),
+		)
+}
+
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
