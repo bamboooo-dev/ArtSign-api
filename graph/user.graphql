@@ -58,7 +58,9 @@ input UserOrder {
 
 input CreateUserInput {
   name: String!
+  username: String!
   profile: String
+  avatarURL: String
 }
 
 input UpdateUserInput {

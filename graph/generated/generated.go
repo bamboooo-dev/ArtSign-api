@@ -2323,7 +2323,9 @@ input UserOrder {
 
 input CreateUserInput {
   name: String!
+  username: String!
   profile: String
+  avatarURL: String
 }
 
 input UpdateUserInput {
@@ -9649,11 +9651,27 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "profile":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profile"))
 			it.Profile, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "avatarURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatarURL"))
+			it.AvatarURL, err = ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
