@@ -39,5 +39,6 @@ func (User) Edges() []ent.Edge {
 		edge.To("portfolios", Portfolio.Type),
 		edge.To("comments", Comment.Type),
 		edge.To("like_comments", Comment.Type),
+		edge.To("followees", User.Type).From("followers"),
 	}
 }

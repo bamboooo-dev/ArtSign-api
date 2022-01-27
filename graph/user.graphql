@@ -4,6 +4,8 @@ type User implements Node {
   username: String!
   profile: String
   avatarURL: String
+  followers: [User]!
+  viewerIsFollowing: Boolean!
   workConnection(
     after: Cursor
     first: Int
@@ -25,6 +27,13 @@ type User implements Node {
     last: Int
     orderBy: TreasureOrder
   ): TreasureConnection
+  followeeConnection(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: UserOrder
+  ): UserConnection
 }
 
 type UserConnection {
@@ -49,7 +58,9 @@ input UserOrder {
 
 input CreateUserInput {
   name: String!
+  username: String!
   profile: String
+  avatarURL: String
 }
 
 input UpdateUserInput {

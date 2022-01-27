@@ -3,6 +3,7 @@
 package model
 
 import (
+	"artsign/ent"
 	"time"
 )
 
@@ -68,9 +69,29 @@ type DeleteWorkPayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
 
+type FollowInput struct {
+	MyID       int `json:"myID"`
+	FolloweeID int `json:"followeeID"`
+}
+
+type FollowPayload struct {
+	ClientMutationID *string   `json:"clientMutationId"`
+	User             *ent.User `json:"user"`
+}
+
 type Message struct {
 	ID         int       `json:"id"`
 	Content    string    `json:"content"`
 	CreatedBy  int       `json:"createdBy"`
 	CreateTime time.Time `json:"createTime"`
+}
+
+type UnfollowInput struct {
+	MyID       int `json:"myID"`
+	FolloweeID int `json:"followeeID"`
+}
+
+type UnfollowPayload struct {
+	ClientMutationID *string   `json:"clientMutationId"`
+	User             *ent.User `json:"user"`
 }

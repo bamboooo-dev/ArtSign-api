@@ -63,6 +63,8 @@ type Mutation {
   createPortfolio(input: CreatePortfolioInput!): CreatePortfolioPayload
   deletePortfolio(input: DeletePortfolioInput!): DeletePortfolioPayload
   postMessage(content: String!, userID: ID!, roomID: ID!): Message!
+  follow(input: FollowInput!): FollowPayload
+  unfollow(input: UnfollowInput!): UnfollowPayload
 }
 
 type Subscription {
@@ -121,4 +123,26 @@ input DeleteTreasureInput {
   clientMutationId: String
   userID: ID!
   workID: ID!
+}
+
+type FollowPayload {
+  clientMutationId: String
+
+  user: User
+}
+
+type UnfollowPayload {
+  clientMutationId: String
+
+  user: User
+}
+
+input FollowInput {
+  myID: ID!
+  followeeID: ID!
+}
+
+input UnfollowInput {
+  myID: ID!
+  followeeID: ID!
 }

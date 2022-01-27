@@ -1533,6 +1533,14 @@ type UserWhereInput struct {
 	// "like_comments" edge predicates.
 	HasLikeComments     *bool                `json:"hasLikeComments,omitempty"`
 	HasLikeCommentsWith []*CommentWhereInput `json:"hasLikeCommentsWith,omitempty"`
+
+	// "followers" edge predicates.
+	HasFollowers     *bool             `json:"hasFollowers,omitempty"`
+	HasFollowersWith []*UserWhereInput `json:"hasFollowersWith,omitempty"`
+
+	// "followees" edge predicates.
+	HasFollowees     *bool             `json:"hasFollowees,omitempty"`
+	HasFolloweesWith []*UserWhereInput `json:"hasFolloweesWith,omitempty"`
 }
 
 // Filter applies the UserWhereInput filter on the UserQuery builder.
@@ -1882,6 +1890,42 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasLikeCommentsWith(with...))
+	}
+	if i.HasFollowers != nil {
+		p := user.HasFollowers()
+		if !*i.HasFollowers {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasFollowersWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasFollowersWith))
+		for _, w := range i.HasFollowersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasFollowersWith(with...))
+	}
+	if i.HasFollowees != nil {
+		p := user.HasFollowees()
+		if !*i.HasFollowees {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasFolloweesWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasFolloweesWith))
+		for _, w := range i.HasFolloweesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, err
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasFolloweesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
