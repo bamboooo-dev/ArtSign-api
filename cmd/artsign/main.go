@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"artsign/app/interface/middleware"
 	"artsign/app/interface/mysql"
 	"artsign/app/interface/s3"
 	"artsign/graph"
@@ -78,7 +79,7 @@ func main() {
 	http.Handle("/",
 		playground.Handler("Todo", "/query"),
 	)
-	http.Handle("/query", srv)
+	http.Handle("/query", middleware.EnsureValidToken()(srv))
 	log.Println("listening on :8081")
 	if err := http.ListenAndServe(":8081", nil); err != nil {
 		log.Fatal("http server terminated", err)
